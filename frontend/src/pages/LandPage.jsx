@@ -22,25 +22,18 @@ function LandPage() {
 
   // Animation variants
   const fadeInUp = {
-    initial: { opacity: 0, y: 80 },
+    initial: { opacity: 0, y: 60 },
     animate: { opacity: 1, y: 0 },
-    transition: { duration: 1.2, ease: 'easeOut', delay: 0.2 },
+    transition: { duration: 0.8, ease: 'easeOut' },
   };
 
   const staggerContainer = {
     initial: {},
     animate: {
       transition: {
-        staggerChildren: 0.3,
-        delayChildren: 0.1,
+        staggerChildren: 0.2,
       },
     },
-  };
-
-  const slowFadeInUp = {
-    initial: { opacity: 0, y: 100 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 1.5, ease: 'easeOut', delay: 0.3 },
   };
 
   const quickHover = {
@@ -68,10 +61,10 @@ function LandPage() {
                 whileHover={{ scale: 1.05 }}
                 className="flex items-center"
               >
-                <div className="w-10 h-10 bg-gradient-to-br from-primaryBlue to-blue-700 rounded-xl flex items-center justify-center shadow-lg mr-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-700 rounded-xl flex items-center justify-center shadow-lg mr-3">
                   <HiOutlineMap className="w-6 h-6 text-white" />
                 </div>
-                <span className="font-rubik font-bold text-2xl bg-gradient-to-r from-primaryBlue to-blue-700 bg-clip-text text-transparent">
+                <span className="font-rubik font-bold text-2xl bg-gradient-to-r from-primary to-blue-700 bg-clip-text text-transparent">
                   JobCompass
                 </span>
               </motion.div>
@@ -81,38 +74,38 @@ function LandPage() {
             <div className="hidden md:flex items-center space-x-8">
               <a
                 href="#features"
-                className="text-textBlack hover:text-primaryBlue transition-colors font-medium"
+                className="text-textBlack hover:text-primary transition-colors font-medium"
               >
                 Features
               </a>
               <a
                 href="#job-trends"
-                className="text-textBlack hover:text-primaryBlue transition-colors font-medium"
+                className="text-textBlack hover:text-primary transition-colors font-medium"
               >
                 Job Trends
               </a>
               <a
                 href="#explore-occupations"
-                className="text-textBlack hover:text-primaryBlue transition-colors font-medium"
+                className="text-textBlack hover:text-primary transition-colors font-medium"
               >
                 Explore Occupations
               </a>
               <a
                 href="#demo"
-                className="text-textBlack hover:text-primaryBlue transition-colors font-medium"
+                className="text-textBlack hover:text-primary transition-colors font-medium"
               >
                 Demo
               </a>
               <a
                 href="#testimonials"
-                className="text-textBlack hover:text-primaryBlue transition-colors font-medium"
+                className="text-textBlack hover:text-primary transition-colors font-medium"
               >
                 Stories
               </a>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-primaryBlue text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg"
+                className="bg-primary text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg"
               >
                 Sign Up Free
               </motion.button>
@@ -123,7 +116,7 @@ function LandPage() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-textBlack hover:text-primaryBlue hover:bg-softGray focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primaryBlue transition-colors"
+                className="inline-flex items-center justify-center p-2 rounded-md text-textBlack hover:text-primary hover:bg-softGray focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary transition-colors"
               >
                 {isMenuOpen ? (
                   <HiOutlineX className="block h-6 w-6" />
@@ -149,7 +142,7 @@ function LandPage() {
               <motion.a
                 whileHover={{ scale: 1.02, x: 10 }}
                 href="#features"
-                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primaryBlue hover:bg-softGray transition-all"
+                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primary hover:bg-softGray transition-all"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Features
@@ -157,7 +150,7 @@ function LandPage() {
               <motion.a
                 whileHover={{ scale: 1.02, x: 10 }}
                 href="#job-trends"
-                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primaryBlue hover:bg-softGray transition-all"
+                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primary hover:bg-softGray transition-all"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Job Trends
@@ -165,7 +158,7 @@ function LandPage() {
               <motion.a
                 whileHover={{ scale: 1.02, x: 10 }}
                 href="#explore-occupations"
-                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primaryBlue hover:bg-softGray transition-all"
+                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primary hover:bg-softGray transition-all"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Explore Occupations
@@ -173,7 +166,7 @@ function LandPage() {
               <motion.a
                 whileHover={{ scale: 1.02, x: 10 }}
                 href="#demo"
-                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primaryBlue hover:bg-softGray transition-all"
+                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primary hover:bg-softGray transition-all"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Demo
@@ -181,7 +174,7 @@ function LandPage() {
               <motion.a
                 whileHover={{ scale: 1.02, x: 10 }}
                 href="#testimonials"
-                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primaryBlue hover:bg-softGray transition-all"
+                className="block px-3 py-2 rounded-md text-base font-medium text-textBlack hover:text-primary hover:bg-softGray transition-all"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Stories
@@ -189,7 +182,7 @@ function LandPage() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full mt-4 bg-primaryBlue text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg text-left"
+                className="w-full mt-4 bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-lg text-left"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign Up Free
@@ -200,7 +193,7 @@ function LandPage() {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-backgroundWhite via-softGray/30 to-primaryBlue/5">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-backgroundWhite via-softGray/30 to-primary/5">
         {/* Animated Background Objects */}
         <div className="absolute inset-0 overflow-hidden hidden lg:block">
           {/* Floating Circles */}
@@ -215,7 +208,7 @@ function LandPage() {
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="absolute top-20 right-20 w-32 h-32 border-2 border-primaryBlue/20 rounded-full"
+            className="absolute top-20 right-20 w-32 h-32 border-2 border-primary/20 rounded-full"
           />
 
           <motion.div
@@ -229,7 +222,7 @@ function LandPage() {
               repeat: Infinity,
               ease: 'easeInOut',
             }}
-            className="absolute bottom-32 left-16 w-24 h-24 bg-gradient-to-br from-primaryBlue/10 to-primaryBlue/20 rounded-2xl transform rotate-12"
+            className="absolute bottom-32 left-16 w-24 h-24 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl transform rotate-12"
           />
 
           {/* Floating Skill Nodes */}
@@ -277,7 +270,7 @@ function LandPage() {
               className="font-rubik font-bold text-4xl sm:text-5xl lg:text-6xl text-textBlack leading-tight mb-6"
             >
               Navigate Your
-              <span className="text-primaryBlue block">Career Journey</span>
+              <span className="text-primary block">Career Journey</span>
             </motion.h1>
             <motion.p
               variants={fadeInUp}
@@ -297,7 +290,7 @@ function LandPage() {
                   boxShadow: '0 10px 25px rgba(0, 101, 255, 0.3)',
                 }}
                 whileTap={{ scale: 0.95 }}
-                className="bg-primaryBlue text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
+                className="bg-primary text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 Start Your Journey
                 <HiOutlineArrowRight className="w-5 h-5" />
@@ -305,7 +298,7 @@ function LandPage() {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="border-2 border-primaryBlue text-primaryBlue px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primaryBlue hover:text-white transition-all duration-300"
+                className="border-2 border-primary text-primary px-8 py-4 rounded-xl font-semibold text-lg hover:bg-primary hover:text-white transition-all duration-300"
               >
                 Explore Demo
               </motion.button>
@@ -334,9 +327,7 @@ function LandPage() {
               >
                 <div className="flex items-center gap-3">
                   <div className="text-center">
-                    <div className="text-xl font-bold text-primaryBlue">
-                      1000+
-                    </div>
+                    <div className="text-xl font-bold text-primary">1000+</div>
                     <div className="text-xs text-gray-600">Jobs</div>
                   </div>
                   <div className="text-center">
@@ -358,7 +349,7 @@ function LandPage() {
       <section className="py-20 bg-softGray relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            variants={slowFadeInUp}
+            variants={fadeInUp}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
@@ -382,7 +373,7 @@ function LandPage() {
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, delay: 0.5, ease: 'easeOut' }}
-                className="absolute left-1/4 transform translate-x-8 w-1/6 h-0.5 bg-gradient-to-r from-yellow-500/40 to-primaryBlue/40"
+                className="absolute left-1/4 transform translate-x-8 w-1/6 h-0.5 bg-gradient-to-r from-yellow-500/40 to-primary/40"
               />
               {/* Second connecting line */}
               <motion.div
@@ -390,7 +381,7 @@ function LandPage() {
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 1, delay: 0.8, ease: 'easeOut' }}
-                className="absolute right-1/4 transform -translate-x-8 w-1/6 h-0.5 bg-gradient-to-r from-primaryBlue/40 to-green-500/40"
+                className="absolute right-1/4 transform -translate-x-8 w-1/6 h-0.5 bg-gradient-to-r from-primary/40 to-green-500/40"
               />
 
               {/* Animated Arrows */}
@@ -399,7 +390,7 @@ function LandPage() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 1 }}
-                className="absolute left-1/3 transform translate-x-4 -translate-y-1 text-primaryBlue/60"
+                className="absolute left-1/3 transform translate-x-4 -translate-y-1 text-primary/60"
               >
                 <HiOutlineChevronRight className="w-4 h-4" />
               </motion.div>
@@ -439,10 +430,10 @@ function LandPage() {
                   title: 'Discover Pathways',
                   description:
                     'Explore career paths and job opportunities tailored to your profile',
-                  color: 'text-primaryBlue',
+                  color: 'text-primary',
                   bgColor: 'from-blue-50 to-blue-100/50',
                   borderColor: 'border-blue-200/30',
-                  iconBg: 'bg-primaryBlue',
+                  iconBg: 'bg-primary',
                 },
                 {
                   icon: HiOutlineAcademicCap,
@@ -488,7 +479,7 @@ function LandPage() {
       <section id="features" className="py-20 bg-backgroundWhite">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            variants={slowFadeInUp}
+            variants={fadeInUp}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
@@ -543,7 +534,7 @@ function LandPage() {
                 className="bg-softGray rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-softGray/20 to-softGray/40 backdrop-blur-sm flex items-center justify-center mb-6 shadow-lg border border-softGray/20">
-                  <feature.icon className="w-8 h-8 text-primaryBlue drop-shadow-sm" />
+                  <feature.icon className="w-8 h-8 text-primary drop-shadow-sm" />
                 </div>
                 <h3 className="font-rubik font-bold text-xl text-textBlack mb-4">
                   {feature.title}
@@ -560,7 +551,7 @@ function LandPage() {
       {/* Demo/Preview Section */}
       <section
         id="demo"
-        className="py-20 bg-gradient-to-br from-primaryBlue/5 via-softGray/50 to-primaryBlue/10"
+        className="py-20 bg-gradient-to-br from-primary/5 via-softGray/50 to-primary/10"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -591,7 +582,7 @@ function LandPage() {
                     transition={{ delay: index * 0.1 }}
                     className="flex items-center space-x-3"
                   >
-                    <div className="w-2 h-2 bg-primaryBlue rounded-full" />
+                    <div className="w-2 h-2 bg-primary rounded-full" />
                     <span className="text-gray-700 font-medium">{feature}</span>
                   </motion.div>
                 ))}
@@ -606,14 +597,14 @@ function LandPage() {
               className="relative"
             >
               <div className="bg-white rounded-2xl shadow-2xl p-8 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-primaryBlue/10 to-purple-500/10 rounded-2xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-2xl" />
                 <div className="relative">
                   <div className="flex items-center justify-between mb-6">
                     <h3 className="font-rubik font-bold text-lg">
                       Skill-Job Network
                     </h3>
                     <div className="flex space-x-2">
-                      <div className="w-3 h-3 bg-primaryBlue rounded-full animate-pulse" />
+                      <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
                       <div
                         className="w-3 h-3 bg-green-500 rounded-full animate-pulse"
                         style={{ animationDelay: '0.5s' }}
@@ -626,8 +617,8 @@ function LandPage() {
                   </div>
                   <div className="space-y-6">
                     <div className="grid grid-cols-3 gap-4">
-                      <div className="bg-primaryBlue/20 rounded-lg p-3 text-center">
-                        <HiOutlineBriefcase className="w-6 h-6 mx-auto mb-2 text-primaryBlue" />
+                      <div className="bg-primary/20 rounded-lg p-3 text-center">
+                        <HiOutlineBriefcase className="w-6 h-6 mx-auto mb-2 text-primary" />
                         <span className="text-sm font-medium">
                           Data Scientist
                         </span>
@@ -644,7 +635,7 @@ function LandPage() {
                     <div className="text-center">
                       <motion.button
                         whileHover={{ scale: 1.05 }}
-                        className="bg-primaryBlue text-white px-6 py-3 rounded-lg font-medium shadow-lg"
+                        className="bg-primary text-white px-6 py-3 rounded-lg font-medium shadow-lg"
                       >
                         Explore Interactive Demo
                       </motion.button>
@@ -697,7 +688,7 @@ function LandPage() {
       <section id="testimonials" className="py-20 bg-backgroundWhite">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            variants={slowFadeInUp}
+            variants={fadeInUp}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
@@ -773,10 +764,10 @@ function LandPage() {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-primaryBlue to-blue-700 text-white">
+      <section className="py-20 bg-gradient-to-r from-primary to-blue-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div
-            variants={slowFadeInUp}
+            variants={fadeInUp}
             initial="initial"
             whileInView="animate"
             viewport={{ once: true }}
@@ -794,7 +785,7 @@ function LandPage() {
                 boxShadow: '0 15px 30px rgba(255, 255, 255, 0.3)',
               }}
               whileTap={{ scale: 0.95 }}
-              className="bg-white text-primaryBlue px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-gray-100 transition-all duration-300 inline-flex items-center gap-3"
+              className="bg-white text-primary px-10 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-gray-100 transition-all duration-300 inline-flex items-center gap-3"
             >
               Get Started Free
               <HiOutlineArrowRight className="w-6 h-6" />
@@ -809,7 +800,7 @@ function LandPage() {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <div className="flex items-center mb-4">
-                <div className="w-8 h-8 bg-gradient-to-br from-primaryBlue to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-blue-700 rounded-lg flex items-center justify-center mr-3">
                   <HiOutlineMap className="w-5 h-5 text-white" />
                 </div>
                 <span className="font-rubik font-bold text-xl">JobCompass</span>
@@ -819,10 +810,10 @@ function LandPage() {
                 by the Tabiya Open Taxonomy of Jobs & Skills.
               </p>
               <div className="flex space-x-4">
-                <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-primaryBlue cursor-pointer transition-colors" />
-                <FaTwitter className="w-6 h-6 text-gray-400 hover:text-primaryBlue cursor-pointer transition-colors" />
-                <FaGithub className="w-6 h-6 text-gray-400 hover:text-primaryBlue cursor-pointer transition-colors" />
-                <FaInstagram className="w-6 h-6 text-gray-400 hover:text-primaryBlue cursor-pointer transition-colors" />
+                <FaLinkedin className="w-6 h-6 text-gray-400 hover:text-primary cursor-pointer transition-colors" />
+                <FaTwitter className="w-6 h-6 text-gray-400 hover:text-primary cursor-pointer transition-colors" />
+                <FaGithub className="w-6 h-6 text-gray-400 hover:text-primary cursor-pointer transition-colors" />
+                <FaInstagram className="w-6 h-6 text-gray-400 hover:text-primary cursor-pointer transition-colors" />
               </div>
             </div>
             <div>
