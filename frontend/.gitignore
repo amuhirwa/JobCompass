@@ -26,5 +26,5 @@ dist-ssr
 # staging commits
 /src/hooks
 /src/lib
-/src/pages
+# /src/pages
 /src/components/Navigation.tsx
