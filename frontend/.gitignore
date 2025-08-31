@@ -27,4 +27,4 @@ dist-ssr
 # /src/hooks
 # /src/lib
 # /src/pages
-/src/components/Navigation.tsx
+# /src/components/Navigation.tsx
