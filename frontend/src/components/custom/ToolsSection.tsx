@@ -1,0 +1,241 @@
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  ScrollAnimation,
+  ScrollAnimationContainer,
+  ScrollAnimationItem,
+} from '@/components/ui/scroll-animation';
+
+export const ToolsSection = () => {
+  return (
+    <section
+      id="tools"
+      className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 bg-gradient-to-br from-tabiya-dark via-tabiya-medium/10 to-tabiya-dark relative overflow-hidden"
+    >
+      <div className="w-full max-w-7xl mx-auto">
+        <ScrollAnimation className="text-center mb-16">
+          <p className="text-tabiya-accent font-sans text-sm font-medium uppercase tracking-wide mb-4">
+            Powerful Tools
+          </p>
+          <h2 className="text-white font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-[110%] mb-6 max-w-4xl mx-auto">
+            Everything You Need for Career Success
+          </h2>
+          <p className="text-white/90 font-sans text-lg font-medium leading-[140%] max-w-3xl mx-auto">
+            Discover our comprehensive suite of AI-powered tools designed to
+            accelerate your career growth and skill development journey.
+          </p>
+        </ScrollAnimation>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
+          {/* AI Career Assistant */}
+          <Card className="bg-tabiya-dark/50 border border-white/10 hover:border-tabiya-accent/30 transition-all duration-300 group backdrop-blur-sm shadow-none">
+            <CardHeader className="p-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-tabiya-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <span className="text-2xl">🤖</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-sans text-xl font-bold">
+                    AI Career Assistant
+                  </h3>
+                  <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30 mt-2">
+                    AI Powered
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-white/80 font-sans text-base leading-[150%] mb-6 font-medium">
+                A smart chatbot powered by AI that helps you discover the best
+                resources to grow your skills. Whether you want to master a new
+                technology, improve your soft skills, or prepare for a specific
+                career path, the assistant provides tailored suggestions to
+                guide your learning journey.
+              </p>
+              <Button
+                variant="read-more"
+                className="text-tabiya-accent hover:text-white font-sans text-sm font-semibold p-0 h-auto group"
+              >
+                Try Assistant
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
+                </svg>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Jobs Around You */}
+          <Card className="bg-tabiya-dark/50 border border-white/10 hover:border-tabiya-accent/30 transition-all duration-300 group backdrop-blur-sm shadow-none">
+            <CardHeader className="p-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-tabiya-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <span className="text-2xl">📍</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-sans text-xl font-bold">
+                    Jobs Around You
+                  </h3>
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/30 mt-2">
+                    Real-time
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-white/80 font-sans text-base leading-[150%] mb-6 font-medium">
+                An interactive map that lets you explore real-time job
+                opportunities near your location. With this tool, you can easily
+                see which industries are hiring in your area, filter jobs by
+                role or skills, and even discover new opportunities you may not
+                have considered.
+              </p>
+              <Button
+                variant="read-more"
+                className="text-tabiya-accent hover:text-white font-sans text-sm font-semibold p-0 h-auto group"
+              >
+                Explore Map
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
+                </svg>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Skill Graph Explorer */}
+          <Card className="bg-tabiya-dark/50 border border-white/10 hover:border-tabiya-accent/30 transition-all duration-300 group backdrop-blur-sm shadow-none">
+            <CardHeader className="p-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-tabiya-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <span className="text-2xl">🔗</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-sans text-xl font-bold">
+                    Skill Graph Explorer
+                  </h3>
+                  <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30 mt-2">
+                    Interactive
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-white/80 font-sans text-base leading-[150%] mb-6 font-medium">
+                A powerful visualization tool that shows how skills are
+                connected to each other and to occupations. Starting from your
+                current skills, you can explore related skills, see which jobs
+                they unlock, and plan a clear pathway to career growth.
+              </p>
+              <Button
+                variant="read-more"
+                className="text-tabiya-accent hover:text-white font-sans text-sm font-semibold p-0 h-auto group"
+              >
+                View Graph
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
+                </svg>
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Community Insights */}
+          <Card className="bg-tabiya-dark/50 border border-white/10 hover:border-tabiya-accent/30 transition-all duration-300 group backdrop-blur-sm shadow-none">
+            <CardHeader className="p-8 pb-4">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-tabiya-accent/20 rounded-2xl flex items-center justify-center group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <div>
+                  <h3 className="text-white font-sans text-xl font-bold">
+                    Community Insights
+                  </h3>
+                  <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/30 mt-2">
+                    Social
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 pt-0">
+              <p className="text-white/80 font-sans text-base leading-[150%] mb-6 font-medium">
+                A space where you can connect with other learners,
+                professionals, and career explorers. Ask questions, share
+                experiences, and gain valuable insights about skills,
+                industries, and career strategies. This tool turns learning into
+                a collaborative experience.
+              </p>
+              <Button
+                variant="read-more"
+                className="text-tabiya-accent hover:text-white font-sans text-sm font-semibold p-0 h-auto group"
+              >
+                Join Community
+                <svg
+                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
+                </svg>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Featured Tool - Tabiya Dataset Explorer */}
+        <Card className="bg-tabiya-dark/30 border border-tabiya-accent/20 backdrop-blur-sm shadow-none hover:border-tabiya-accent/40 transition-all duration-300 group">
+          <CardContent className="p-8 lg:p-12">
+            <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+              <div className="flex-shrink-0">
+                <div className="w-24 h-24 bg-tabiya-accent/20 rounded-3xl flex items-center justify-center group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <span className="text-4xl">📚</span>
+                </div>
+              </div>
+              <div className="flex-1 text-center lg:text-left">
+                <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
+                  <h3 className="text-white font-sans text-2xl font-bold">
+                    Tabiya Dataset Explorer
+                  </h3>
+                  <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30">
+                    Featured
+                  </Badge>
+                </div>
+                <p className="text-white/80 font-sans text-lg leading-[150%] mb-6 max-w-3xl font-medium">
+                  A simplified interface for exploring the Tabiya dataset. You
+                  can stumble upon new skills, understand how they fit into the
+                  wider labor market, and identify potential learning paths.
+                  This tool makes structured career data more accessible and
+                  engaging for everyday use.
+                </p>
+                <Button
+                  variant="accent"
+                  size="cta"
+                  className="font-sans font-semibold"
+                >
+                  Explore Dataset
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
+                  </svg>
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+};
