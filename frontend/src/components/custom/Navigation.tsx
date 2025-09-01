@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -101,27 +102,27 @@ const Navigation = () => {
                         Browse jobs and see required skills
                       </div>
                     </a>
-                    <a
-                      href="#skill-explorer"
+                    <Link
+                      to="/skill-mapping"
                       className="block px-4 py-3 text-white/90 hover:text-white hover:bg-tabiya-accent/10 font-sans text-sm font-medium transition-colors"
                       onClick={() => setIsCareerExploreDropdownOpen(false)}
                     >
-                      Skill Explorer
+                      Skill mapping
                       <div className="text-xs text-white/60 mt-1">
                         Explore skills and connected occupations
                       </div>
-                    </a>
+                    </Link>
                   </div>
                 </div>
               )}
             </div>
 
-            <a
-              href="#credits"
+            <Link
+              to="/dataset-explorer"
               className="text-white font-sans text-base font-medium leading-6 hover:text-tabiya-accent transition-colors"
             >
               Tabiya Data
-            </a>
+            </Link>
             <a
               href="#cta"
               className="text-white font-sans text-base font-medium leading-6 hover:text-tabiya-accent transition-colors"
@@ -285,16 +286,16 @@ const Navigation = () => {
                       Browse jobs and see required skills
                     </div>
                   </a>
-                  <a
-                    href="#skill-explorer"
+                  <Link
+                    to="/skill-mapping"
                     className="block text-white/90 font-sans text-sm font-medium py-2 hover:text-tabiya-accent transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
-                    Skill Explorer
+                    Skill Mapping
                     <div className="text-xs text-white/60 mt-1">
                       Explore skills and connected occupations
                     </div>
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
