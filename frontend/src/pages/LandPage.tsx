@@ -1,4 +1,4 @@
-import Navigation from '@/components/custom/Navigation';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import { HeroSection } from '@/components/custom/HeroSection';
 import { FeaturesSection } from '@/components/custom/FeaturesSection';
 import { ToolsSection } from '@/components/custom/ToolsSection';
@@ -10,9 +10,10 @@ import { CTASection } from '@/components/custom/CTASection';
 import { Footer } from '@/components/custom/Footer';
 
 export default function LandPage() {
+  const { isDark } = useDarkMode();
+
   return (
-    <div className="min-h-screen bg-tabiya-dark">
-      <Navigation />
+    <div className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}>
       <HeroSection />
       <FeaturesSection />
       <ToolsSection />
@@ -21,7 +22,6 @@ export default function LandPage() {
       <CreditsSection />
       <FAQSection />
       <CTASection />
-      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import {
   ScrollAnimation,
   ScrollAnimationContainer,
@@ -60,6 +61,7 @@ const features = [
 
 export const FeaturesSection = () => {
   const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
+  const { isDark } = useDarkMode();
 
   const toggleFeature = (featureIndex: number) => {
     setExpandedFeature(expandedFeature === featureIndex ? null : featureIndex);
@@ -68,17 +70,21 @@ export const FeaturesSection = () => {
   return (
     <section
       id="features"
-      className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 bg-tabiya-dark relative overflow-hidden"
+      className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 ${isDark ? 'bg-tabiya-dark' : 'bg-white'} relative overflow-hidden`}
     >
       <div className="w-full max-w-7xl mx-auto">
         <ScrollAnimation className="text-center mb-16">
           <p className="text-tabiya-accent font-sans text-sm font-medium uppercase tracking-wide mb-4">
             Explore
           </p>
-          <h2 className="text-white font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-[110%] mb-6 max-w-4xl mx-auto">
+          <h2
+            className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-[110%] mb-6 max-w-4xl mx-auto`}
+          >
             Unlock Your Career Potential with JobCompass
           </h2>
-          <p className="text-white/90 font-sans text-lg font-medium leading-[140%] max-w-3xl mx-auto">
+          <p
+            className={`${isDark ? 'text-white/90' : 'text-gray-700'} font-sans text-lg font-medium leading-[140%] max-w-3xl mx-auto`}
+          >
             JobCompass empowers you to navigate the complex world of jobs and
             skills. Discover pathways that align with your aspirations and
             market demands.
@@ -86,24 +92,32 @@ export const FeaturesSection = () => {
         </ScrollAnimation>
 
         <ScrollAnimationContainer
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12"
+          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 lg:gap-12"
           staggerDelay={0.2}
         >
           {features.map((feature, index) => (
             <ScrollAnimationItem key={index}>
-              <Card className="bg-tabiya-medium/30 rounded-2xl border border-white/10 hover:border-tabiya-accent/30 transition-all duration-300 group backdrop-blur-sm shadow-none">
+              <Card
+                className={`${isDark ? 'bg-tabiya-medium/30 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} rounded-2xl border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
+              >
                 <CardHeader className="p-8 pb-0">
-                  <div className="w-20 h-20 bg-tabiya-accent/20 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-tabiya-accent/30 transition-colors duration-300">
+                  <div
+                    className={`w-20 h-20 ${isDark ? 'bg-tabiya-accent/20 group-hover:bg-tabiya-accent/30' : 'bg-tabiya-accent/10 group-hover:bg-tabiya-accent/20'} rounded-2xl flex items-center justify-center mb-8 transition-colors duration-300`}
+                  >
                     {feature.icon}
                   </div>
 
-                  <h3 className="text-white font-sans text-xl font-bold mb-4">
+                  <h3
+                    className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-xl font-bold mb-4`}
+                  >
                     {feature.title}
                   </h3>
                 </CardHeader>
 
                 <CardContent className="p-8 pt-0">
-                  <p className="text-white/80 font-sans text-base leading-[150%] mb-6 font-medium">
+                  <p
+                    className={`${isDark ? 'text-white/80' : 'text-gray-700'} font-sans text-base leading-[150%] mb-6 font-medium`}
+                  >
                     {expandedFeature === index
                       ? feature.fullDescription
                       : feature.shortDescription}
@@ -113,7 +127,7 @@ export const FeaturesSection = () => {
                     variant="read-more"
                     size="sm"
                     onClick={() => toggleFeature(index)}
-                    className="text-tabiya-accent font-sans text-sm font-semibold hover:text-white transition-colors group p-0 h-auto"
+                    className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto`}
                   >
                     {expandedFeature === index ? 'Read Less' : 'Read More'}
                     <svg
