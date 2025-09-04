@@ -1,10 +1,54 @@
-import Navigation from '@/components/custom/Navigation';
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import Navigation from "@/components/custom/Navigation";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import {
+  useSkills,
+  useSkillGroups,
+  useOccupationGroups,
+  useDebouncedSearch,
+  useTaxonomyStats,
+} from "@/lib/hooks";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function TabiyaDatasetExplorer() {
-  const [selectedSkill, setSelectedSkill] = useState('Machine Learning');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({
+    crossSectorOnly: false,
+    localOccupationsOnly: false,
+    emergingSkills: false,
+  });
+
+  // API calls
+  const { data: skills, isLoading: skillsLoading } = useSkills();
+  const { data: skillGroups, isLoading: skillGroupsLoading } = useSkillGroups();
+  const { data: occupationGroups, isLoading: occupationGroupsLoading } =
+    useOccupationGroups();
+  const { data: taxonomyStats } = useTaxonomyStats();
+  const {
+    debouncedQuery,
+    data: searchResults,
+    isLoading: searchLoading,
+  } = useDebouncedSearch(searchQuery);
+
+  // Get selected skill details
+  const selectedSkill = selectedSkillId
+    ? skills?.results?.find((skill) => skill.id === selectedSkillId)
+    : null;
+
+  // Filter skills based on current filters and search
+  const displayedSkills = searchQuery.trim()
+    ? searchResults?.skills || []
+    : skills?.results || [];
+
+  const handleFilterChange = (filterKey: keyof typeof filters) => {
+    setFilters((prev) => ({
+      ...prev,
+      [filterKey]: !prev[filterKey],
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-tabiya-dark w-screen overflow-x-hidden">
@@ -41,6 +85,11 @@ export default function TabiyaDatasetExplorer() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full px-4 py-2 bg-white/10 text-white placeholder-white/60 rounded-lg border border-white/20 focus:border-tabiya-accent focus:outline-none"
               />
+              {searchLoading && (
+                <div className="absolute right-3 top-2.5">
+                  <div className="animate-spin h-4 w-4 border-2 border-white/20 border-t-tabiya-accent rounded-full"></div>
+                </div>
+              )}
             </div>
 
             <Button className="w-full bg-tabiya-accent hover:bg-tabiya-accent/90 text-white mb-6">
@@ -55,6 +104,8 @@ export default function TabiyaDatasetExplorer() {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  checked={filters.crossSectorOnly}
+                  onChange={() => handleFilterChange("crossSectorOnly")}
                   className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
                 />
                 <span className="text-sm text-white/80">
@@ -64,6 +115,8 @@ export default function TabiyaDatasetExplorer() {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  checked={filters.localOccupationsOnly}
+                  onChange={() => handleFilterChange("localOccupationsOnly")}
                   className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
                 />
                 <span className="text-sm text-white/80">
@@ -73,6 +126,8 @@ export default function TabiyaDatasetExplorer() {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
+                  checked={filters.emergingSkills}
+                  onChange={() => handleFilterChange("emergingSkills")}
                   className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
                 />
                 <span className="text-sm text-white/80">Emerging skills</span>
@@ -84,43 +139,29 @@ export default function TabiyaDatasetExplorer() {
           <div className="mb-8">
             <h3 className="font-semibold text-white mb-4">Skill Groups</h3>
             <div className="space-y-2">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Technical Skills</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  247
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">
-                  Communication Skills
-                </span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  89
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Analytical Skills</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  156
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">
-                  Operational Skills
-                </span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  203
-                </span>
-              </div>
-              <div className="text-sm text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer mt-3">
-                Project Management
-              </div>
-              <div className="text-sm text-white/70 hover:text-tabiya-accent cursor-pointer">
-                Quality Control
-              </div>
-              <div className="text-sm text-white/70 hover:text-tabiya-accent cursor-pointer">
-                Process Optimization
-              </div>
+              {skillGroupsLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <Skeleton className="h-4 w-24 bg-white/10" />
+                      <Skeleton className="h-6 w-8 bg-white/10" />
+                    </div>
+                  ))
+                : skillGroups?.results?.map((group) => (
+                    <div
+                      key={group.id}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <span className="text-sm text-white/80">
+                        {group.preferred_label}
+                      </span>
+                      <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                        {group.skills?.length || 0}
+                      </span>
+                    </div>
+                  ))}
             </div>
           </div>
 
@@ -128,216 +169,253 @@ export default function TabiyaDatasetExplorer() {
           <div>
             <h3 className="font-semibold text-white mb-4">Occupation Groups</h3>
             <div className="space-y-2">
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Technology</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  45
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Healthcare</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  67
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Education</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  32
-                </span>
-              </div>
-              <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Finance</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                  28
-                </span>
-              </div>
+              {occupationGroupsLoading
+                ? Array.from({ length: 4 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <Skeleton className="h-4 w-20 bg-white/10" />
+                      <Skeleton className="h-6 w-8 bg-white/10" />
+                    </div>
+                  ))
+                : occupationGroups?.results?.slice(0, 6).map((group) => (
+                    <div
+                      key={group.id}
+                      className="flex justify-between items-center py-2"
+                    >
+                      <span className="text-sm text-white/80">
+                        {group.preferred_label}
+                      </span>
+                      <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                        {group.occupations?.length || 0}
+                      </span>
+                    </div>
+                  ))}
             </div>
           </div>
         </div>
 
         {/* Main Content Area */}
         <div className="flex-1 p-8 bg-tabiya-dark">
+          {/* Stats Overview */}
+          {taxonomyStats && (
+            <div className="grid grid-cols-4 gap-4 mb-8">
+              <Card className="bg-white/5 border-white/10 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Skills
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-tabiya-accent">
+                    {taxonomyStats.total_skills}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/5 border-white/10 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Occupations
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-tabiya-accent">
+                    {taxonomyStats.total_occupations}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/5 border-white/10 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Skill Groups
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-tabiya-accent">
+                    {taxonomyStats.total_skill_groups}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-white/5 border-white/10 text-white">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Languages
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-tabiya-accent">
+                    {taxonomyStats.languages?.length || 0}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {/* Navigation Tabs */}
           <div className="flex gap-1 mb-8 border-b border-white/10">
             <button className="px-4 py-2 text-sm font-medium text-tabiya-accent border-b-2 border-tabiya-accent">
-              Home
+              Skills Explorer
             </button>
             <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
               Skill Groups
             </button>
             <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
-              Technical Skills
+              Occupations
             </button>
           </div>
 
-          {/* Main Content */}
+          {/* Skills List */}
           <div className="max-w-4xl">
-            <h1 className="text-3xl font-bold text-white mb-4">
-              {selectedSkill}
-            </h1>
+            {searchQuery && (
+              <div className="mb-4">
+                <span className="text-white/60">Search results for: </span>
+                <span className="text-tabiya-accent font-medium">
+                  "{debouncedQuery}"
+                </span>
+              </div>
+            )}
 
-            {/* Skill Tags */}
-            <div className="flex gap-2 mb-6">
-              <span className="px-3 py-1 bg-tabiya-accent/20 text-tabiya-accent text-sm font-medium rounded-full border border-tabiya-accent/30">
-                technical
-              </span>
-              <span className="px-3 py-1 bg-white/10 text-white text-sm font-medium rounded-full border border-white/20">
-                Cross-sector
-              </span>
-            </div>
-
-            {/* Description */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">
-                Description
-              </h2>
-              <p className="text-white/80 leading-relaxed mb-4">
-                The ability to design, develop, and implement machine learning
-                algorithms and models to solve complex problems, make patterns,
-                and make predictions based on historical data.
-              </p>
-            </div>
-
-            {/* Scope Notes */}
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">
-                Scope Notes
-              </h2>
-              <p className="text-white/80 leading-relaxed">
-                Includes supervised and unsupervised learning techniques, neural
-                networks, deep learning, natural language processing, and
-                computer vision applications.
-              </p>
-            </div>
-
-            {/* Related Skills and Occupations */}
-            <div className="grid grid-cols-2 gap-8 mb-8">
+            {selectedSkill ? (
+              /* Skill Detail View */
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Related Skills
-                </h2>
-                <div className="space-y-3">
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Python Programming
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Statistical Analysis
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Data Mining
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Deep Learning
-                  </div>
+                <div className="flex items-center gap-4 mb-4">
+                  <Button
+                    variant="ghost"
+                    onClick={() => setSelectedSkillId(null)}
+                    className="text-white/70 hover:text-white"
+                  >
+                    ← Back to skills list
+                  </Button>
                 </div>
-              </div>
 
+                <h1 className="text-3xl font-bold text-white mb-4">
+                  {selectedSkill.preferred_label}
+                </h1>
+
+                {/* Skill Tags */}
+                <div className="flex gap-2 mb-6">
+                  <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30">
+                    {selectedSkill.skill_type}
+                  </Badge>
+                  {selectedSkill.reuse_level && (
+                    <Badge
+                      variant="outline"
+                      className="border-white/20 text-white"
+                    >
+                      {selectedSkill.reuse_level}
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Description */}
+                {selectedSkill.definition && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-3">
+                      Description
+                    </h2>
+                    <p className="text-white/80 leading-relaxed mb-4">
+                      {selectedSkill.definition}
+                    </p>
+                  </div>
+                )}
+
+                {/* Scope Notes */}
+                {selectedSkill.scope_note && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-3">
+                      Scope Notes
+                    </h2>
+                    <p className="text-white/80 leading-relaxed">
+                      {selectedSkill.scope_note}
+                    </p>
+                  </div>
+                )}
+
+                {/* Alternative Labels */}
+                {selectedSkill.alternative_labels?.length > 0 && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-3">
+                      Alternative Labels
+                    </h2>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedSkill.alternative_labels.map((label, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="border-white/20 text-white/80"
+                        >
+                          {label}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* Skills List View */
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4">
-                  Related Occupations
-                </h2>
-                <div className="space-y-3">
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Data Scientist
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    AI Engineer
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Research Scientist
-                  </div>
-                  <div className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer">
-                    Business Analyst
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                <h1 className="text-2xl font-bold text-white mb-6">
+                  Skills ({skillsLoading ? "..." : skills?.count || 0})
+                </h1>
 
-          {/* Skills & Occupation Assistant */}
-          <div className="fixed bottom-8 right-8 max-w-sm">
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-white/10">
-              <div className="flex items-start gap-3 mb-3">
-                <div className="w-8 h-8 bg-tabiya-accent/20 rounded-full flex items-center justify-center flex-shrink-0 border border-tabiya-accent/30">
-                  <svg
-                    className="w-4 h-4 text-tabiya-accent"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-white text-sm">
-                    Skills & Occupation Assistant
-                  </h3>
-                  <p className="text-white/70 text-xs mt-1">
-                    Hi! I'm here to help you explore Tabiya's taxonomy. You can
-                    ask me about skills, occupations, or their relationships.
-                    Try asking:
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-xs text-white/60 mb-3">
-                <div>"What jobs require Data Science skills?"</div>
-                <div>"Tell me about Data Science skills"</div>
-                <div>"Most in demand tech skills"</div>
-              </div>
-
-              <div className="bg-white/10 rounded p-2 mb-3 border border-white/20">
-                <div className="text-xs font-medium text-white mb-1">
-                  What skills are required for a Data Scientist role?
-                </div>
-                <div className="text-xs text-white/80">
-                  Based on our taxonomy, Data Scientists typically need these
-                  key skills:
-                </div>
-                <div className="space-y-1 mt-2">
-                  <div className="text-xs text-tabiya-accent">
-                    Machine Learning
-                  </div>
-                  <div className="text-xs text-tabiya-accent">
-                    Statistical Analysis
-                  </div>
-                  <div className="text-xs text-tabiya-accent">
-                    Python Programming
-                  </div>
-                  <div className="text-xs text-tabiya-accent">
-                    Data Visualization
-                  </div>
+                <div className="grid gap-4">
+                  {skillsLoading ? (
+                    Array.from({ length: 6 }).map((_, i) => (
+                      <Card key={i} className="bg-white/5 border-white/10">
+                        <CardContent className="p-4">
+                          <Skeleton className="h-5 w-3/4 mb-2 bg-white/10" />
+                          <Skeleton className="h-4 w-full mb-2 bg-white/10" />
+                          <Skeleton className="h-4 w-1/2 bg-white/10" />
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : displayedSkills.length > 0 ? (
+                    displayedSkills.slice(0, 20).map((skill) => (
+                      <Card
+                        key={skill.id}
+                        className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                        onClick={() => setSelectedSkillId(skill.id)}
+                      >
+                        <CardContent className="p-4">
+                          <h3 className="text-lg font-semibold text-white mb-2">
+                            {skill.preferred_label}
+                          </h3>
+                          {skill.definition && (
+                            <p className="text-white/70 text-sm mb-3 line-clamp-2">
+                              {skill.definition}
+                            </p>
+                          )}
+                          <div className="flex gap-2">
+                            <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30 text-xs">
+                              {skill.skill_type}
+                            </Badge>
+                            {skill.reuse_level && (
+                              <Badge
+                                variant="outline"
+                                className="border-white/20 text-white/80 text-xs"
+                              >
+                                {skill.reuse_level}
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  ) : searchQuery ? (
+                    <div className="text-center py-12">
+                      <p className="text-white/60">
+                        No skills found for "{searchQuery}"
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <p className="text-white/60">No skills available</p>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask about skills or occupations..."
-                  className="flex-1 px-3 py-2 text-xs bg-white/10 text-white placeholder-white/60 border border-white/20 rounded focus:outline-none focus:ring-1 focus:ring-tabiya-accent focus:border-tabiya-accent"
-                />
-                <Button
-                  size="sm"
-                  className="bg-tabiya-accent hover:bg-tabiya-accent/90 px-3"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
