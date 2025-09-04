@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import {
   ScrollAnimation,
   ScrollAnimationContainer,
@@ -73,6 +74,7 @@ const faqs = [
 
 export const FAQSection = () => {
   const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  const { isDark } = useDarkMode();
 
   const toggleFAQ = (id: number) => {
     setOpenFAQ(openFAQ === id ? null : id);
@@ -81,116 +83,193 @@ export const FAQSection = () => {
   return (
     <section
       id="faq"
-      className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 bg-tabiya-dark relative overflow-hidden"
+      className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
+        isDark
+          ? 'bg-gradient-to-br from-tabiya-darker via-tabiya-dark to-tabiya-darker'
+          : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
+      }`}
     >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-tabiya-accent/3 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-white/3 rounded-full blur-2xl"></div>
+        <div
+          className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
+            isDark ? 'bg-tabiya-accent/3' : 'bg-tabiya-accent/5'
+          }`}
+        ></div>
+        <div
+          className={`absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full blur-2xl ${
+            isDark ? 'bg-white/3' : 'bg-orange-300/5'
+          }`}
+        ></div>
       </div>
 
       <div className="w-full max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-white font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6">
-            Frequently Asked Questions
-          </h2>
+        <ScrollAnimation>
+          <div className="text-center mb-16">
+            <h2
+              className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}
+            >
+              Frequently Asked Questions
+            </h2>
 
-          <p className="text-white/90 font-sans text-lg font-medium leading-relaxed max-w-3xl mx-auto">
-            Get answers to common questions about JobCompass, our AI technology,
-            and how we can help accelerate your career journey.
-          </p>
-        </div>
+            <p
+              className={`font-sans text-lg font-medium leading-relaxed max-w-3xl mx-auto ${
+                isDark ? 'text-white/90' : 'text-gray-600'
+              }`}
+            >
+              Get answers to common questions about JobCompass, our AI
+              technology, and how we can help accelerate your career journey.
+            </p>
+          </div>
+        </ScrollAnimation>
 
         {/* FAQ Items */}
-        <div className="space-y-4">
-          {faqs.map((faq) => (
-            <Card
-              key={faq.id}
-              className={`
-                bg-gradient-to-br from-tabiya-medium/70 via-tabiya-medium/60 to-tabiya-dark/70 
-                border transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm
-                ${
-                  openFAQ === faq.id
-                    ? 'border-tabiya-accent/60 shadow-xl shadow-tabiya-accent/30 bg-gradient-to-br from-tabiya-medium/80 via-tabiya-medium/70 to-tabiya-dark/80'
-                    : 'border-tabiya-accent/30 hover:border-tabiya-accent/50 hover:shadow-lg shadow-lg'
-                }
-              `}
-            >
-              <CardContent className="p-0">
-                <button
-                  onClick={() => toggleFAQ(faq.id)}
-                  className="w-full text-left p-6 focus:outline-none"
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-white font-sans text-lg font-bold pr-8 leading-relaxed">
-                      {faq.question}
-                    </h3>
-
-                    <div
-                      className={`
-                      flex-shrink-0 w-10 h-10 bg-tabiya-accent/30 rounded-full flex items-center justify-center
-                      transition-all duration-300 ${openFAQ === faq.id ? 'rotate-180 bg-tabiya-accent/50' : 'hover:bg-tabiya-accent/40'}
-                    `}
-                    >
-                      <svg
-                        className="w-6 h-6 text-white transition-transform duration-300"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
+        <ScrollAnimation delay={0.2}>
+          <div className="space-y-4">
+            {faqs.map((faq) => (
+              <Card
+                key={faq.id}
+                className={`
+                  border transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm
+                  ${
+                    openFAQ === faq.id
+                      ? isDark
+                        ? 'bg-gradient-to-br from-tabiya-medium/80 via-tabiya-medium/70 to-tabiya-dark/80 border-tabiya-accent/60 shadow-xl shadow-tabiya-accent/30'
+                        : 'bg-gradient-to-br from-white via-orange-50/50 to-white border-orange-300 shadow-xl shadow-orange-500/10'
+                      : isDark
+                        ? 'bg-gradient-to-br from-tabiya-medium/70 via-tabiya-medium/60 to-tabiya-dark/70 border-tabiya-accent/30 hover:border-tabiya-accent/50 hover:shadow-lg shadow-lg'
+                        : 'bg-gradient-to-br from-white via-gray-50/50 to-white border-gray-200 hover:border-orange-300 hover:shadow-lg shadow-sm'
+                  }
+                `}
+              >
+                <CardContent className="p-0">
+                  <button
+                    onClick={() => toggleFAQ(faq.id)}
+                    className="w-full text-left p-6 focus:outline-none"
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3
+                        className={`font-sans text-lg font-bold pr-8 leading-relaxed ${
+                          isDark ? 'text-white' : 'text-gray-900'
+                        }`}
                       >
-                        <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                      </svg>
-                    </div>
-                  </div>
-                </button>
+                        {faq.question}
+                      </h3>
 
-                <div
-                  className={`
+                      <div
+                        className={`
+                        flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center
+                        transition-all duration-300 ${
+                          openFAQ === faq.id
+                            ? isDark
+                              ? 'rotate-180 bg-tabiya-accent/50'
+                              : 'rotate-180 bg-orange-100'
+                            : isDark
+                              ? 'bg-tabiya-accent/30 hover:bg-tabiya-accent/40'
+                              : 'bg-gray-100 hover:bg-orange-100'
+                        }
+                      `}
+                      >
+                        <svg
+                          className={`w-6 h-6 transition-transform duration-300 ${
+                            isDark ? 'text-white' : 'text-gray-600'
+                          }`}
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </button>
+
+                  <div
+                    className={`
                   transition-all duration-500 ease-out overflow-hidden
                   ${openFAQ === faq.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
                 `}
-                >
-                  <div className="px-6 pb-6">
-                    <div className="border-t border-white/20 pt-4">
-                      <p className="text-white/90 font-sans font-medium leading-relaxed">
-                        {faq.answer}
-                      </p>
+                  >
+                    <div className="px-6 pb-6">
+                      <div
+                        className={`border-t pt-4 ${
+                          isDark ? 'border-white/20' : 'border-gray-200'
+                        }`}
+                      >
+                        <p
+                          className={`font-sans font-medium leading-relaxed ${
+                            isDark ? 'text-white/90' : 'text-gray-600'
+                          }`}
+                        >
+                          {faq.answer}
+                        </p>
+                      </div>
                     </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollAnimation>
+
+        {/* Contact CTA */}
+        <ScrollAnimation delay={0.4}>
+          <div className="mt-16 text-center">
+            <Card
+              className={`shadow-xl ${
+                isDark
+                  ? 'bg-gradient-to-br from-tabiya-medium/60 via-tabiya-medium/50 to-tabiya-dark/70 border border-tabiya-accent/40'
+                  : 'bg-gradient-to-br from-white via-orange-50/50 to-white border border-orange-200'
+              }`}
+            >
+              <CardContent className="p-8">
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <h3
+                      className={`font-sans text-xl font-bold ${
+                        isDark ? 'text-white' : 'text-gray-900'
+                      }`}
+                    >
+                      Still have questions?
+                    </h3>
+                    <p
+                      className={`font-sans font-medium leading-relaxed ${
+                        isDark ? 'text-white/90' : 'text-gray-600'
+                      }`}
+                    >
+                      Our team is here to help. Reach out to us for personalized
+                      assistance with your career journey.
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button
+                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                        isDark
+                          ? 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white shadow-tabiya-accent/30'
+                          : 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white shadow-tabiya-accent/30'
+                      }`}
+                    >
+                      Contact Support
+                    </button>
+
+                    <button
+                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 ${
+                        isDark
+                          ? 'border border-white/30 text-white hover:bg-white/10'
+                          : 'border border-gray-300 text-gray-700 hover:bg-orange-50'
+                      }`}
+                    >
+                      Schedule a Demo
+                    </button>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {/* Contact CTA */}
-        <div className="mt-16 text-center">
-          <Card className="bg-gradient-to-br from-tabiya-medium/60 via-tabiya-medium/50 to-tabiya-dark/70 border border-tabiya-accent/40 shadow-xl">
-            <CardContent className="p-8">
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <h3 className="text-white font-sans text-xl font-bold">
-                    Still have questions?
-                  </h3>
-                  <p className="text-white/90 font-sans font-medium leading-relaxed">
-                    Our team is here to help. Reach out to us for personalized
-                    assistance with your career journey.
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button className="bg-tabiya-accent hover:bg-tabiya-accent/90 text-white font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg shadow-tabiya-accent/30">
-                    Contact Support
-                  </button>
-
-                  <button className="border border-white/30 text-white hover:bg-white/10 font-sans font-medium px-8 py-3 rounded-full transition-all duration-300">
-                    Schedule a Demo
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+          </div>
+        </ScrollAnimation>
       </div>
     </section>
   );

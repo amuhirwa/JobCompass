@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 import { cn } from '@/lib/utils';
 
@@ -52,10 +53,38 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const { isDark } = useDarkMode();
     const Comp = asChild ? Slot : 'button';
+
+    // Dynamic variant classes based on theme
+    const getThemeVariantClasses = () => {
+      switch (variant) {
+        case 'accent-outline':
+          return isDark
+            ? 'border border-white/30 text-white bg-transparent hover:bg-white hover:text-tabiya-dark'
+            : 'border border-tabiya-accent text-tabiya-accent bg-transparent hover:bg-tabiya-accent hover:text-white';
+        case 'cta-outline':
+          return isDark
+            ? 'bg-transparent border border-white/30 text-white hover:bg-white hover:text-tabiya-dark'
+            : 'bg-transparent border border-tabiya-accent text-tabiya-accent hover:bg-tabiya-accent hover:text-white';
+        case 'read-more':
+          return isDark
+            ? 'text-tabiya-accent hover:text-white bg-transparent border-none p-0 h-auto font-semibold'
+            : 'text-tabiya-accent hover:text-tabiya-accent/80 bg-transparent border-none p-0 h-auto font-semibold';
+        default:
+          return '';
+      }
+    };
+
+    const themeClasses = getThemeVariantClasses();
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size }),
+          themeClasses,
+          className
+        )}
         ref={ref}
         {...props}
       />

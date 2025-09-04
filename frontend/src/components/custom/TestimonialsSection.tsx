@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ScrollAnimation } from '@/components/ui/scroll-animation';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 const testimonials = [
   {
@@ -61,20 +63,30 @@ interface TestimonialCardProps {
 }
 
 const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
+  const { isDark } = useDarkMode();
+
   return (
     <Card
       className={`
-        w-full h-48 bg-gradient-to-br from-tabiya-medium/90 via-tabiya-medium/80 to-tabiya-dark/90 
-        border border-tabiya-accent/30 shadow-xl backdrop-blur-sm
-        transition-all duration-700 ease-out transform
+        w-full h-48 transition-all duration-700 ease-out transform shadow-lg
         ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}
-        hover:shadow-2xl hover:border-tabiya-accent/50 hover:from-tabiya-medium/95 hover:via-tabiya-medium/90 hover:to-tabiya-dark/95
+        ${
+          isDark
+            ? 'bg-gradient-to-br from-tabiya-medium/90 via-tabiya-medium/80 to-tabiya-dark/90 border-tabiya-accent/30 hover:border-tabiya-accent/50 hover:from-tabiya-medium/95 hover:via-tabiya-medium/90 hover:to-tabiya-dark/95'
+            : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 hover:border-gray-300 hover:shadow-lg'
+        } backdrop-blur-sm hover:shadow-2xl
       `}
     >
       <CardContent className="p-6 h-full flex items-center gap-6">
         {/* Profile Image */}
         <div className="flex-shrink-0">
-          <div className="w-20 h-20 rounded-full overflow-hidden border-3 border-tabiya-accent/50 shadow-lg">
+          <div
+            className={`w-20 h-20 rounded-full overflow-hidden shadow-lg ${
+              isDark
+                ? 'border-3 border-tabiya-accent/50'
+                : 'border-3 border-tabiya-accent/30'
+            }`}
+          >
             <img
               src={testimonial.image}
               alt={testimonial.name}
@@ -91,7 +103,9 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
             {[...Array(5)].map((_, i) => (
               <svg
                 key={i}
-                className="w-4 h-4 text-tabiya-accent fill-current drop-shadow-sm"
+                className={`w-4 h-4 fill-current drop-shadow-sm ${
+                  isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
+                }`}
                 viewBox="0 0 24 24"
               >
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -100,21 +114,39 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
           </div>
 
           {/* Quote */}
-          <blockquote className="text-white font-sans text-sm leading-relaxed mb-3 line-clamp-3">
+          <blockquote
+            className={`font-sans text-sm leading-relaxed mb-3 line-clamp-3 ${
+              isDark ? 'text-white' : 'text-gray-700'
+            }`}
+          >
             "{testimonial.quote}"
           </blockquote>
 
           {/* Author Info */}
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-white font-sans font-bold text-sm">
+              <div
+                className={`font-sans font-bold text-sm ${
+                  isDark ? 'text-white' : 'text-gray-900'
+                }`}
+              >
                 {testimonial.name}
               </div>
-              <div className="text-tabiya-accent font-sans text-xs font-medium">
+              <div
+                className={`font-sans text-xs font-medium ${
+                  isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
+                }`}
+              >
                 {testimonial.position}
               </div>
             </div>
-            <div className="text-white/70 font-sans text-xs bg-tabiya-accent/20 rounded-full px-3 py-1 border border-tabiya-accent/20">
+            <div
+              className={`font-sans text-xs rounded-full px-3 py-1 ${
+                isDark
+                  ? 'text-white/70 bg-tabiya-accent/20 border border-tabiya-accent/20'
+                  : 'text-gray-600 bg-orange-50 border border-tabiya-accent/20'
+              }`}
+            >
               {testimonial.company}
             </div>
           </div>
@@ -127,14 +159,15 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
 export const TestimonialsSection = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
+  const { isDark } = useDarkMode();
 
-  // Auto-play functionality
+  // Auto-advance testimonials every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isAnimating) {
         nextTestimonial();
       }
-    }, 4000);
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isAnimating]);
@@ -155,7 +188,7 @@ export const TestimonialsSection = () => {
     setTimeout(() => setIsAnimating(false), 700);
   };
 
-  const goToSlide = (index: number) => {
+  const goToTestimonial = (index: number) => {
     if (isAnimating || index === currentIndex) return;
     setIsAnimating(true);
     setCurrentIndex(index);
@@ -163,112 +196,150 @@ export const TestimonialsSection = () => {
   };
 
   return (
-    <section className="w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 bg-tabiya-dark relative overflow-hidden">
+    <section
+      className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
+        isDark
+          ? 'bg-gradient-to-br from-tabiya-darker via-tabiya-dark to-tabiya-darker'
+          : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
+      }`}
+    >
       {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-tabiya-accent/3 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-white/3 rounded-full blur-2xl animate-bounce"></div>
+        <div
+          className={`absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
+            isDark ? 'bg-tabiya-accent/3' : 'bg-tabiya-accent/5'
+          }`}
+        ></div>
+        <div
+          className={`absolute bottom-1/4 left-1/4 w-64 h-64 rounded-full blur-2xl animate-bounce ${
+            isDark ? 'bg-white/3' : 'bg-purple-500/5'
+          }`}
+        ></div>
       </div>
 
       <div className="w-full max-w-6xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-white font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6">
-            What Our Users Say
-          </h2>
-          <p className="text-white/80 font-sans text-lg leading-relaxed max-w-3xl mx-auto">
-            Discover how JobCompass has transformed careers and helped
-            professionals unlock their potential.
-          </p>
-        </div>
-
-        <div className="flex items-center justify-center gap-8 lg:gap-16">
-          {/* Navigation Controls */}
-          <div className="flex flex-col items-center gap-8">
-            {/* Up Button */}
-            <Button
-              onClick={prevTestimonial}
-              disabled={isAnimating}
-              variant="outline"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white transition-all duration-300 disabled:opacity-50 group"
+        <ScrollAnimation>
+          <div className="text-center mb-16">
+            <h2
+              className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 ${
+                isDark ? 'text-white' : 'text-gray-900'
+              }`}
             >
-              <svg
-                className="w-5 h-5 group-hover:scale-110 transition-transform"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
-              </svg>
-            </Button>
+              What Our Users Say
+            </h2>
+            <p
+              className={`font-sans text-lg leading-relaxed max-w-3xl mx-auto ${
+                isDark ? 'text-white/80' : 'text-gray-600'
+              }`}
+            >
+              Discover how JobCompass has transformed careers and helped
+              professionals unlock their potential.
+            </p>
+          </div>
+        </ScrollAnimation>
 
-            {/* Slide Indicators */}
-            <div className="flex flex-col gap-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  disabled={isAnimating}
-                  className={`
-                    rounded-full transition-all duration-300 cursor-pointer
-                    ${
-                      index === currentIndex
-                        ? 'w-2 h-8 bg-tabiya-accent shadow-lg shadow-tabiya-accent/30'
-                        : 'w-1.5 h-6 bg-white/30 hover:bg-white/50'
-                    }
-                  `}
-                />
-              ))}
+        <ScrollAnimation delay={0.2}>
+          <div className="flex items-center justify-center gap-8 lg:gap-16">
+            {/* Navigation Controls */}
+            <div className="flex flex-col items-center gap-8">
+              {/* Up Button */}
+              <Button
+                onClick={prevTestimonial}
+                disabled={isAnimating}
+                variant="outline"
+                size="icon"
+                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group ${
+                  isDark
+                    ? 'bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
+                    : 'bg-white border-tabiya-accent text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
+                }`}
+              >
+                <svg
+                  className="w-5 h-5 group-hover:scale-110 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+                </svg>
+              </Button>
+
+              {/* Slide Indicators */}
+              <div className="flex flex-col gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToTestimonial(index)}
+                    disabled={isAnimating}
+                    className={`
+                      rounded-full transition-all duration-300 cursor-pointer
+                      ${
+                        index === currentIndex
+                          ? isDark
+                            ? 'w-2 h-8 bg-tabiya-accent shadow-lg shadow-tabiya-accent/30'
+                            : 'w-2 h-8 bg-tabiya-accent shadow-lg shadow-tabiya-accent/30'
+                          : isDark
+                            ? 'w-1.5 h-6 bg-white/30 hover:bg-white/50'
+                            : 'w-1.5 h-6 bg-gray-300 hover:bg-gray-400'
+                      }
+                    `}
+                  />
+                ))}
+              </div>
+
+              {/* Down Button */}
+              <Button
+                onClick={nextTestimonial}
+                disabled={isAnimating}
+                variant="outline"
+                size="icon"
+                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group ${
+                  isDark
+                    ? 'bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
+                    : 'bg-white border-tabiya-accent text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
+                }`}
+              >
+                <svg
+                  className="w-5 h-5 group-hover:scale-110 transition-transform"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
+                </svg>
+              </Button>
             </div>
 
-            {/* Down Button */}
-            <Button
-              onClick={nextTestimonial}
-              disabled={isAnimating}
-              variant="outline"
-              size="icon"
-              className="w-12 h-12 rounded-full bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white transition-all duration-300 disabled:opacity-50 group"
-            >
-              <svg
-                className="w-5 h-5 group-hover:scale-110 transition-transform"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-              </svg>
-            </Button>
-          </div>
-
-          {/* Testimonial Cards Container */}
-          <div className="flex-1 max-w-3xl">
-            <div className="relative h-[600px] overflow-hidden">
-              {/* Card Stack */}
-              <div
-                className="absolute inset-0 transition-transform duration-700 ease-out"
-                style={{
-                  transform: `translateY(-${currentIndex * 200}px)`,
-                }}
-              >
-                {testimonials.map((testimonial, index) => (
-                  <div
-                    key={testimonial.id}
-                    className="absolute inset-x-0 transition-all duration-700 ease-out"
-                    style={{
-                      transform: `translateY(${index * 200}px)`,
-                      zIndex:
-                        testimonials.length - Math.abs(index - currentIndex),
-                    }}
-                  >
-                    <TestimonialCard
-                      testimonial={testimonial}
-                      isVisible={Math.abs(index - currentIndex) < 3}
-                    />
-                  </div>
-                ))}
+            {/* Testimonial Cards Container */}
+            <div className="flex-1 max-w-3xl">
+              <div className="relative h-[600px] overflow-hidden">
+                {/* Card Stack */}
+                <div
+                  className="absolute inset-0 transition-transform duration-700 ease-out"
+                  style={{
+                    transform: `translateY(-${currentIndex * 200}px)`,
+                  }}
+                >
+                  {testimonials.map((testimonial, index) => (
+                    <div
+                      key={testimonial.id}
+                      className="absolute inset-x-0 transition-all duration-700 ease-out"
+                      style={{
+                        transform: `translateY(${index * 200}px)`,
+                        zIndex:
+                          testimonials.length - Math.abs(index - currentIndex),
+                      }}
+                    >
+                      <TestimonialCard
+                        testimonial={testimonial}
+                        isVisible={Math.abs(index - currentIndex) < 3}
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ScrollAnimation>
       </div>
     </section>
   );

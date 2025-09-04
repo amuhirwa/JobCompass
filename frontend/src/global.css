@@ -111,6 +111,22 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Remove default focus outline and prevent blue borders */
+  button:focus,
+  button:focus-visible,
+  a:focus,
+  a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
+  }
+
+  /* Custom focus styles for navigation elements */
+  nav button:focus,
+  nav a:focus {
+    color: var(--tabiya-accent, #ff6347) !important;
+  }
 }
 
 @layer utilities {

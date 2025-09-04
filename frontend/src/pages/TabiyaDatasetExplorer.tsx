@@ -1,33 +1,38 @@
-import Navigation from '@/components/custom/Navigation';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 export default function TabiyaDatasetExplorer() {
   const [selectedSkill, setSelectedSkill] = useState('Machine Learning');
   const [searchQuery, setSearchQuery] = useState('');
+  const { isDark } = useDarkMode();
 
   return (
-    <div className="min-h-screen bg-tabiya-dark w-screen overflow-x-hidden">
-      <div className="w-full overflow-hidden">
-        <Navigation />
-      </div>
-
+    <div
+      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-screen overflow-x-hidden`}
+    >
       <div className="flex w-full">
         {/* Left Sidebar */}
-        <div className="w-80 bg-white/5 border-r border-white/10 min-h-screen p-6">
+        <div
+          className={`w-80 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border-r min-h-screen p-6`}
+        >
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 bg-white/10 rounded flex items-center justify-center">
+              <div
+                className={`w-8 h-8 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded flex items-center justify-center`}
+              >
                 <svg
-                  className="w-5 h-5 text-white/80"
+                  className={`w-5 h-5 ${isDark ? 'text-white/80' : 'text-gray-600'}`}
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
                   <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                 </svg>
               </div>
-              <h1 className="text-xl font-bold text-white">
+              <h1
+                className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
+              >
                 Tabiya Dataset Explorer
               </h1>
             </div>
@@ -39,7 +44,7 @@ export default function TabiyaDatasetExplorer() {
                 placeholder="Search skills or occupations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 bg-white/10 text-white placeholder-white/60 rounded-lg border border-white/20 focus:border-tabiya-accent focus:outline-none"
+                className={`w-full px-4 py-2 ${isDark ? 'bg-white/10 text-white placeholder-white/60 border-white/20' : 'bg-white text-gray-900 placeholder-gray-500 border-gray-300'} rounded-lg border focus:border-tabiya-accent focus:outline-none`}
               />
             </div>
 
@@ -50,75 +55,115 @@ export default function TabiyaDatasetExplorer() {
 
           {/* Filters Section */}
           <div className="mb-8">
-            <h3 className="font-semibold text-white mb-4">Filters</h3>
+            <h3
+              className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+            >
+              Filters
+            </h3>
             <div className="space-y-3">
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
+                  className={`rounded ${isDark ? 'border-white/20 bg-white/10' : 'border-gray-300 bg-white'} text-tabiya-accent focus:ring-tabiya-accent`}
                 />
-                <span className="text-sm text-white/80">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
                   Cross-sector skills only
                 </span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
+                  className={`rounded ${isDark ? 'border-white/20 bg-white/10' : 'border-gray-300 bg-white'} text-tabiya-accent focus:ring-tabiya-accent`}
                 />
-                <span className="text-sm text-white/80">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
                   Local occupations only
                 </span>
               </label>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  className="rounded border-white/20 bg-white/10 text-tabiya-accent focus:ring-tabiya-accent"
+                  className={`rounded ${isDark ? 'border-white/20 bg-white/10' : 'border-gray-300 bg-white'} text-tabiya-accent focus:ring-tabiya-accent`}
                 />
-                <span className="text-sm text-white/80">Emerging skills</span>
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Emerging skills
+                </span>
               </label>
             </div>
           </div>
 
           {/* Skill Groups */}
           <div className="mb-8">
-            <h3 className="font-semibold text-white mb-4">Skill Groups</h3>
+            <h3
+              className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+            >
+              Skill Groups
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Technical Skills</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Technical Skills
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   247
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
                   Communication Skills
                 </span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   89
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Analytical Skills</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Analytical Skills
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   156
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
                   Operational Skills
                 </span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   203
                 </span>
               </div>
               <div className="text-sm text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer mt-3">
                 Project Management
               </div>
-              <div className="text-sm text-white/70 hover:text-tabiya-accent cursor-pointer">
+              <div
+                className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'} hover:text-tabiya-accent cursor-pointer`}
+              >
                 Quality Control
               </div>
-              <div className="text-sm text-white/70 hover:text-tabiya-accent cursor-pointer">
+              <div
+                className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'} hover:text-tabiya-accent cursor-pointer`}
+              >
                 Process Optimization
               </div>
             </div>
@@ -126,29 +171,57 @@ export default function TabiyaDatasetExplorer() {
 
           {/* Occupation Groups */}
           <div>
-            <h3 className="font-semibold text-white mb-4">Occupation Groups</h3>
+            <h3
+              className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+            >
+              Occupation Groups
+            </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Technology</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Technology
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   45
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Healthcare</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Healthcare
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   67
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Education</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Education
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   32
                 </span>
               </div>
               <div className="flex justify-between items-center py-2">
-                <span className="text-sm text-white/80">Finance</span>
-                <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
+                <span
+                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
+                  Finance
+                </span>
+                <span
+                  className={`text-xs ${isDark ? 'text-white/60 bg-white/10' : 'text-gray-500 bg-gray-100'} px-2 py-1 rounded`}
+                >
                   28
                 </span>
               </div>
@@ -157,23 +230,33 @@ export default function TabiyaDatasetExplorer() {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 p-8 bg-tabiya-dark">
+        <div
+          className={`flex-1 p-8 ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
+        >
           {/* Navigation Tabs */}
-          <div className="flex gap-1 mb-8 border-b border-white/10">
+          <div
+            className={`flex gap-1 mb-8 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+          >
             <button className="px-4 py-2 text-sm font-medium text-tabiya-accent border-b-2 border-tabiya-accent">
               Home
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
+            <button
+              className={`px-4 py-2 text-sm font-medium ${isDark ? 'text-white/70' : 'text-gray-600'} hover:text-tabiya-accent`}
+            >
               Skill Groups
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
+            <button
+              className={`px-4 py-2 text-sm font-medium ${isDark ? 'text-white/70' : 'text-gray-600'} hover:text-tabiya-accent`}
+            >
               Technical Skills
             </button>
           </div>
 
           {/* Main Content */}
           <div className="max-w-4xl">
-            <h1 className="text-3xl font-bold text-white mb-4">
+            <h1
+              className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+            >
               {selectedSkill}
             </h1>
 
@@ -182,17 +265,23 @@ export default function TabiyaDatasetExplorer() {
               <span className="px-3 py-1 bg-tabiya-accent/20 text-tabiya-accent text-sm font-medium rounded-full border border-tabiya-accent/30">
                 technical
               </span>
-              <span className="px-3 py-1 bg-white/10 text-white text-sm font-medium rounded-full border border-white/20">
+              <span
+                className={`px-3 py-1 ${isDark ? 'bg-white/10 text-white border-white/20' : 'bg-gray-100 text-gray-700 border-gray-300'} text-sm font-medium rounded-full border`}
+              >
                 Cross-sector
               </span>
             </div>
 
             {/* Description */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">
+              <h2
+                className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}
+              >
                 Description
               </h2>
-              <p className="text-white/80 leading-relaxed mb-4">
+              <p
+                className={`${isDark ? 'text-white/80' : 'text-gray-700'} leading-relaxed mb-4`}
+              >
                 The ability to design, develop, and implement machine learning
                 algorithms and models to solve complex problems, make patterns,
                 and make predictions based on historical data.
@@ -201,10 +290,14 @@ export default function TabiyaDatasetExplorer() {
 
             {/* Scope Notes */}
             <div className="mb-8">
-              <h2 className="text-lg font-semibold text-white mb-3">
+              <h2
+                className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}
+              >
                 Scope Notes
               </h2>
-              <p className="text-white/80 leading-relaxed">
+              <p
+                className={`${isDark ? 'text-white/80' : 'text-gray-700'} leading-relaxed`}
+              >
                 Includes supervised and unsupervised learning techniques, neural
                 networks, deep learning, natural language processing, and
                 computer vision applications.
@@ -214,7 +307,9 @@ export default function TabiyaDatasetExplorer() {
             {/* Related Skills and Occupations */}
             <div className="grid grid-cols-2 gap-8 mb-8">
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4">
+                <h2
+                  className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+                >
                   Related Skills
                 </h2>
                 <div className="space-y-3">
@@ -234,7 +329,9 @@ export default function TabiyaDatasetExplorer() {
               </div>
 
               <div>
-                <h2 className="text-lg font-semibold text-white mb-4">
+                <h2
+                  className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
+                >
                   Related Occupations
                 </h2>
                 <div className="space-y-3">
@@ -257,7 +354,9 @@ export default function TabiyaDatasetExplorer() {
 
           {/* Skills & Occupation Assistant */}
           <div className="fixed bottom-8 right-8 max-w-sm">
-            <div className="bg-white/5 backdrop-blur-sm rounded-lg shadow-lg p-4 border border-white/10">
+            <div
+              className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} backdrop-blur-sm rounded-lg shadow-lg p-4 border`}
+            >
               <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 bg-tabiya-accent/20 rounded-full flex items-center justify-center flex-shrink-0 border border-tabiya-accent/30">
                   <svg
@@ -273,10 +372,14 @@ export default function TabiyaDatasetExplorer() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-white text-sm">
+                  <h3
+                    className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} text-sm`}
+                  >
                     Skills & Occupation Assistant
                   </h3>
-                  <p className="text-white/70 text-xs mt-1">
+                  <p
+                    className={`${isDark ? 'text-white/70' : 'text-gray-600'} text-xs mt-1`}
+                  >
                     Hi! I'm here to help you explore Tabiya's taxonomy. You can
                     ask me about skills, occupations, or their relationships.
                     Try asking:
@@ -284,17 +387,25 @@ export default function TabiyaDatasetExplorer() {
                 </div>
               </div>
 
-              <div className="space-y-2 text-xs text-white/60 mb-3">
+              <div
+                className={`space-y-2 text-xs ${isDark ? 'text-white/60' : 'text-gray-500'} mb-3`}
+              >
                 <div>"What jobs require Data Science skills?"</div>
                 <div>"Tell me about Data Science skills"</div>
                 <div>"Most in demand tech skills"</div>
               </div>
 
-              <div className="bg-white/10 rounded p-2 mb-3 border border-white/20">
-                <div className="text-xs font-medium text-white mb-1">
+              <div
+                className={`${isDark ? 'bg-white/10 border-white/20' : 'bg-gray-50 border-gray-200'} rounded p-2 mb-3 border`}
+              >
+                <div
+                  className={`text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'} mb-1`}
+                >
                   What skills are required for a Data Scientist role?
                 </div>
-                <div className="text-xs text-white/80">
+                <div
+                  className={`text-xs ${isDark ? 'text-white/80' : 'text-gray-700'}`}
+                >
                   Based on our taxonomy, Data Scientists typically need these
                   key skills:
                 </div>
@@ -318,7 +429,7 @@ export default function TabiyaDatasetExplorer() {
                 <input
                   type="text"
                   placeholder="Ask about skills or occupations..."
-                  className="flex-1 px-3 py-2 text-xs bg-white/10 text-white placeholder-white/60 border border-white/20 rounded focus:outline-none focus:ring-1 focus:ring-tabiya-accent focus:border-tabiya-accent"
+                  className={`flex-1 px-3 py-2 text-xs ${isDark ? 'bg-white/10 text-white placeholder-white/60 border-white/20' : 'bg-white text-gray-900 placeholder-gray-500 border-gray-300'} border rounded focus:outline-none focus:ring-1 focus:ring-tabiya-accent focus:border-tabiya-accent`}
                 />
                 <Button
                   size="sm"
