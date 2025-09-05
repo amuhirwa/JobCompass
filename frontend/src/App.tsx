@@ -10,6 +10,7 @@ import NotFound from './pages/NotFound';
 import LandPage from './pages/LandPage';
 import SkillMapping from './pages/SkillMapping';
 import TabiyaDatasetExplorer from './pages/TabiyaDatasetExplorer';
+import { Dashboard } from '@/features/dashboard';
 import AppLayout from './components/custom/AppLayout';
 
 const queryClient = new QueryClient();
@@ -19,16 +20,18 @@ const AppContent = () => {
   const { isDark } = useDarkMode();
   const isSkillMapping = location.pathname === '/skill-mapping';
   const isDatasetExplorer = location.pathname === '/dataset-explorer';
+  const isDashboard = location.pathname === '/dashboard';
 
   return (
     <div
-      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-white'} ${isSkillMapping || isDatasetExplorer ? 'w-full max-w-none overflow-x-hidden' : ''}`}
+      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-white'} ${isSkillMapping || isDatasetExplorer || isDashboard ? 'w-full max-w-none overflow-x-hidden' : ''}`}
     >
       <Routes>
         <Route path="/" element={<AppLayout />}>
           <Route index element={<LandPage />} />
           <Route path="skill-mapping" element={<SkillMapping />} />
           <Route path="dataset-explorer" element={<TabiyaDatasetExplorer />} />
+          <Route path="dashboard" element={<Dashboard />} />
         </Route>
         <Route path="*" element={<NotFound />} />
       </Routes>

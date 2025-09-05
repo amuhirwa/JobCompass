@@ -12,10 +12,18 @@ const Navigation = () => {
     useState(false);
   const { isDark, changeMode } = useDarkMode();
   const { navigateToSection } = useAnchorNavigation();
-  
+
   // Use scrollspy to track active section
   const activeSection = useScrollspy({
-    sectionIds: ['hero', 'features', 'tools', 'demo', 'testimonials', 'faq', 'cta'],
+    sectionIds: [
+      'hero',
+      'features',
+      'tools',
+      'demo',
+      'testimonials',
+      'faq',
+      'cta',
+    ],
     rootMargin: '-10% 0px -80% 0px',
     threshold: 0.1,
   });
@@ -56,8 +64,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium leading-6 transition-colors focus:outline-none ${
                 activeSection === 'features'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:text-tabiya-accent'
                     : 'text-gray-700 hover:text-tabiya-accent'
               }`}
             >
@@ -68,8 +76,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium leading-6 transition-colors focus:outline-none ${
                 activeSection === 'features'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:text-tabiya-accent'
                     : 'text-gray-700 hover:text-tabiya-accent'
               }`}
             >
@@ -80,8 +88,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium leading-6 transition-colors focus:outline-none ${
                 activeSection === 'tools'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:text-tabiya-accent'
                     : 'text-gray-700 hover:text-tabiya-accent'
               }`}
             >
@@ -169,13 +177,21 @@ const Navigation = () => {
             >
               Tabiya Data
             </NavLink>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `${isDark ? 'text-white' : 'text-gray-700'} ${isActive ? 'text-tabiya-accent' : ''} font-sans text-base font-medium leading-6 hover:text-tabiya-accent transition-colors focus:outline-none focus:text-tabiya-accent`
+              }
+            >
+              Dashboard
+            </NavLink>
             <button
               onClick={() => navigateToSection('cta')}
               className={`font-sans text-base font-medium leading-6 transition-colors focus:outline-none ${
                 activeSection === 'cta'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:text-tabiya-accent'
                     : 'text-gray-700 hover:text-tabiya-accent'
               }`}
             >
@@ -301,8 +317,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium py-2 px-2 rounded transition-colors text-left focus:outline-none ${
                 activeSection === 'features'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'
               }`}
             >
@@ -316,8 +332,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium py-2 px-2 rounded transition-colors text-left focus:outline-none ${
                 activeSection === 'features'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'
               }`}
             >
@@ -331,8 +347,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium py-2 px-2 rounded transition-colors text-left focus:outline-none ${
                 activeSection === 'tools'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'
               }`}
             >
@@ -407,6 +423,15 @@ const Navigation = () => {
             >
               Tabiya Data
             </NavLink>
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) =>
+                `${isDark ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'} ${isActive ? 'text-tabiya-accent' : ''} font-sans text-base font-medium py-2 px-2 rounded transition-colors focus:outline-none focus:text-tabiya-accent`
+              }
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Dashboard
+            </NavLink>
             <button
               onClick={() => {
                 navigateToSection('cta');
@@ -415,8 +440,8 @@ const Navigation = () => {
               className={`font-sans text-base font-medium py-2 px-2 rounded transition-colors text-left focus:outline-none ${
                 activeSection === 'cta'
                   ? 'text-tabiya-accent'
-                  : isDark 
-                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' 
+                  : isDark
+                    ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent'
                     : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'
               }`}
             >
