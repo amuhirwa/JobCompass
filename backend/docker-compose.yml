@@ -1,0 +1,28 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_DEBUG=1
+      - DJANGO_SECRET_KEY=django-insecure-52l@djn2_t0f)!1s_4913(xbqe^bcj@p)(6#y@((&opb)1tg6)
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_DB=jobcompass
+      - POSTGRES_USER=jobcompass
+      - POSTGRES_PASSWORD=jobcompass123
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
