@@ -59,7 +59,8 @@ export default function SkillMapping() {
       } else if (activeTab === "occupations") {
         return searchResults?.occupations || [];
       } else if (activeTab === "groups") {
-        return searchResults?.skill_groups || [];
+        // For skill groups, fall back to default data if search doesn't include them
+        return searchResults?.skill_groups || skillGroups?.results?.slice(0, 10) || [];
       }
       return [];
     } else {
@@ -338,59 +339,126 @@ export default function SkillMapping() {
           {/* Related Items */}
           <div className="bg-white/5 rounded-lg p-4 border border-white/10">
             <h3 className="text-white font-semibold mb-4 text-lg">
-              {activeTab === "skills"
-                ? "Related Skills"
-                : activeTab === "occupations"
-                  ? "Required Skills"
-                  : "Related Items"}
+              Related Items
             </h3>
-            {activeTab === "skills" && suggestionsLoading ? (
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton
-                    key={i}
-                    className="h-6 w-16 bg-white/10 rounded-full"
-                  />
-                ))}
-              </div>
-            ) : activeTab === "skills" && skillSuggestions?.length ? (
-              <div className="flex flex-wrap gap-2">
-                {skillSuggestions.slice(0, 8).map((skill, index) => {
-                  const colors = [
-                    "bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30",
-                    "bg-blue-500/20 text-blue-300 border-blue-500/30",
-                    "bg-green-500/20 text-green-300 border-green-500/30",
-                    "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                    "bg-orange-500/20 text-orange-300 border-orange-500/30",
-                  ];
-                  const colorClass = colors[index % colors.length];
+            
+            {/* For Skills: Show related skills, occupations, and skill groups */}
+            {activeTab === "skills" && selectedSkillId && (
+              <div className="space-y-4">
+                {/* Related Skills */}
+                {suggestionsLoading ? (
+                  <div>
+                    <h4 className="text-white/80 text-sm font-medium mb-2">Related Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <Skeleton key={i} className="h-6 w-16 bg-white/10 rounded-full" />
+                      ))}
+                    </div>
+                  </div>
+                ) : skillSuggestions?.length ? (
+                  <div>
+                    <h4 className="text-white/80 text-sm font-medium mb-2">Related Skills</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skillSuggestions.slice(0, 4).map((skill, index) => {
+                        const colors = [
+                          "bg-blue-500/20 text-blue-300 border-blue-500/30",
+                          "bg-green-500/20 text-green-300 border-green-500/30",
+                          "bg-purple-500/20 text-purple-300 border-purple-500/30",
+                          "bg-orange-500/20 text-orange-300 border-orange-500/30",
+                        ];
+                        const colorClass = colors[index % colors.length];
+                        return (
+                          <span
+                            key={skill.id}
+                            onClick={() => handleItemSelect(skill)}
+                            className={`px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
+                          >
+                            {skill.preferred_label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
 
-                  return (
-                    <span
-                      key={skill.id}
-                      onClick={() => handleItemSelect(skill)}
-                      className={`px-3 py-1 rounded-full text-sm font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
-                    >
-                      {skill.preferred_label}
-                    </span>
-                  );
-                })}
+                {/* Related Occupations */}
+                {relatedOccupations.length > 0 && (
+                  <div>
+                    <h4 className="text-white/80 text-sm font-medium mb-2">Related Occupations</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {relatedOccupations.slice(0, 4).map((occupation, index) => {
+                        const colors = [
+                          "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+                          "bg-pink-500/20 text-pink-300 border-pink-500/30",
+                          "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
+                          "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
+                        ];
+                        const colorClass = colors[index % colors.length];
+                        return (
+                          <span
+                            key={occupation.id}
+                            onClick={() => {
+                              setActiveTab("occupations");
+                              setSelectedOccupationId(occupation.id);
+                              setSelectedSkillId(null);
+                              setSelectedSkillGroupId(null);
+                            }}
+                            className={`px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
+                          >
+                            {occupation.preferred_label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Related Skill Groups */}
+                {skillGroups?.results && (
+                  <div>
+                    <h4 className="text-white/80 text-sm font-medium mb-2">Skill Groups</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {skillGroups.results.slice(0, 3).map((group, index) => {
+                        const colors = [
+                          "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+                          "bg-violet-500/20 text-violet-300 border-violet-500/30",
+                          "bg-rose-500/20 text-rose-300 border-rose-500/30",
+                        ];
+                        const colorClass = colors[index % colors.length];
+                        return (
+                          <span
+                            key={group.id}
+                            onClick={() => {
+                              setActiveTab("groups");
+                              setSelectedSkillGroupId(group.id);
+                              setSelectedSkillId(null);
+                              setSelectedOccupationId(null);
+                            }}
+                            className={`px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
+                          >
+                            {group.preferred_label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
-            ) : activeTab === "occupations" &&
-              selectedOccupation?.related_skills?.length ? (
-              <div className="flex flex-wrap gap-2">
-                {selectedOccupation.related_skills
-                  .slice(0, 8)
-                  .map((skill, index) => {
+            )}
+
+            {/* For Occupations: Show required skills */}
+            {activeTab === "occupations" && selectedOccupation?.related_skills?.length && (
+              <div>
+                <h4 className="text-white/80 text-sm font-medium mb-2">Required Skills</h4>
+                <div className="flex flex-wrap gap-2">
+                  {selectedOccupation.related_skills.slice(0, 6).map((skill, index) => {
                     const colors = [
                       "bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30",
                       "bg-blue-500/20 text-blue-300 border-blue-500/30",
                       "bg-green-500/20 text-green-300 border-green-500/30",
                       "bg-purple-500/20 text-purple-300 border-purple-500/30",
-                      "bg-orange-500/20 text-orange-300 border-orange-500/30",
                     ];
                     const colorClass = colors[index % colors.length];
-
                     return (
                       <span
                         key={skill.skill_id}
@@ -400,20 +468,33 @@ export default function SkillMapping() {
                           setSelectedOccupationId(null);
                           setSelectedSkillGroupId(null);
                         }}
-                        className={`px-3 py-1 rounded-full text-sm font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium border cursor-pointer hover:scale-105 transition-transform ${colorClass}`}
                       >
                         {skill.skill_name}
+                        {skill.relation_type === 'essential' && 
+                          <span className="ml-1 text-xs">●</span>
+                        }
                       </span>
                     );
                   })}
+                </div>
               </div>
-            ) : selectedItem ? (
-              <div className="text-white/60 text-sm">
-                No related {activeTab} found
+            )}
+
+            {/* For Skill Groups: Show related skills */}
+            {activeTab === "groups" && selectedSkillGroup && (
+              <div>
+                <h4 className="text-white/80 text-sm font-medium mb-2">Skills in this Group</h4>
+                <div className="text-white/60 text-sm">
+                  Skills for this group will be loaded from the backend
+                </div>
               </div>
-            ) : (
+            )}
+
+            {/* Empty state */}
+            {!selectedItem && (
               <div className="text-white/60 text-sm">
-                Select a {activeTab.slice(0, -1)} to see related {activeTab}
+                Select a {activeTab.slice(0, -1)} to see related items
               </div>
             )}
           </div>

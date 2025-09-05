@@ -3,18 +3,26 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import {
   useSkills,
+  useSkill,
   useSkillGroups,
+  useOccupations,
+  useOccupation,
   useOccupationGroups,
   useDebouncedSearch,
   useTaxonomyStats,
+  useSkillSuggestions,
 } from "@/lib/hooks";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { Skill, Occupation, SkillGroup } from "@/lib/types";
 
 export default function TabiyaDatasetExplorer() {
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
+  const [selectedOccupationId, setSelectedOccupationId] = useState<string | null>(null);
+  const [selectedSkillGroupId, setSelectedSkillGroupId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"skills" | "skill-groups" | "occupations">("skills");
   const [filters, setFilters] = useState({
     crossSectorOnly: false,
     localOccupationsOnly: false,
@@ -22,8 +30,13 @@ export default function TabiyaDatasetExplorer() {
   });
 
   // API calls
-  const { data: skills, isLoading: skillsLoading } = useSkills();
+  const { data: skills, isLoading: skillsLoading } = useSkills({
+    reuse_level: filters.crossSectorOnly ? "cross-sector" : undefined,
+  });
   const { data: skillGroups, isLoading: skillGroupsLoading } = useSkillGroups();
+  const { data: occupations, isLoading: occupationsLoading } = useOccupations({
+    occupation_type: filters.localOccupationsOnly ? "localoccupation" : undefined,
+  });
   const { data: occupationGroups, isLoading: occupationGroupsLoading } =
     useOccupationGroups();
   const { data: taxonomyStats } = useTaxonomyStats();
@@ -33,15 +46,36 @@ export default function TabiyaDatasetExplorer() {
     isLoading: searchLoading,
   } = useDebouncedSearch(searchQuery);
 
-  // Get selected skill details
-  const selectedSkill = selectedSkillId
-    ? skills?.results?.find((skill) => skill.id === selectedSkillId)
-    : null;
+  // Get selected item details
+  const { data: selectedSkill, isLoading: selectedSkillLoading } = useSkill(selectedSkillId || "");
+  const { data: selectedOccupation, isLoading: selectedOccupationLoading } = useOccupation(selectedOccupationId || "");
+  const { data: skillSuggestions } = useSkillSuggestions(selectedSkillId || "");
 
-  // Filter skills based on current filters and search
-  const displayedSkills = searchQuery.trim()
-    ? searchResults?.skills || []
-    : skills?.results || [];
+  // Get current selection based on active tab
+  const selectedItem = selectedSkillId && selectedSkill ? selectedSkill :
+                      selectedOccupationId && selectedOccupation ? selectedOccupation :
+                      selectedSkillGroupId ? skillGroups?.results?.find(g => g.id === selectedSkillGroupId) :
+                      null;
+
+  // Get related occupations for selected skill
+  const relatedOccupations = selectedSkillId && occupations?.results ? 
+    occupations.results.filter(occupation =>
+      occupation.related_skills?.some(skill => skill.skill_id === selectedSkillId)
+    ) : [];
+
+  // Filter and display items based on current tab and search
+  const getDisplayedItems = () => {
+    if (activeTab === "skills") {
+      return searchQuery.trim() ? (searchResults?.skills || []) : (skills?.results || []);
+    } else if (activeTab === "occupations") {
+      return searchQuery.trim() ? (searchResults?.occupations || []) : (occupations?.results || []);
+    } else if (activeTab === "skill-groups") {
+      return skillGroups?.results || [];
+    }
+    return [];
+  };
+
+  const displayedItems = getDisplayedItems();
 
   const handleFilterChange = (filterKey: keyof typeof filters) => {
     setFilters((prev) => ({
@@ -149,16 +183,22 @@ export default function TabiyaDatasetExplorer() {
                       <Skeleton className="h-6 w-8 bg-white/10" />
                     </div>
                   ))
-                : skillGroups?.results?.map((group) => (
+                : skillGroups?.results?.slice(0, 8).map((group) => (
                     <div
                       key={group.id}
-                      className="flex justify-between items-center py-2"
+                      className="flex justify-between items-center py-2 cursor-pointer hover:bg-white/5 rounded px-2 transition-colors"
+                      onClick={() => {
+                        setActiveTab("skill-groups");
+                        setSelectedSkillGroupId(group.id);
+                        setSelectedSkillId(null);
+                        setSelectedOccupationId(null);
+                      }}
                     >
-                      <span className="text-sm text-white/80">
+                      <span className="text-sm text-white/80 hover:text-white">
                         {group.preferred_label}
                       </span>
                       <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                        {group.skills?.length || 0}
+                        {group.skills?.length || "N/A"}
                       </span>
                     </div>
                   ))}
@@ -182,13 +222,20 @@ export default function TabiyaDatasetExplorer() {
                 : occupationGroups?.results?.slice(0, 6).map((group) => (
                     <div
                       key={group.id}
-                      className="flex justify-between items-center py-2"
+                      className="flex justify-between items-center py-2 cursor-pointer hover:bg-white/5 rounded px-2 transition-colors"
+                      onClick={() => {
+                        setActiveTab("occupations");
+                        setSelectedOccupationId(null);
+                        setSelectedSkillId(null);
+                        setSelectedSkillGroupId(null);
+                        // You could filter occupations by group here if needed
+                      }}
                     >
-                      <span className="text-sm text-white/80">
+                      <span className="text-sm text-white/80 hover:text-white">
                         {group.preferred_label}
                       </span>
                       <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded">
-                        {group.occupations?.length || 0}
+                        {group.occupations?.length || "N/A"}
                       </span>
                     </div>
                   ))}
@@ -254,18 +301,54 @@ export default function TabiyaDatasetExplorer() {
 
           {/* Navigation Tabs */}
           <div className="flex gap-1 mb-8 border-b border-white/10">
-            <button className="px-4 py-2 text-sm font-medium text-tabiya-accent border-b-2 border-tabiya-accent">
+            <button 
+              onClick={() => {
+                setActiveTab("skills");
+                setSelectedSkillId(null);
+                setSelectedOccupationId(null);
+                setSelectedSkillGroupId(null);
+              }}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "skills" 
+                  ? "text-tabiya-accent border-b-2 border-tabiya-accent"
+                  : "text-white/70 hover:text-tabiya-accent"
+              }`}
+            >
               Skills Explorer
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
+            <button 
+              onClick={() => {
+                setActiveTab("skill-groups");
+                setSelectedSkillId(null);
+                setSelectedOccupationId(null);
+                setSelectedSkillGroupId(null);
+              }}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "skill-groups"
+                  ? "text-tabiya-accent border-b-2 border-tabiya-accent"
+                  : "text-white/70 hover:text-tabiya-accent"
+              }`}
+            >
               Skill Groups
             </button>
-            <button className="px-4 py-2 text-sm font-medium text-white/70 hover:text-tabiya-accent">
+            <button 
+              onClick={() => {
+                setActiveTab("occupations");
+                setSelectedSkillId(null);
+                setSelectedOccupationId(null);
+                setSelectedSkillGroupId(null);
+              }}
+              className={`px-4 py-2 text-sm font-medium ${
+                activeTab === "occupations"
+                  ? "text-tabiya-accent border-b-2 border-tabiya-accent"
+                  : "text-white/70 hover:text-tabiya-accent"
+              }`}
+            >
               Occupations
             </button>
           </div>
 
-          {/* Skills List */}
+          {/* Main Content */}
           <div className="max-w-4xl">
             {searchQuery && (
               <div className="mb-4">
@@ -276,29 +359,35 @@ export default function TabiyaDatasetExplorer() {
               </div>
             )}
 
-            {selectedSkill ? (
-              /* Skill Detail View */
+            {selectedItem ? (
+              /* Detail View */
               <div>
                 <div className="flex items-center gap-4 mb-4">
                   <Button
                     variant="ghost"
-                    onClick={() => setSelectedSkillId(null)}
+                    onClick={() => {
+                      setSelectedSkillId(null);
+                      setSelectedOccupationId(null);
+                      setSelectedSkillGroupId(null);
+                    }}
                     className="text-white/70 hover:text-white"
                   >
-                    ← Back to skills list
+                    ← Back to {activeTab.replace("-", " ")} list
                   </Button>
                 </div>
 
                 <h1 className="text-3xl font-bold text-white mb-4">
-                  {selectedSkill.preferred_label}
+                  {selectedItem.preferred_label}
                 </h1>
 
-                {/* Skill Tags */}
+                {/* Item Tags */}
                 <div className="flex gap-2 mb-6">
                   <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30">
-                    {selectedSkill.skill_type}
+                    {selectedSkillId && selectedSkill ? selectedSkill.skill_type :
+                     selectedOccupationId && selectedOccupation ? selectedOccupation.occupation_type :
+                     "Skill Group"}
                   </Badge>
-                  {selectedSkill.reuse_level && (
+                  {selectedSkillId && selectedSkill?.reuse_level && (
                     <Badge
                       variant="outline"
                       className="border-white/20 text-white"
@@ -308,20 +397,30 @@ export default function TabiyaDatasetExplorer() {
                   )}
                 </div>
 
-                {/* Description */}
-                {selectedSkill.definition && (
+                {/* Description/Definition */}
+                {selectedItem.definition && (
                   <div className="mb-8">
                     <h2 className="text-lg font-semibold text-white mb-3">
                       Description
                     </h2>
                     <p className="text-white/80 leading-relaxed mb-4">
-                      {selectedSkill.definition}
+                      {selectedItem.definition}
+                    </p>
+                  </div>
+                )}
+                {selectedItem.description && !selectedItem.definition && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-3">
+                      Description
+                    </h2>
+                    <p className="text-white/80 leading-relaxed mb-4">
+                      {selectedItem.description}
                     </p>
                   </div>
                 )}
 
                 {/* Scope Notes */}
-                {selectedSkill.scope_note && (
+                {selectedSkillId && selectedSkill?.scope_note && (
                   <div className="mb-8">
                     <h2 className="text-lg font-semibold text-white mb-3">
                       Scope Notes
@@ -332,14 +431,154 @@ export default function TabiyaDatasetExplorer() {
                   </div>
                 )}
 
+                {/* Related Items - Skills */}
+                {selectedSkillId && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-4">
+                      Related Items
+                    </h2>
+                    
+                    {/* Related Skills */}
+                    {skillSuggestions && skillSuggestions.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-md font-medium text-white/90 mb-3">
+                          Related Skills
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {skillSuggestions.slice(0, 4).map((skill) => (
+                            <Card
+                              key={skill.id}
+                              className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setActiveTab("skills");
+                                setSelectedSkillId(skill.id);
+                                setSelectedOccupationId(null);
+                                setSelectedSkillGroupId(null);
+                              }}
+                            >
+                              <CardContent className="p-3">
+                                <h4 className="text-sm font-medium text-white mb-1">
+                                  {skill.preferred_label}
+                                </h4>
+                                <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                                  {skill.skill_type}
+                                </Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Related Occupations */}
+                    {relatedOccupations.length > 0 && (
+                      <div className="mb-6">
+                        <h3 className="text-md font-medium text-white/90 mb-3">
+                          Related Occupations
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {relatedOccupations.slice(0, 4).map((occupation) => (
+                            <Card
+                              key={occupation.id}
+                              className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setActiveTab("occupations");
+                                setSelectedOccupationId(occupation.id);
+                                setSelectedSkillId(null);
+                                setSelectedSkillGroupId(null);
+                              }}
+                            >
+                              <CardContent className="p-3">
+                                <h4 className="text-sm font-medium text-white mb-1">
+                                  {occupation.preferred_label}
+                                </h4>
+                                <Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-xs">
+                                  {occupation.occupation_type}
+                                </Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Related Skill Groups */}
+                    {skillGroups?.results && (
+                      <div className="mb-6">
+                        <h3 className="text-md font-medium text-white/90 mb-3">
+                          Skill Groups
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {skillGroups.results.slice(0, 4).map((group) => (
+                            <Card
+                              key={group.id}
+                              className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                              onClick={() => {
+                                setActiveTab("skill-groups");
+                                setSelectedSkillGroupId(group.id);
+                                setSelectedSkillId(null);
+                                setSelectedOccupationId(null);
+                              }}
+                            >
+                              <CardContent className="p-3">
+                                <h4 className="text-sm font-medium text-white mb-1">
+                                  {group.preferred_label}
+                                </h4>
+                                <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs">
+                                  Skill Group
+                                </Badge>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Related Items - Occupations */}
+                {selectedOccupationId && selectedOccupation?.related_skills && (
+                  <div className="mb-8">
+                    <h2 className="text-lg font-semibold text-white mb-4">
+                      Required Skills
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedOccupation.related_skills.slice(0, 6).map((skill) => (
+                        <Card
+                          key={skill.skill_id}
+                          className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
+                          onClick={() => {
+                            setActiveTab("skills");
+                            setSelectedSkillId(skill.skill_id);
+                            setSelectedOccupationId(null);
+                            setSelectedSkillGroupId(null);
+                          }}
+                        >
+                          <CardContent className="p-3">
+                            <h4 className="text-sm font-medium text-white mb-1">
+                              {skill.skill_name}
+                              {skill.relation_type === 'essential' && 
+                                <span className="ml-1 text-red-400">●</span>
+                              }
+                            </h4>
+                            <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30 text-xs">
+                              {skill.relation_type}
+                            </Badge>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Alternative Labels */}
-                {selectedSkill.alternative_labels?.length > 0 && (
+                {selectedSkill?.alt_labels_list && selectedSkill.alt_labels_list.length > 0 && (
                   <div className="mb-8">
                     <h2 className="text-lg font-semibold text-white mb-3">
                       Alternative Labels
                     </h2>
                     <div className="flex flex-wrap gap-2">
-                      {selectedSkill.alternative_labels.map((label, index) => (
+                      {selectedSkill.alt_labels_list.map((label, index) => (
                         <Badge
                           key={index}
                           variant="outline"
@@ -353,14 +592,21 @@ export default function TabiyaDatasetExplorer() {
                 )}
               </div>
             ) : (
-              /* Skills List View */
+              /* List View */
               <div>
                 <h1 className="text-2xl font-bold text-white mb-6">
-                  Skills ({skillsLoading ? "..." : skills?.count || 0})
+                  {activeTab === "skills" ? "Skills" :
+                   activeTab === "occupations" ? "Occupations" :
+                   "Skill Groups"} ({
+                    (skillsLoading || occupationsLoading || skillGroupsLoading) ? "..." :
+                    activeTab === "skills" ? (skills?.count || 0) :
+                    activeTab === "occupations" ? (occupations?.count || 0) :
+                    (skillGroups?.count || 0)
+                  })
                 </h1>
 
                 <div className="grid gap-4">
-                  {skillsLoading ? (
+                  {(skillsLoading || occupationsLoading || skillGroupsLoading) ? (
                     Array.from({ length: 6 }).map((_, i) => (
                       <Card key={i} className="bg-white/5 border-white/10">
                         <CardContent className="p-4">
@@ -370,32 +616,42 @@ export default function TabiyaDatasetExplorer() {
                         </CardContent>
                       </Card>
                     ))
-                  ) : displayedSkills.length > 0 ? (
-                    displayedSkills.slice(0, 20).map((skill) => (
+                  ) : displayedItems.length > 0 ? (
+                    displayedItems.slice(0, 20).map((item: any) => (
                       <Card
-                        key={skill.id}
+                        key={item.id}
                         className="bg-white/5 border-white/10 hover:bg-white/10 cursor-pointer transition-colors"
-                        onClick={() => setSelectedSkillId(skill.id)}
+                        onClick={() => {
+                          if (activeTab === "skills") {
+                            setSelectedSkillId(item.id);
+                          } else if (activeTab === "occupations") {
+                            setSelectedOccupationId(item.id);
+                          } else if (activeTab === "skill-groups") {
+                            setSelectedSkillGroupId(item.id);
+                          }
+                        }}
                       >
                         <CardContent className="p-4">
                           <h3 className="text-lg font-semibold text-white mb-2">
-                            {skill.preferred_label}
+                            {item.preferred_label}
                           </h3>
-                          {skill.definition && (
+                          {(item.definition || item.description) && (
                             <p className="text-white/70 text-sm mb-3 line-clamp-2">
-                              {skill.definition}
+                              {item.definition || item.description}
                             </p>
                           )}
                           <div className="flex gap-2">
                             <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30 text-xs">
-                              {skill.skill_type}
+                              {activeTab === "skills" && item.skill_type ||
+                               activeTab === "occupations" && item.occupation_type ||
+                               "Skill Group"}
                             </Badge>
-                            {skill.reuse_level && (
+                            {activeTab === "skills" && item.reuse_level && (
                               <Badge
                                 variant="outline"
                                 className="border-white/20 text-white/80 text-xs"
                               >
-                                {skill.reuse_level}
+                                {item.reuse_level}
                               </Badge>
                             )}
                           </div>
@@ -405,12 +661,12 @@ export default function TabiyaDatasetExplorer() {
                   ) : searchQuery ? (
                     <div className="text-center py-12">
                       <p className="text-white/60">
-                        No skills found for "{searchQuery}"
+                        No {activeTab.replace("-", " ")} found for "{searchQuery}"
                       </p>
                     </div>
                   ) : (
                     <div className="text-center py-12">
-                      <p className="text-white/60">No skills available</p>
+                      <p className="text-white/60">No {activeTab.replace("-", " ")} available</p>
                     </div>
                   )}
                 </div>

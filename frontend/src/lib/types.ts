@@ -134,6 +134,7 @@ export interface OccupationHierarchy {
 export interface SearchResults {
   skills: SkillSearchResult[];
   occupations: OccupationSearchResult[];
+  skill_groups?: SkillGroupSearchResult[];
 }
 
 export interface SkillSearchResult {
@@ -148,6 +149,12 @@ export interface OccupationSearchResult {
   id: string;
   preferred_label: string;
   occupation_type: string;
+  description: string;
+}
+
+export interface SkillGroupSearchResult {
+  id: string;
+  preferred_label: string;
   description: string;
 }
 
