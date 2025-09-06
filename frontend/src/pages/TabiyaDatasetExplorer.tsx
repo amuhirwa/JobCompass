@@ -105,6 +105,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadedSkillsCount, setLoadedSkillsCount] = useState(0);
   const [maxSkillsCount, setMaxSkillsCount] = useState(0);
+  const [hasInitialSkillsLoaded, setHasInitialSkillsLoaded] = useState(false);
 
   // Performance optimization state
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -267,6 +268,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
       setError(
         `Failed to load dataset files: ${err instanceof Error ? err.message : "Unknown error"}`
       );
+      setHasInitialSkillsLoaded(false); // Ensure button is available for manual loading
     } finally {
       setIsLoading(false);
     }
@@ -341,7 +343,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
     // Add top skills to reach minimum 1000 nodes total
     // Calculate how many skills we need: 1000 - (groups + occupations)
     const currentNodeCount = nodes.length;
-    const skillsNeeded = Math.max(800, 1000 - currentNodeCount); // Ensure at least 800 skills
+    const skillsNeeded = Math.max(50, 200 - currentNodeCount); // Reduced initial skills for faster rendering
 
     const topSkills = Array.from(data.skills.values())
       .map((skill: any) => ({
@@ -446,6 +448,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
         graph.addNode(node.id, {
           label: node.label,
+          originalLabel: node.label, // Store original label for restoration
           x: Math.random() * 1000,
           y: Math.random() * 1000,
           size: node.size,
@@ -453,12 +456,114 @@ const TabiyaDatasetExplorer: React.FC = () => {
           nodeType: node.type,
           description: node.description,
           skillCount: node.skillCount,
+          zIndex: 1, // Default z-index for layering
         });
       }
 
       return endIndex;
     },
     []
+  );
+
+  // Load initial skills for first render
+  const loadInitialSkills = useCallback(
+    async (batchSize: number = 2000) => {
+      if (!processedData || isLoadingMore || hasInitialSkillsLoaded) {
+        return;
+      }
+
+      setIsLoadingMore(true);
+
+      try {
+        // Calculate skill connection frequencies
+        const skillConnectionCounts = new Map<string, number>();
+        processedData.relations.forEach((rel: any) => {
+          const count = skillConnectionCounts.get(rel.SKILLID) || 0;
+          skillConnectionCounts.set(rel.SKILLID, count + 1);
+        });
+
+        // Get top skills for initial load
+        const topSkills = Array.from(processedData.skills.values())
+          .map((skill: any) => ({
+            ...skill,
+            connectionCount: skillConnectionCounts.get(skill.ID) || 0,
+          }))
+          .sort((a, b) => b.connectionCount - a.connectionCount)
+          .slice(0, batchSize);
+
+        if (topSkills.length === 0) return;
+
+        // Add skills to existing graph data
+        const newNodes = [...graphData.nodes];
+        const newEdges = [...graphData.edges];
+        const microBatchSize = 100;
+
+        for (let i = 0; i < topSkills.length; i += microBatchSize) {
+          const microBatch = topSkills.slice(i, i + microBatchSize);
+
+          microBatch.forEach((skill: any) => {
+            // Only add if not already present
+            if (!newNodes.find((n) => n.id === skill.ID)) {
+              newNodes.push({
+                id: skill.ID,
+                label: skill.PREFERREDLABEL || "Unknown Skill",
+                description: skill.DESCRIPTION || "",
+                type: "skill",
+                size: Math.max(2, Math.min(6, skill.connectionCount / 5)),
+              });
+            }
+          });
+
+          // Add edges with limit per skill
+          const microBatchIds = new Set(microBatch.map((s: any) => s.ID));
+          const edgeCount = new Map<string, number>();
+
+          processedData.relations
+            .filter((rel: any) => microBatchIds.has(rel.SKILLID))
+            .forEach((rel: any) => {
+              const skillEdgeCount = edgeCount.get(rel.SKILLID) || 0;
+              if (
+                skillEdgeCount < 5 &&
+                newNodes.some((n) => n.id === rel.OCCUPATIONID)
+              ) {
+                const edgeId = `${rel.OCCUPATIONID}-${rel.SKILLID}`;
+                if (!newEdges.find((e) => e.id === edgeId)) {
+                  newEdges.push({
+                    id: edgeId,
+                    source: rel.OCCUPATIONID,
+                    target: rel.SKILLID,
+                    relationType: rel.RELATIONTYPE as "essential" | "optional",
+                  });
+                  edgeCount.set(rel.SKILLID, skillEdgeCount + 1);
+                }
+              }
+            });
+
+          // Yield to main thread
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+
+        setGraphData({ nodes: newNodes, edges: newEdges });
+        setLoadedSkillsCount(loadedSkillsCount + topSkills.length);
+        setHasInitialSkillsLoaded(true);
+
+        console.log(
+          `Loaded ${topSkills.length} initial skills. Total: ${loadedSkillsCount + topSkills.length}/${maxSkillsCount}`
+        );
+      } catch (error) {
+        console.error("Error loading initial skills:", error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    },
+    [
+      processedData,
+      isLoadingMore,
+      loadedSkillsCount,
+      maxSkillsCount,
+      graphData,
+      hasInitialSkillsLoaded,
+    ]
   );
 
   // Optimized progressive loading with micro-batching
@@ -776,9 +881,9 @@ const TabiyaDatasetExplorer: React.FC = () => {
           skillCount: nodeData.skillCount,
         });
 
-        // Enhanced visual feedback with edge highlighting
+        // Enhanced visual feedback with z-index layering and label control
         if (graph.order > 0) {
-          // Reset all nodes to dimmed state first
+          // Reset all nodes with background styling and hidden labels
           graph.forEachNode((node: string, attributes: any) => {
             const originalColor =
               attributes.nodeType === "occupation"
@@ -791,39 +896,47 @@ const TabiyaDatasetExplorer: React.FC = () => {
             const isSelected = node === nodeId;
 
             if (isSelected) {
-              // Selected node - bright orange
+              // Selected node - bright orange, largest size, highest z-index
               graph.setNodeAttribute(node, "color", "#ff6b35");
               graph.setNodeAttribute(node, "size", attributes.size * 1.5);
+              graph.setNodeAttribute(node, "zIndex", 100); // Bring to front
+              graph.setNodeAttribute(node, "label", attributes.originalLabel); // Show label
             } else if (isHighlighted) {
-              // Connected nodes - maintain original color but slightly brighter
+              // Connected nodes - original color, medium size, high z-index
               graph.setNodeAttribute(node, "color", originalColor);
               graph.setNodeAttribute(node, "size", attributes.size * 1.2);
+              graph.setNodeAttribute(node, "zIndex", 50); // Bring to front
+              graph.setNodeAttribute(node, "label", attributes.originalLabel); // Show label
             } else {
-              // Non-connected nodes - dimmed
+              // Background nodes - dimmed, smaller, low z-index, hidden labels
               graph.setNodeAttribute(node, "color", "#e5e7eb");
-              graph.setNodeAttribute(node, "size", attributes.size * 0.8);
+              graph.setNodeAttribute(node, "size", attributes.size * 0.6);
+              graph.setNodeAttribute(node, "zIndex", 1); // Keep in background
+              graph.setNodeAttribute(node, "label", ""); // Hide label
             }
           });
 
-          // Highlight connected edges
+          // Highlight connected edges with z-index
           graph.forEachEdge((edgeKey: string, attributes: any) => {
             const isConnected = connectedEdges.has(edgeKey);
             if (isConnected) {
-              // Connected edges - bright and thick
+              // Connected edges - bright, thick, high z-index
               graph.setEdgeAttribute(edgeKey, "color", "#ff6b35");
               graph.setEdgeAttribute(
                 edgeKey,
                 "size",
                 Math.max(2, attributes.size * 2)
               );
+              graph.setEdgeAttribute(edgeKey, "zIndex", 75); // Bring to front
             } else {
-              // Non-connected edges - dimmed and thin
+              // Background edges - dimmed, thin, low z-index
               graph.setEdgeAttribute(edgeKey, "color", "#e5e7eb");
               graph.setEdgeAttribute(
                 edgeKey,
                 "size",
-                Math.max(0.5, attributes.size * 0.5)
+                Math.max(0.5, attributes.size * 0.3)
               );
+              graph.setEdgeAttribute(edgeKey, "zIndex", 1); // Keep in background
             }
           });
 
@@ -840,7 +953,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
         setHighlightedNodes(new Set());
         setSelectedNode(null);
 
-        // Reset all nodes and edges to original state
+        // Reset all nodes and edges to original state with z-index and labels
         if (graph.order > 0) {
           try {
             graph.forEachNode((node: string, attributes: any) => {
@@ -851,7 +964,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
                     ? "#10b981"
                     : "#f59e0b";
 
-              // Restore original color and size
+              // Restore original color, size, z-index, and labels
               graph.setNodeAttribute(node, "color", originalColor);
               // Reset to base size (assuming original size is stored or calculate from node type)
               const baseSize =
@@ -867,9 +980,15 @@ const TabiyaDatasetExplorer: React.FC = () => {
                       )
                     : Math.max(3, Math.min(8, 5)); // default skill size
               graph.setNodeAttribute(node, "size", baseSize);
+              graph.setNodeAttribute(node, "zIndex", 1); // Reset z-index
+              graph.setNodeAttribute(
+                node,
+                "label",
+                attributes.originalLabel || attributes.label
+              ); // Restore label
             });
 
-            // Reset all edges to original state
+            // Reset all edges to original state with z-index
             graph.forEachEdge((edgeKey: string, attributes: any) => {
               const originalColor =
                 attributes.relationType === "hierarchy"
@@ -883,6 +1002,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
               graph.setEdgeAttribute(edgeKey, "color", originalColor);
               graph.setEdgeAttribute(edgeKey, "size", originalSize);
+              graph.setEdgeAttribute(edgeKey, "zIndex", 1); // Reset z-index
             });
 
             sigma.refresh();
@@ -1044,6 +1164,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
                         : "#64748b",
                   size: edge.relationType === "hierarchy" ? 2 : 1,
                   relationType: edge.relationType,
+                  zIndex: 1, // Default z-index for layering
                 });
                 edgeCount++;
 
@@ -1226,7 +1347,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
       }
     }
 
-    // Reset all nodes and edges to original state
+    // Reset all nodes and edges to original state with z-index and labels
     if (graphRef.current && graphRef.current.order > 0) {
       try {
         graphRef.current.forEachNode((node: string, attributes: any) => {
@@ -1237,7 +1358,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
                 ? "#10b981"
                 : "#f59e0b";
 
-          // Restore original color and size
+          // Restore original color, size, z-index, and labels
           graphRef.current.setNodeAttribute(node, "color", originalColor);
           const baseSize =
             attributes.nodeType === "group"
@@ -1246,9 +1367,15 @@ const TabiyaDatasetExplorer: React.FC = () => {
                 ? Math.max(8, Math.min(25, (attributes.skillCount || 5) / 2))
                 : Math.max(3, Math.min(8, 5)); // default skill size
           graphRef.current.setNodeAttribute(node, "size", baseSize);
+          graphRef.current.setNodeAttribute(node, "zIndex", 1); // Reset z-index
+          graphRef.current.setNodeAttribute(
+            node,
+            "label",
+            attributes.originalLabel || attributes.label
+          ); // Restore label
         });
 
-        // Reset all edges to original state
+        // Reset all edges to original state with z-index
         graphRef.current.forEachEdge((edgeKey: string, attributes: any) => {
           const originalColor =
             attributes.relationType === "hierarchy"
@@ -1261,6 +1388,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
           graphRef.current.setEdgeAttribute(edgeKey, "color", originalColor);
           graphRef.current.setEdgeAttribute(edgeKey, "size", originalSize);
+          graphRef.current.setEdgeAttribute(edgeKey, "zIndex", 1); // Reset z-index
         });
 
         sigmaRef.current.refresh();
@@ -1412,13 +1540,22 @@ const TabiyaDatasetExplorer: React.FC = () => {
             </button>
 
             {/* Progressive Loading Controls */}
-            {loadedSkillsCount < maxSkillsCount && (
+            {(loadedSkillsCount < maxSkillsCount ||
+              !hasInitialSkillsLoaded) && (
               <button
-                onClick={() => loadMoreSkills(2000)}
+                onClick={() =>
+                  hasInitialSkillsLoaded
+                    ? loadMoreSkills(2000)
+                    : loadInitialSkills(2000)
+                }
                 disabled={isLoadingMore}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoadingMore ? "Loading..." : `Load More Skills`}
+                {isLoadingMore
+                  ? "Loading..."
+                  : hasInitialSkillsLoaded
+                    ? "Load More Skills"
+                    : "Start Exploring Skills"}
               </button>
             )}
 
