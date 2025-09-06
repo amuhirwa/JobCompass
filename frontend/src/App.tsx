@@ -1,30 +1,40 @@
-import './global.css';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { DarkModeContext, useDarkMode } from '@/contexts/DarkModeContext';
+import "./global.css";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { DarkModeContext, useDarkMode } from "@/contexts/DarkModeContext";
 
-import NotFound from './pages/NotFound';
-import LandPage from './pages/LandPage';
-import SkillMapping from './pages/SkillMapping';
-import TabiyaDatasetExplorer from './pages/TabiyaDatasetExplorer';
-import { Dashboard } from '@/features/dashboard';
-import AppLayout from './components/custom/AppLayout';
+import NotFound from "./pages/NotFound";
+import LandPage from "./pages/LandPage";
+import SkillMapping from "./pages/SkillMapping";
+import TabiyaDatasetExplorer from "./pages/TabiyaDatasetExplorer";
+import { Dashboard } from "@/features/dashboard";
+import AppLayout from "./components/custom/AppLayout";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1, // Reduce retries for long operations
+    },
+    mutations: {
+      retry: 1, // Reduce retries for AI operations
+    },
+  },
+});
 
 const AppContent = () => {
   const location = useLocation();
   const { isDark } = useDarkMode();
-  const isSkillMapping = location.pathname === '/skill-mapping';
-  const isDatasetExplorer = location.pathname === '/dataset-explorer';
-  const isDashboard = location.pathname === '/dashboard';
+  const isSkillMapping = location.pathname === "/skill-mapping";
+  const isDatasetExplorer = location.pathname === "/dataset-explorer";
+  const isDashboard = location.pathname === "/dashboard";
 
   return (
     <div
-      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-white'} ${isSkillMapping || isDatasetExplorer || isDashboard ? 'w-full max-w-none overflow-x-hidden' : ''}`}
+      className={`min-h-screen ${isDark ? "bg-tabiya-dark" : "bg-white"} ${isSkillMapping || isDatasetExplorer || isDashboard ? "w-full max-w-none overflow-x-hidden" : ""}`}
     >
       <Routes>
         <Route path="/" element={<AppLayout />}>

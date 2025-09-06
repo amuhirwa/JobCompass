@@ -29,6 +29,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
+# AI Services Configuration
+GEMINI_API_KEY = config('GEMINI_API_KEY', default='AIzaSyCjIj4F9sSqMJEAndOIL6l6yTN54xkJ4kU')
+
 
 # Application definition
 
@@ -44,6 +47,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'taxonomy',
     'accounts',
+    'ai_services',
 ]
 
 MIDDLEWARE = [
@@ -181,6 +185,65 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
+
+# Additional CORS settings for long requests
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'cache-control',
+    'pragma',
+    'expires',
+]
+
+# Keep connection alive for long requests
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+# Performance and Timeout Settings
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
+
+# HTTP and Request Timeout Settings
+# These settings help prevent browser request cancellations
+import os
+os.environ.setdefault('DJANGO_REQUEST_TIMEOUT', '300')  # 5 minutes
+
+# WSGI/ASGI timeout settings for long-running requests
+WSGI_TIMEOUT = 300  # 5 minutes
+ASGI_TIMEOUT = 300  # 5 minutes
+
+# Database connection settings
+DATABASES['default']['CONN_MAX_AGE'] = 600  # 10 minutes
+DATABASES['default']['OPTIONS'] = {
+    'timeout': 300,  # 5 minutes timeout for database operations
+}
+
+# Logging configuration for AI services
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'ai_services': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}

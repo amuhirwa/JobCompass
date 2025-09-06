@@ -21,6 +21,10 @@ import type {
   RegisterRequest,
   RefreshTokenResponse,
   User,
+  MarketInsight,
+  CareerPath,
+  LearningResource,
+  GenerateAllInsightsResponse,
 } from './types';
 
 class JobCompassAPI {
@@ -200,6 +204,42 @@ class JobCompassAPI {
   // Model info API
   async getModelInfo(): Promise<ModelInfo[]> {
     const response = await this.client.get<ModelInfo[]>('/taxonomy/model-info/');
+    return response.data;
+  }
+
+  // AI Services API
+  async getMarketInsights(occupationId: string): Promise<MarketInsight> {
+    const response = await this.client.get<MarketInsight>(`/ai/occupations/${occupationId}/market-insights/`);
+    return response.data;
+  }
+
+  async generateMarketInsights(occupationId: string): Promise<MarketInsight> {
+    const response = await this.client.post<MarketInsight>(`/ai/occupations/${occupationId}/market-insights/`);
+    return response.data;
+  }
+
+  async getCareerPaths(occupationId: string): Promise<CareerPath[]> {
+    const response = await this.client.get<CareerPath[]>(`/ai/occupations/${occupationId}/career-paths/`);
+    return response.data;
+  }
+
+  async generateCareerPaths(occupationId: string): Promise<CareerPath[]> {
+    const response = await this.client.post<CareerPath[]>(`/ai/occupations/${occupationId}/career-paths/`);
+    return response.data;
+  }
+
+  async getLearningResources(skillId: string): Promise<LearningResource[]> {
+    const response = await this.client.get<LearningResource[]>(`/ai/skills/${skillId}/learning-resources/`);
+    return response.data;
+  }
+
+  async generateLearningResources(skillId: string): Promise<LearningResource[]> {
+    const response = await this.client.post<LearningResource[]>(`/ai/skills/${skillId}/learning-resources/`);
+    return response.data;
+  }
+
+  async generateAllInsights(occupationId: string): Promise<GenerateAllInsightsResponse> {
+    const response = await this.client.post<GenerateAllInsightsResponse>(`/ai/occupations/${occupationId}/generate-all/`);
     return response.data;
   }
 

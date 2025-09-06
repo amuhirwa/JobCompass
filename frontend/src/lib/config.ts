@@ -1,7 +1,7 @@
 // Environment variables configuration
 export const config = {
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
-  API_TIMEOUT: 10000,
+  API_TIMEOUT: 300000, // 5 minutes for AI operations
   ENABLE_DEVTOOLS: import.meta.env.DEV,
 } as const;
 
