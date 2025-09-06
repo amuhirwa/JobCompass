@@ -21,7 +21,6 @@ import Graph from "graphology";
 import Sigma from "sigma";
 // Import layout algorithms with fallback
 import forceAtlas2 from "graphology-layout-forceatlas2";
-import louvain from "graphology-communities-louvain";
 
 // Types for our graph data
 interface GraphNode {
@@ -93,7 +92,6 @@ const TabiyaDatasetExplorer: React.FC = () => {
   const [highlightedNodes, setHighlightedNodes] = useState<Set<string>>(
     new Set()
   );
-  const [showClusters, setShowClusters] = useState(true);
   const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
     new Set()
   );
@@ -147,18 +145,32 @@ const TabiyaDatasetExplorer: React.FC = () => {
       const files = await Promise.all(filePromises);
       const processed: any = {};
 
-      // Process each file with the worker
       const processPromises = files.map(({ filename, data }) => {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           const handleMessage = (e: MessageEvent) => {
             if (e.data.type === filename) {
-              processed[filename] = e.data.data;
+              if (e.data.success) {
+                processed[filename] = e.data.data;
+                console.log(
+                  `Processed ${filename}: ${e.data.data.length} records`
+                );
+              } else {
+                console.error(`Failed to process ${filename}:`, e.data.error);
+                processed[filename] = [];
+              }
               workerRef.current?.removeEventListener("message", handleMessage);
               resolve(e.data);
             }
           };
 
+          const handleError = (error: any) => {
+            console.error(`Worker error processing ${filename}:`, error);
+            workerRef.current?.removeEventListener("error", handleError);
+            reject(error);
+          };
+
           workerRef.current?.addEventListener("message", handleMessage);
+          workerRef.current?.addEventListener("error", handleError);
           workerRef.current?.postMessage({ csvData: data, type: filename });
         });
       });
@@ -191,6 +203,14 @@ const TabiyaDatasetExplorer: React.FC = () => {
         ],
       };
 
+      console.log("Processed data summary:", {
+        occupations: processedData.occupations.size,
+        skills: processedData.skills.size,
+        groups: processedData.groups.size,
+        relations: processedData.relations.length,
+        hierarchies: processedData.hierarchies.length,
+      });
+
       setProcessedData(processedData);
 
       // Generate initial graph with clustering
@@ -198,7 +218,9 @@ const TabiyaDatasetExplorer: React.FC = () => {
       setGraphData(initialGraph);
     } catch (err) {
       console.error("Error loading dataset:", err);
-      setError("Failed to load dataset files");
+      setError(
+        `Failed to load dataset files: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -259,10 +281,18 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
       // Get the cluster/group data
       const group = processedData.groups.get(clusterId);
-      if (!group) return;
+      if (!group) {
+        console.warn(`Group not found for ID: ${clusterId}`);
+        return;
+      }
+
+      console.log(`Expanding cluster: ${group.PREFERREDLABEL} (${group.type})`);
 
       const newNodes = [...graphData.nodes];
       const newEdges = [...graphData.edges];
+
+      // Track existing node IDs to avoid duplicates
+      const existingNodeIds = new Set(newNodes.map((node) => node.id));
 
       if (group.type === "occupation_group") {
         // Add occupations in this group
@@ -273,26 +303,36 @@ const TabiyaDatasetExplorer: React.FC = () => {
           .slice(0, 10); // Limit for performance
 
         relatedOccupations.forEach((occ: any) => {
-          const skillCount = processedData.relations.filter(
-            (rel: any) => rel.OCCUPATIONID === occ.ID
-          ).length;
+          if (!existingNodeIds.has(occ.ID)) {
+            const skillCount = processedData.relations.filter(
+              (rel: any) => rel.OCCUPATIONID === occ.ID
+            ).length;
 
-          newNodes.push({
-            id: occ.ID,
-            label: occ.PREFERREDLABEL || "Unknown Occupation",
-            description: occ.DESCRIPTION || "",
-            type: "occupation",
-            size: Math.max(8, Math.min(25, skillCount * 2)),
-            skillCount,
-          });
+            newNodes.push({
+              id: occ.ID,
+              label: occ.PREFERREDLABEL || "Unknown Occupation",
+              description: occ.DESCRIPTION || "",
+              type: "occupation",
+              size: Math.max(8, Math.min(25, skillCount * 2)),
+              skillCount,
+            });
 
-          // Add edge from group to occupation
-          newEdges.push({
-            id: `${clusterId}-${occ.ID}`,
-            source: clusterId,
-            target: occ.ID,
-            relationType: "hierarchy",
-          });
+            existingNodeIds.add(occ.ID);
+            console.log(
+              `Added occupation: ${occ.PREFERREDLABEL} with ${skillCount} skills`
+            );
+          }
+
+          // Add edge from group to occupation (check if edge doesn't already exist)
+          const edgeId = `${clusterId}-${occ.ID}`;
+          if (!newEdges.find((edge) => edge.id === edgeId)) {
+            newEdges.push({
+              id: edgeId,
+              source: clusterId,
+              target: occ.ID,
+              relationType: "hierarchy",
+            });
+          }
         });
 
         // Add some related skills
@@ -306,7 +346,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
         Array.from(skillIds).forEach((skillId) => {
           const skill = processedData.skills.get(skillId);
-          if (skill) {
+          if (skill && !existingNodeIds.has(skill.ID)) {
             newNodes.push({
               id: skill.ID,
               label: skill.PREFERREDLABEL || "Unknown Skill",
@@ -315,27 +355,36 @@ const TabiyaDatasetExplorer: React.FC = () => {
               size: 6,
             });
 
-            // Add edges for occupation-skill relations
-            processedData.relations
-              .filter(
-                (rel: any) =>
-                  rel.SKILLID === skillId &&
-                  relatedOccupations.some(
-                    (occ: any) => occ.ID === rel.OCCUPATIONID
-                  )
-              )
-              .forEach((rel: any) => {
+            existingNodeIds.add(skill.ID);
+            console.log(`Added skill: ${skill.PREFERREDLABEL}`);
+          }
+
+          // Add edges for occupation-skill relations
+          processedData.relations
+            .filter(
+              (rel: any) =>
+                rel.SKILLID === skillId &&
+                relatedOccupations.some(
+                  (occ: any) => occ.ID === rel.OCCUPATIONID
+                )
+            )
+            .forEach((rel: any) => {
+              const edgeId = `${rel.OCCUPATIONID}-${rel.SKILLID}`;
+              if (!newEdges.find((edge) => edge.id === edgeId)) {
                 newEdges.push({
-                  id: `${rel.OCCUPATIONID}-${rel.SKILLID}`,
+                  id: edgeId,
                   source: rel.OCCUPATIONID,
                   target: rel.SKILLID,
                   relationType: rel.RELATIONTYPE as "essential" | "optional",
                 });
-              });
-          }
+              }
+            });
         });
       }
 
+      console.log(
+        `Cluster expansion complete. Total nodes: ${newNodes.length}, Total edges: ${newEdges.length}`
+      );
       setGraphData({ nodes: newNodes, edges: newEdges });
     },
     [graphData, processedData, expandedClusters]
@@ -381,7 +430,8 @@ const TabiyaDatasetExplorer: React.FC = () => {
       graphData.edges.forEach((edge) => {
         if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
           graph.addEdge(edge.source, edge.target, {
-            type: edge.relationType === "essential" ? "solid" : "dashed",
+            // Use line instead of dashed/solid - Sigma.js handles styling differently
+            type: "line",
             color:
               edge.relationType === "hierarchy"
                 ? "#94a3b8"
@@ -389,6 +439,8 @@ const TabiyaDatasetExplorer: React.FC = () => {
                   ? "#ef4444"
                   : "#64748b",
             size: edge.relationType === "hierarchy" ? 2 : 1,
+            // Store relation type for potential custom rendering
+            relationType: edge.relationType,
           });
         }
       });
@@ -464,15 +516,11 @@ const TabiyaDatasetExplorer: React.FC = () => {
         });
 
         // Update node colors
-        graph.forEachNode((node: string, attributes: any) => {
+        graph.forEachNode((node: string) => {
           const isHighlighted = neighbors.has(node);
-          graph.setNodeAttribute(
-            node,
-            "color",
-            isHighlighted
-              ? attributes.originalColor || attributes.color
-              : "#ddd"
-          );
+          if (!isHighlighted) {
+            graph.setNodeAttribute(node, "color", "#ddd");
+          }
         });
 
         sigma.refresh();
@@ -486,9 +534,9 @@ const TabiyaDatasetExplorer: React.FC = () => {
         // Reset node colors
         graph.forEachNode((node: string, attributes: any) => {
           const originalColor =
-            attributes.type === "occupation"
+            attributes.nodeType === "occupation"
               ? "#3b82f6"
-              : attributes.type === "skill"
+              : attributes.nodeType === "skill"
                 ? "#10b981"
                 : "#f59e0b";
           graph.setNodeAttribute(node, "color", originalColor);
@@ -498,7 +546,9 @@ const TabiyaDatasetExplorer: React.FC = () => {
       });
     } catch (err) {
       console.error("Error initializing Sigma.js:", err);
-      setError("Failed to initialize graph visualization");
+      setError(
+        `Failed to initialize graph visualization: ${err instanceof Error ? err.message : "Unknown error"}`
+      );
     }
   }, [graphData, expandedClusters, expandCluster]);
 
@@ -577,9 +627,9 @@ const TabiyaDatasetExplorer: React.FC = () => {
       if (graphRef.current) {
         graphRef.current.forEachNode((node: string, attributes: any) => {
           const originalColor =
-            attributes.type === "occupation"
+            attributes.nodeType === "occupation"
               ? "#3b82f6"
-              : attributes.type === "skill"
+              : attributes.nodeType === "skill"
                 ? "#10b981"
                 : "#f59e0b";
           graphRef.current.setNodeAttribute(node, "color", originalColor);
