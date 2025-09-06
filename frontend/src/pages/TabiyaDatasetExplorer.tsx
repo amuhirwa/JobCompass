@@ -96,6 +96,26 @@ const TabiyaDatasetExplorer: React.FC = () => {
     new Set()
   );
 
+  // Virtual Graph and LOD state
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [renderQuality, setRenderQuality] = useState<"low" | "medium" | "high">(
+    "medium"
+  );
+  const [visibleNodeCount, setVisibleNodeCount] = useState(5000);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [loadedSkillsCount, setLoadedSkillsCount] = useState(0);
+  const [maxSkillsCount, setMaxSkillsCount] = useState(0);
+
+  // Performance optimization state
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingStage, setLoadingStage] = useState("");
+  const [performanceMetrics, setPerformanceMetrics] = useState({
+    fps: 0,
+    renderTime: 0,
+    nodeCount: 0,
+  });
+  const [isInteracting, setIsInteracting] = useState(false);
+
   // Refs for Sigma.js integration
   const containerRef = useRef<HTMLDivElement>(null);
   const sigmaRef = useRef<any>(null);
@@ -120,14 +140,18 @@ const TabiyaDatasetExplorer: React.FC = () => {
     };
   }, []);
 
-  // Load and process dataset files
+  // Optimized chunked dataset loading with progress tracking
   const loadDataset = async () => {
     if (!workerRef.current) return;
 
     setIsLoading(true);
     setError(null);
+    setLoadingProgress(0);
+    setLoadingStage("Initializing...");
 
     try {
+      // Stage 1: Load CSV files in parallel
+      setLoadingStage("Loading CSV files...");
       const filePromises = [
         "occupations.csv",
         "skills.csv",
@@ -143,10 +167,16 @@ const TabiyaDatasetExplorer: React.FC = () => {
       });
 
       const files = await Promise.all(filePromises);
+      setLoadingProgress(20);
+
+      // Stage 2: Process files sequentially with delays to prevent blocking
+      setLoadingStage("Processing core data...");
       const processed: any = {};
 
-      const processPromises = files.map(({ filename, data }) => {
-        return new Promise((resolve, reject) => {
+      for (let i = 0; i < files.length; i++) {
+        const { filename, data } = files[i];
+
+        await new Promise((resolve, reject) => {
           const handleMessage = (e: MessageEvent) => {
             if (e.data.type === filename) {
               if (e.data.success) {
@@ -173,11 +203,16 @@ const TabiyaDatasetExplorer: React.FC = () => {
           workerRef.current?.addEventListener("error", handleError);
           workerRef.current?.postMessage({ csvData: data, type: filename });
         });
-      });
 
-      await Promise.all(processPromises);
+        // Progress update and yield to main thread
+        setLoadingProgress(20 + (i + 1) * (60 / files.length));
+        await new Promise((resolve) => setTimeout(resolve, 10)); // Yield to main thread
+      }
 
-      // Convert to Maps for faster lookups
+      // Stage 3: Create data structures
+      setLoadingStage("Building data structures...");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
       const processedData: ProcessedData = {
         occupations: new Map(
           processed["occupations.csv"]?.map((item: any) => [item.ID, item]) ||
@@ -203,6 +238,8 @@ const TabiyaDatasetExplorer: React.FC = () => {
         ],
       };
 
+      setLoadingProgress(85);
+
       console.log("Processed data summary:", {
         occupations: processedData.occupations.size,
         skills: processedData.skills.size,
@@ -213,9 +250,18 @@ const TabiyaDatasetExplorer: React.FC = () => {
 
       setProcessedData(processedData);
 
-      // Generate initial graph with clustering
-      const initialGraph = generateClusteredGraph(processedData);
+      // Stage 4: Generate initial graph with 1000+ nodes
+      setLoadingStage("Creating visualization with 1000+ nodes...");
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+      const initialGraph = generateMinimalGraph(processedData);
       setGraphData(initialGraph);
+
+      setLoadingProgress(100);
+      setLoadingStage("Complete!");
+
+      // Brief delay to show completion
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (err) {
       console.error("Error loading dataset:", err);
       setError(
@@ -226,51 +272,298 @@ const TabiyaDatasetExplorer: React.FC = () => {
     }
   };
 
-  // Generate initial clustered view of the graph
-  const generateClusteredGraph = useCallback(
-    (data: ProcessedData): GraphData => {
-      const nodes: GraphNode[] = [];
-      const edges: GraphEdge[] = [];
+  // Generate initial graph with guaranteed minimum 1000 nodes for immediate rendering
+  const generateMinimalGraph = useCallback((data: ProcessedData): GraphData => {
+    const nodes: GraphNode[] = [];
+    const edges: GraphEdge[] = [];
 
-      // Calculate skill counts for occupations
-      const occupationSkillCounts = new Map<string, number>();
-      data.relations.forEach((rel: any) => {
-        const count = occupationSkillCounts.get(rel.OCCUPATIONID) || 0;
-        occupationSkillCounts.set(rel.OCCUPATIONID, count + 1);
+    // Load top occupation groups (30 groups)
+    const topOccupationGroups = Array.from(data.groups.values())
+      .filter((group: any) => group.type === "occupation_group")
+      .slice(0, 30);
+
+    // Calculate connection frequencies for prioritization
+    const skillConnectionCounts = new Map<string, number>();
+    const occupationSkillCounts = new Map<string, number>();
+
+    data.relations.forEach((rel: any) => {
+      const skillCount = skillConnectionCounts.get(rel.SKILLID) || 0;
+      skillConnectionCounts.set(rel.SKILLID, skillCount + 1);
+
+      const occCount = occupationSkillCounts.get(rel.OCCUPATIONID) || 0;
+      occupationSkillCounts.set(rel.OCCUPATIONID, occCount + 1);
+    });
+
+    // Add occupation groups first (30 nodes)
+    topOccupationGroups.forEach((group: any) => {
+      const relatedOccupations = Array.from(data.occupations.values()).filter(
+        (occ: any) => occ.OCCUPATIONGROUPCODE === group.CODE
+      );
+
+      const totalSkills = relatedOccupations.reduce(
+        (sum: number, occ: any) =>
+          sum + (occupationSkillCounts.get(occ.ID) || 0),
+        0
+      );
+
+      nodes.push({
+        id: group.ID,
+        label: group.PREFERREDLABEL || `Group ${group.CODE}`,
+        description: group.DESCRIPTION || "Occupation group",
+        type: "group",
+        size: Math.max(8, Math.min(20, totalSkills / 15)),
+        skillCount: totalSkills,
       });
+    });
 
-      // Create cluster nodes for occupation groups (limit to top 20 for initial view)
-      const topOccupationGroups = Array.from(data.groups.values())
-        .filter((group: any) => group.type === "occupation_group")
-        .slice(0, 20);
+    // Add top occupations to reach ~200 occupation nodes
+    const topOccupations = Array.from(data.occupations.values())
+      .map((occ: any) => ({
+        ...occ,
+        skillCount: occupationSkillCounts.get(occ.ID) || 0,
+      }))
+      .sort((a, b) => b.skillCount - a.skillCount)
+      .slice(0, 200);
 
-      topOccupationGroups.forEach((group: any) => {
-        const relatedOccupations = Array.from(data.occupations.values()).filter(
-          (occ: any) => occ.OCCUPATIONGROUPCODE === group.CODE
-        );
-
-        const totalSkills = relatedOccupations.reduce(
-          (sum: number, occ: any) =>
-            sum + (occupationSkillCounts.get(occ.ID) || 0),
-          0
-        );
-
+    topOccupations.forEach((occ: any) => {
+      if (!nodes.find((n) => n.id === occ.ID)) {
         nodes.push({
-          id: group.ID,
-          label: group.PREFERREDLABEL || `Group ${group.CODE}`,
-          description: group.DESCRIPTION || "Occupation group",
-          type: "group",
-          size: Math.max(15, Math.min(50, totalSkills / 10)),
-          skillCount: totalSkills,
+          id: occ.ID,
+          label: occ.PREFERREDLABEL || "Unknown Occupation",
+          description: occ.DESCRIPTION || "",
+          type: "occupation",
+          size: Math.max(8, Math.min(25, occ.skillCount / 2)),
+          skillCount: occ.skillCount,
         });
+      }
+    });
+
+    // Add top skills to reach minimum 1000 nodes total
+    // Calculate how many skills we need: 1000 - (groups + occupations)
+    const currentNodeCount = nodes.length;
+    const skillsNeeded = Math.max(800, 1000 - currentNodeCount); // Ensure at least 800 skills
+
+    const topSkills = Array.from(data.skills.values())
+      .map((skill: any) => ({
+        ...skill,
+        connectionCount: skillConnectionCounts.get(skill.ID) || 0,
+      }))
+      .sort((a, b) => b.connectionCount - a.connectionCount)
+      .slice(0, skillsNeeded);
+
+    topSkills.forEach((skill: any) => {
+      nodes.push({
+        id: skill.ID,
+        label: skill.PREFERREDLABEL || "Unknown Skill",
+        description: skill.DESCRIPTION || "",
+        type: "skill",
+        size: Math.max(3, Math.min(8, skill.connectionCount / 5)),
+      });
+    });
+
+    // Create edges with intelligent limiting
+    const addedEdges = new Set<string>();
+    const skillIds = new Set(topSkills.map((s: any) => s.ID));
+    const occupationIds = new Set(topOccupations.map((o: any) => o.ID));
+
+    // Add skill-occupation edges (limit per skill for performance)
+    data.relations
+      .filter(
+        (rel: any) =>
+          skillIds.has(rel.SKILLID) && occupationIds.has(rel.OCCUPATIONID)
+      )
+      .slice(0, 2000) // Limit total edges for initial performance
+      .forEach((rel: any) => {
+        const edgeId = `${rel.OCCUPATIONID}-${rel.SKILLID}`;
+        if (!addedEdges.has(edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: rel.OCCUPATIONID,
+            target: rel.SKILLID,
+            relationType: rel.RELATIONTYPE as "essential" | "optional",
+          });
+          addedEdges.add(edgeId);
+        }
       });
 
-      return { nodes, edges };
+    // Add group-occupation hierarchy edges
+    topOccupationGroups.forEach((group: any) => {
+      const groupOccupations = topOccupations
+        .filter((occ: any) => occ.OCCUPATIONGROUPCODE === group.CODE)
+        .slice(0, 8); // Limit to prevent overcrowding
+
+      groupOccupations.forEach((occ: any) => {
+        const edgeId = `${group.ID}-${occ.ID}`;
+        if (!addedEdges.has(edgeId)) {
+          edges.push({
+            id: edgeId,
+            source: group.ID,
+            target: occ.ID,
+            relationType: "hierarchy",
+          });
+          addedEdges.add(edgeId);
+        }
+      });
+    });
+
+    // Set counters - count actual loaded skills
+    const loadedSkillCount = nodes.filter((n) => n.type === "skill").length;
+    setLoadedSkillsCount(loadedSkillCount);
+    setMaxSkillsCount(data.skills.size);
+
+    console.log(
+      `Generated initial graph: ${nodes.length} nodes (${loadedSkillCount} skills), ${edges.length} edges`
+    );
+
+    // Ensure we have at least 1000 nodes for proper initial rendering
+    if (nodes.length < 1000) {
+      console.warn(
+        `Only ${nodes.length} nodes generated, expected at least 1000`
+      );
+    }
+
+    return { nodes, edges };
+  }, []);
+
+  // Chunked node addition for non-blocking rendering
+  const addNodeChunk = useCallback(
+    async (
+      graph: any,
+      nodes: GraphNode[],
+      startIndex: number,
+      chunkSize: number = 50
+    ): Promise<number> => {
+      const endIndex = Math.min(startIndex + chunkSize, nodes.length);
+
+      for (let i = startIndex; i < endIndex; i++) {
+        const node = nodes[i];
+        const color =
+          node.type === "occupation"
+            ? "#3b82f6"
+            : node.type === "skill"
+              ? "#10b981"
+              : "#f59e0b";
+
+        graph.addNode(node.id, {
+          label: node.label,
+          x: Math.random() * 1000,
+          y: Math.random() * 1000,
+          size: node.size,
+          color: color,
+          nodeType: node.type,
+          description: node.description,
+          skillCount: node.skillCount,
+        });
+      }
+
+      return endIndex;
     },
     []
   );
 
-  // Expand a cluster to show its constituent nodes
+  // Optimized progressive loading with micro-batching
+  const loadMoreSkills = useCallback(
+    async (batchSize: number = 1000) => {
+      if (
+        !processedData ||
+        isLoadingMore ||
+        loadedSkillsCount >= maxSkillsCount
+      ) {
+        return;
+      }
+
+      setIsLoadingMore(true);
+
+      try {
+        // Calculate skill connection frequencies
+        const skillConnectionCounts = new Map<string, number>();
+        processedData.relations.forEach((rel: any) => {
+          const count = skillConnectionCounts.get(rel.SKILLID) || 0;
+          skillConnectionCounts.set(rel.SKILLID, count + 1);
+        });
+
+        // Get currently loaded skill IDs
+        const currentSkillIds = new Set(
+          graphData.nodes
+            .filter((node) => node.type === "skill")
+            .map((node) => node.id)
+        );
+
+        // Get next batch of skills (most connected ones not yet loaded)
+        const nextSkills = Array.from(processedData.skills.values())
+          .filter((skill: any) => !currentSkillIds.has(skill.ID))
+          .map((skill: any) => ({
+            ...skill,
+            connectionCount: skillConnectionCounts.get(skill.ID) || 0,
+          }))
+          .sort((a, b) => b.connectionCount - a.connectionCount)
+          .slice(0, batchSize);
+
+        if (nextSkills.length === 0) return;
+
+        // Process skills in micro-batches to prevent blocking
+        const newNodes = [...graphData.nodes];
+        const newEdges = [...graphData.edges];
+        const microBatchSize = 100;
+
+        for (let i = 0; i < nextSkills.length; i += microBatchSize) {
+          const microBatch = nextSkills.slice(i, i + microBatchSize);
+
+          microBatch.forEach((skill: any) => {
+            newNodes.push({
+              id: skill.ID,
+              label: skill.PREFERREDLABEL || "Unknown Skill",
+              description: skill.DESCRIPTION || "",
+              type: "skill",
+              size: Math.max(2, Math.min(6, skill.connectionCount / 5)),
+            });
+          });
+
+          // Add edges with reduced limit (5 per skill instead of 10)
+          const microBatchIds = new Set(microBatch.map((s: any) => s.ID));
+          const edgeCount = new Map<string, number>();
+
+          processedData.relations
+            .filter((rel: any) => microBatchIds.has(rel.SKILLID))
+            .forEach((rel: any) => {
+              const skillEdgeCount = edgeCount.get(rel.SKILLID) || 0;
+              if (
+                skillEdgeCount < 5 && // Reduced from 10 to 5
+                newNodes.some((n) => n.id === rel.OCCUPATIONID)
+              ) {
+                const edgeId = `${rel.OCCUPATIONID}-${rel.SKILLID}`;
+                if (!newEdges.find((e) => e.id === edgeId)) {
+                  newEdges.push({
+                    id: edgeId,
+                    source: rel.OCCUPATIONID,
+                    target: rel.SKILLID,
+                    relationType: rel.RELATIONTYPE as "essential" | "optional",
+                  });
+                  edgeCount.set(rel.SKILLID, skillEdgeCount + 1);
+                }
+              }
+            });
+
+          // Yield to main thread every micro-batch
+          await new Promise((resolve) => setTimeout(resolve, 5));
+        }
+
+        setGraphData({ nodes: newNodes, edges: newEdges });
+        setLoadedSkillsCount(loadedSkillsCount + nextSkills.length);
+
+        console.log(
+          `Loaded ${nextSkills.length} more skills. Total: ${loadedSkillsCount + nextSkills.length}/${maxSkillsCount}`
+        );
+      } catch (error) {
+        console.error("Error loading more skills:", error);
+      } finally {
+        setIsLoadingMore(false);
+      }
+    },
+    [processedData, isLoadingMore, loadedSkillsCount, maxSkillsCount, graphData]
+  );
+
+  // Expand a cluster to show its constituent nodes (moved before setupSigmaEvents)
   const expandCluster = useCallback(
     (clusterId: string) => {
       if (!processedData) return;
@@ -390,119 +683,87 @@ const TabiyaDatasetExplorer: React.FC = () => {
     [graphData, processedData, expandedClusters]
   );
 
-  // Initialize Sigma.js visualization
-  useEffect(() => {
-    if (!containerRef.current || graphData.nodes.length === 0) return;
+  // Optimized event handlers setup
+  const setupSigmaEvents = useCallback(
+    (sigma: any, graph: any) => {
+      // Throttled camera updates
+      let zoomTimeout: NodeJS.Timeout;
+      let interactionTimeout: NodeJS.Timeout;
 
-    try {
-      // Clear existing instance
-      if (sigmaRef.current) {
-        sigmaRef.current.kill();
-      }
+      sigma.getCamera().on("updated", ({ ratio }: { ratio: number }) => {
+        setIsInteracting(true);
 
-      // Create new graph instance
-      const graph = new Graph();
-      graphRef.current = graph;
+        // Throttle zoom updates for performance (increased to 150ms)
+        clearTimeout(zoomTimeout);
+        zoomTimeout = setTimeout(() => {
+          updateRenderQuality(ratio);
+        }, 150);
 
-      // Add nodes with clustering colors
-      graphData.nodes.forEach((node) => {
-        const color =
-          node.type === "occupation"
-            ? "#3b82f6"
-            : node.type === "skill"
-              ? "#10b981"
-              : "#f59e0b";
-
-        graph.addNode(node.id, {
-          label: node.label,
-          x: Math.random() * 1000,
-          y: Math.random() * 1000,
-          size: node.size,
-          color: color,
-          // Store type in a custom attribute that doesn't interfere with Sigma
-          nodeType: node.type,
-          description: node.description,
-          skillCount: node.skillCount,
-        });
+        // Reset interaction state
+        clearTimeout(interactionTimeout);
+        interactionTimeout = setTimeout(() => {
+          setIsInteracting(false);
+        }, 300);
       });
 
-      // Add edges with different styles
-      graphData.edges.forEach((edge) => {
-        if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
-          graph.addEdge(edge.source, edge.target, {
-            // Use line instead of dashed/solid - Sigma.js handles styling differently
-            type: "line",
-            color:
-              edge.relationType === "hierarchy"
-                ? "#94a3b8"
-                : edge.relationType === "essential"
-                  ? "#ef4444"
-                  : "#64748b",
-            size: edge.relationType === "hierarchy" ? 2 : 1,
-            // Store relation type for potential custom rendering
-            relationType: edge.relationType,
-          });
-        }
-      });
+      // Optimized hover with delay
+      let hoverTimeout: NodeJS.Timeout;
 
-      // Apply ForceAtlas2 layout
-      const settings = forceAtlas2.inferSettings(graph);
-      forceAtlas2.assign(graph, { ...settings, iterations: 100 });
-
-      // Initialize Sigma renderer
-      const sigma = new Sigma(graph, containerRef.current, {
-        renderLabels: true,
-        renderEdgeLabels: false,
-        defaultNodeColor: "#666",
-        defaultEdgeColor: "#ccc",
-        labelFont: "Arial",
-        labelSize: 12,
-        labelColor: { color: "#000" },
-        enableEdgeEvents: true,
-      });
-
-      sigmaRef.current = sigma;
-
-      // Mouse event handlers
       sigma.on("enterNode", (event: any) => {
-        const nodeId = event.node;
-        const nodeData = graph.getNodeAttributes(nodeId);
-        const domNode = sigma.getNodeDisplayData(nodeId);
+        // Skip tooltip during interactions or in low quality mode
+        if (isInteracting || renderQuality === "low") return;
 
-        if (domNode) {
-          setTooltip({
-            node: {
-              id: nodeId,
-              label: nodeData.label,
-              description: nodeData.description,
-              type: nodeData.nodeType,
-              size: nodeData.size,
-              skillCount: nodeData.skillCount,
-            },
-            x: domNode.x,
-            y: domNode.y,
-          });
-        }
+        clearTimeout(hoverTimeout);
+        hoverTimeout = setTimeout(() => {
+          const nodeId = event.node;
+          const nodeData = graph.getNodeAttributes(nodeId);
+          const domNode = sigma.getNodeDisplayData(nodeId);
+
+          if (domNode) {
+            setTooltip({
+              node: {
+                id: nodeId,
+                label: nodeData.label,
+                description: nodeData.description,
+                type: nodeData.nodeType,
+                size: nodeData.size,
+                skillCount: nodeData.skillCount,
+              },
+              x: domNode.x,
+              y: domNode.y,
+            });
+          }
+        }, 100); // 100ms delay for hover
       });
 
       sigma.on("leaveNode", () => {
+        clearTimeout(hoverTimeout);
         setTooltip(null);
       });
 
+      // Enhanced click handler with comprehensive node highlighting
       sigma.on("clickNode", (event: any) => {
         const nodeId = event.node;
         const nodeData = graph.getNodeAttributes(nodeId);
 
-        // Handle cluster expansion
+        // Handle cluster expansion (legacy support)
         if (nodeData.nodeType === "group" && !expandedClusters.has(nodeId)) {
           expandCluster(nodeId);
           return;
         }
 
-        // Highlight node and neighbors
+        // Comprehensive highlighting for all connected nodes and edges
         const neighbors = new Set([nodeId]);
+        const connectedEdges = new Set<string>();
+
+        // Get all directly connected neighbors
         graph.forEachNeighbor(nodeId, (neighbor: string) => {
           neighbors.add(neighbor);
+        });
+
+        // Get all edges connected to the selected node
+        graph.forEachEdge(nodeId, (edgeKey: string) => {
+          connectedEdges.add(edgeKey);
         });
 
         setHighlightedNodes(neighbors);
@@ -515,44 +776,336 @@ const TabiyaDatasetExplorer: React.FC = () => {
           skillCount: nodeData.skillCount,
         });
 
-        // Update node colors
-        graph.forEachNode((node: string) => {
-          const isHighlighted = neighbors.has(node);
-          if (!isHighlighted) {
-            graph.setNodeAttribute(node, "color", "#ddd");
-          }
-        });
+        // Enhanced visual feedback with edge highlighting
+        if (graph.order > 0) {
+          // Reset all nodes to dimmed state first
+          graph.forEachNode((node: string, attributes: any) => {
+            const originalColor =
+              attributes.nodeType === "occupation"
+                ? "#3b82f6"
+                : attributes.nodeType === "skill"
+                  ? "#10b981"
+                  : "#f59e0b";
 
-        sigma.refresh();
+            const isHighlighted = neighbors.has(node);
+            const isSelected = node === nodeId;
+
+            if (isSelected) {
+              // Selected node - bright orange
+              graph.setNodeAttribute(node, "color", "#ff6b35");
+              graph.setNodeAttribute(node, "size", attributes.size * 1.5);
+            } else if (isHighlighted) {
+              // Connected nodes - maintain original color but slightly brighter
+              graph.setNodeAttribute(node, "color", originalColor);
+              graph.setNodeAttribute(node, "size", attributes.size * 1.2);
+            } else {
+              // Non-connected nodes - dimmed
+              graph.setNodeAttribute(node, "color", "#e5e7eb");
+              graph.setNodeAttribute(node, "size", attributes.size * 0.8);
+            }
+          });
+
+          // Highlight connected edges
+          graph.forEachEdge((edgeKey: string, attributes: any) => {
+            const isConnected = connectedEdges.has(edgeKey);
+            if (isConnected) {
+              // Connected edges - bright and thick
+              graph.setEdgeAttribute(edgeKey, "color", "#ff6b35");
+              graph.setEdgeAttribute(
+                edgeKey,
+                "size",
+                Math.max(2, attributes.size * 2)
+              );
+            } else {
+              // Non-connected edges - dimmed and thin
+              graph.setEdgeAttribute(edgeKey, "color", "#e5e7eb");
+              graph.setEdgeAttribute(
+                edgeKey,
+                "size",
+                Math.max(0.5, attributes.size * 0.5)
+              );
+            }
+          });
+
+          try {
+            sigma.refresh();
+          } catch (refreshError) {
+            console.warn("Failed to refresh after highlighting:", refreshError);
+          }
+        }
       });
 
-      // Click on empty space to reset
+      // Enhanced click on empty space to reset with proper restoration
       sigma.on("clickStage", () => {
         setHighlightedNodes(new Set());
         setSelectedNode(null);
 
-        // Reset node colors
-        graph.forEachNode((node: string, attributes: any) => {
-          const originalColor =
-            attributes.nodeType === "occupation"
-              ? "#3b82f6"
-              : attributes.nodeType === "skill"
-                ? "#10b981"
-                : "#f59e0b";
-          graph.setNodeAttribute(node, "color", originalColor);
-        });
+        // Reset all nodes and edges to original state
+        if (graph.order > 0) {
+          try {
+            graph.forEachNode((node: string, attributes: any) => {
+              const originalColor =
+                attributes.nodeType === "occupation"
+                  ? "#3b82f6"
+                  : attributes.nodeType === "skill"
+                    ? "#10b981"
+                    : "#f59e0b";
 
-        sigma.refresh();
+              // Restore original color and size
+              graph.setNodeAttribute(node, "color", originalColor);
+              // Reset to base size (assuming original size is stored or calculate from node type)
+              const baseSize =
+                attributes.nodeType === "group"
+                  ? Math.max(
+                      8,
+                      Math.min(20, (attributes.skillCount || 10) / 15)
+                    )
+                  : attributes.nodeType === "occupation"
+                    ? Math.max(
+                        8,
+                        Math.min(25, (attributes.skillCount || 5) / 2)
+                      )
+                    : Math.max(3, Math.min(8, 5)); // default skill size
+              graph.setNodeAttribute(node, "size", baseSize);
+            });
+
+            // Reset all edges to original state
+            graph.forEachEdge((edgeKey: string, attributes: any) => {
+              const originalColor =
+                attributes.relationType === "hierarchy"
+                  ? "#94a3b8"
+                  : attributes.relationType === "essential"
+                    ? "#ef4444"
+                    : "#64748b";
+
+              const originalSize =
+                attributes.relationType === "hierarchy" ? 2 : 1;
+
+              graph.setEdgeAttribute(edgeKey, "color", originalColor);
+              graph.setEdgeAttribute(edgeKey, "size", originalSize);
+            });
+
+            sigma.refresh();
+          } catch (resetError) {
+            console.warn("Failed to reset node and edge colors:", resetError);
+          }
+        }
       });
-    } catch (err) {
-      console.error("Error initializing Sigma.js:", err);
-      setError(
-        `Failed to initialize graph visualization: ${err instanceof Error ? err.message : "Unknown error"}`
-      );
-    }
-  }, [graphData, expandedClusters, expandCluster]);
+    },
+    [renderQuality, isInteracting, expandedClusters, expandCluster]
+  );
 
-  // Search functionality
+  // Update render quality based on zoom level with infinite zoom support
+  const updateRenderQuality = useCallback(
+    (zoomRatio: number) => {
+      setZoomLevel(zoomRatio);
+
+      // Adjusted quality thresholds for infinite zoom
+      const newQuality =
+        zoomRatio > 5 ? "low" : zoomRatio > 0.1 ? "medium" : "high";
+
+      if (newQuality !== renderQuality) {
+        setRenderQuality(newQuality);
+
+        // Update Sigma settings based on quality with enhanced zoom support
+        if (sigmaRef.current) {
+          try {
+            // Enable labels at all zoom levels for better user experience
+            sigmaRef.current.setSetting("renderLabels", true);
+            sigmaRef.current.setSetting(
+              "hideLabelsOnMove",
+              newQuality === "low"
+            );
+
+            // Adjust label size based on zoom for readability
+            const labelSize =
+              newQuality === "high" ? 12 : newQuality === "medium" ? 10 : 8;
+            sigmaRef.current.setSetting("labelSize", labelSize);
+
+            // Adjust edge visibility based on zoom
+            sigmaRef.current.setSetting(
+              "hideEdgesOnMove",
+              newQuality === "low"
+            );
+          } catch (settingError) {
+            console.warn("Failed to update Sigma settings:", settingError);
+          }
+        }
+      }
+
+      // Note: Removed automatic progressive loading on zoom
+      // Skills are only loaded when "Load More Skills" button is clicked
+    },
+    [renderQuality]
+  );
+
+  // Optimized Sigma.js initialization with chunked rendering
+  useEffect(() => {
+    if (!containerRef.current || graphData.nodes.length === 0) return;
+
+    // Add a small delay to ensure container is fully rendered
+    const timeoutId = setTimeout(() => {
+      const initializeSigma = async () => {
+        try {
+          // Ensure container has proper dimensions before initializing
+          const container = containerRef.current!;
+          if (container.clientWidth === 0 || container.clientHeight === 0) {
+            console.warn("Container has no dimensions, waiting...");
+            setTimeout(() => initializeSigma(), 100);
+            return;
+          }
+
+          // Clear existing instance
+          if (sigmaRef.current) {
+            sigmaRef.current.kill();
+          }
+
+          // Create new graph instance
+          const graph = new Graph();
+          graphRef.current = graph;
+
+          // Performance-first Sigma settings with infinite zoom
+          const sigmaSettings = {
+            renderLabels: true, // Enable labels for better initial experience
+            renderEdgeLabels: false,
+            defaultNodeColor: "#666",
+            defaultEdgeColor: "#ccc",
+            labelFont: "Arial",
+            labelSize: 10,
+            labelColor: { color: "#000" },
+            enableEdgeEvents: false, // Disable for performance
+            // Infinite zoom settings
+            minCameraRatio: 0.001, // Allow extreme zoom in
+            maxCameraRatio: 100, // Allow extreme zoom out
+            // Performance settings
+            hideEdgesOnMove: false, // Keep edges visible during interaction
+            hideLabelsOnMove: false, // Keep labels visible during interaction
+            mouseWheelZoomSpeed: 1.5, // Faster zoom speed for smooth experience
+            // Allow invalid container to prevent errors
+            allowInvalidContainer: true,
+          };
+
+          const sigma = new Sigma(graph, container, sigmaSettings);
+          sigmaRef.current = sigma;
+
+          // Start FPS monitoring
+          let lastTime = performance.now();
+          let frameCount = 0;
+
+          const updateFPS = () => {
+            frameCount++;
+            const currentTime = performance.now();
+
+            if (currentTime - lastTime >= 1000) {
+              setPerformanceMetrics((prev) => ({
+                ...prev,
+                fps: Math.round((frameCount * 1000) / (currentTime - lastTime)),
+                renderTime: currentTime - lastTime,
+              }));
+              frameCount = 0;
+              lastTime = currentTime;
+            }
+
+            requestAnimationFrame(updateFPS);
+          };
+          requestAnimationFrame(updateFPS);
+
+          // Add nodes in chunks to prevent blocking
+          let nodeIndex = 0;
+          const addNodesChunked = async () => {
+            while (nodeIndex < graphData.nodes.length) {
+              nodeIndex = await addNodeChunk(
+                graph,
+                graphData.nodes,
+                nodeIndex,
+                50
+              );
+              // Update performance metrics
+              setPerformanceMetrics((prev) => ({
+                ...prev,
+                nodeCount: nodeIndex,
+              }));
+              // Yield to main thread
+              await new Promise((resolve) => requestAnimationFrame(resolve));
+            }
+
+            // Add edges after all nodes are added
+            console.log("Adding edges...");
+            let edgeCount = 0;
+            for (const edge of graphData.edges) {
+              if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
+                graph.addEdge(edge.source, edge.target, {
+                  type: "line",
+                  color:
+                    edge.relationType === "hierarchy"
+                      ? "#94a3b8"
+                      : edge.relationType === "essential"
+                        ? "#ef4444"
+                        : "#64748b",
+                  size: edge.relationType === "hierarchy" ? 2 : 1,
+                  relationType: edge.relationType,
+                });
+                edgeCount++;
+
+                // Yield every 100 edges
+                if (edgeCount % 100 === 0) {
+                  await new Promise((resolve) =>
+                    requestAnimationFrame(resolve)
+                  );
+                }
+              }
+            }
+
+            // Apply optimized layout with reduced iterations
+            console.log("Applying layout...");
+            const settings = forceAtlas2.inferSettings(graph);
+            forceAtlas2.assign(graph, { ...settings, iterations: 30 }); // Reduced from 100
+
+            // Setup optimized event handlers
+            setupSigmaEvents(sigma, graph);
+
+            // Enable labels after initial setup (without refresh to prevent errors)
+            sigma.setSetting("renderLabels", renderQuality !== "low");
+
+            // Only refresh if we have nodes and the container is properly sized
+            if (graph.order > 0 && container.clientWidth > 0) {
+              try {
+                sigma.refresh();
+              } catch (refreshError) {
+                console.warn("Refresh failed, will retry:", refreshError);
+                // Retry refresh after a short delay
+                setTimeout(() => {
+                  try {
+                    sigma.refresh();
+                  } catch (retryError) {
+                    console.error("Refresh retry failed:", retryError);
+                  }
+                }, 100);
+              }
+            }
+
+            console.log(
+              `Sigma initialization complete: ${graph.order} nodes, ${graph.size} edges`
+            );
+          };
+
+          await addNodesChunked();
+        } catch (err) {
+          console.error("Error initializing Sigma.js:", err);
+          setError(
+            `Failed to initialize graph visualization: ${err instanceof Error ? err.message : "Unknown error"}`
+          );
+        }
+      };
+
+      initializeSigma();
+    }, 50); // 50ms delay to ensure container is rendered
+
+    // Cleanup function
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [graphData]); // Simplified dependencies  // Ultra-fast performance-aware search functionality
   const handleSearch = useCallback(
     (searchTerm: string) => {
       if (!sigmaRef.current || !graphRef.current || !searchTerm.trim()) return;
@@ -560,14 +1113,33 @@ const TabiyaDatasetExplorer: React.FC = () => {
       const graph = graphRef.current;
       const sigma = sigmaRef.current;
 
-      // Find matching nodes (fuzzy search)
+      // Optimized search with aggressive early termination
       const matches: { node: string; score: number }[] = [];
+      const maxMatches =
+        isInteracting || renderQuality === "low"
+          ? 5
+          : renderQuality === "medium"
+            ? 15
+            : 30;
+
+      let searchCount = 0;
+      const maxSearchNodes =
+        renderQuality === "low"
+          ? 500
+          : renderQuality === "medium"
+            ? 2000
+            : 5000;
+
       graph.forEachNode((nodeId: string, attributes: any) => {
+        if (matches.length >= maxMatches || searchCount >= maxSearchNodes)
+          return;
+        searchCount++;
+
         const label = attributes.label.toLowerCase();
         const search = searchTerm.toLowerCase();
 
         if (label.includes(search)) {
-          const score = label.indexOf(search) === 0 ? 2 : 1; // Prefer prefix matches
+          const score = label.indexOf(search) === 0 ? 2 : 1;
           matches.push({ node: nodeId, score });
         }
       });
@@ -578,53 +1150,85 @@ const TabiyaDatasetExplorer: React.FC = () => {
         const bestMatch = matches[0].node;
 
         // Center the camera on the found node
-        const nodePosition = sigma.getNodeDisplayData(bestMatch);
-        sigma
-          .getCamera()
-          .animate(
-            { x: nodePosition.x, y: nodePosition.y, ratio: 0.2 },
-            { duration: 1000 }
+        try {
+          const nodePosition = sigma.getNodeDisplayData(bestMatch);
+          const targetRatio =
+            renderQuality === "low"
+              ? 0.8
+              : renderQuality === "medium"
+                ? 0.5
+                : 0.2;
+
+          sigma
+            .getCamera()
+            .animate(
+              { x: nodePosition.x, y: nodePosition.y, ratio: targetRatio },
+              { duration: renderQuality === "low" ? 500 : 1000 }
+            );
+        } catch (cameraError) {
+          console.warn(
+            "Failed to center camera on search result:",
+            cameraError
           );
+        }
 
         // Highlight the found node
-        graph.setNodeAttribute(bestMatch, "color", "#ff6b35");
-        sigma.refresh();
+        try {
+          graph.setNodeAttribute(bestMatch, "color", "#ff6b35");
+          sigma.refresh();
+        } catch (highlightError) {
+          console.warn("Failed to highlight search result:", highlightError);
+        }
 
         // If it's a group node that hasn't been expanded, expand it
         const nodeData = graph.getNodeAttributes(bestMatch);
         if (nodeData.nodeType === "group" && !expandedClusters.has(bestMatch)) {
-          setTimeout(() => expandCluster(bestMatch), 500);
+          setTimeout(() => expandCluster(bestMatch), 300);
         }
       }
     },
-    [expandedClusters, expandCluster]
+    [expandedClusters, expandCluster, renderQuality, isInteracting]
   );
 
   // Control functions
   const zoomIn = () => {
     if (sigmaRef.current) {
-      const camera = sigmaRef.current.getCamera();
-      camera.animate({ ratio: camera.ratio * 0.7 }, { duration: 300 });
+      try {
+        const camera = sigmaRef.current.getCamera();
+        camera.animate({ ratio: camera.ratio * 0.7 }, { duration: 300 });
+      } catch (zoomError) {
+        console.warn("Failed to zoom in:", zoomError);
+      }
     }
   };
 
   const zoomOut = () => {
     if (sigmaRef.current) {
-      const camera = sigmaRef.current.getCamera();
-      camera.animate({ ratio: camera.ratio * 1.3 }, { duration: 300 });
+      try {
+        const camera = sigmaRef.current.getCamera();
+        camera.animate({ ratio: camera.ratio * 1.3 }, { duration: 300 });
+      } catch (zoomError) {
+        console.warn("Failed to zoom out:", zoomError);
+      }
     }
   };
 
   const resetView = () => {
     if (sigmaRef.current) {
-      const camera = sigmaRef.current.getCamera();
-      camera.animate({ x: 0.5, y: 0.5, ratio: 1 }, { duration: 500 });
+      try {
+        const camera = sigmaRef.current.getCamera();
+        camera.animate({ x: 0.5, y: 0.5, ratio: 1 }, { duration: 500 });
 
-      setHighlightedNodes(new Set());
-      setSelectedNode(null);
+        setHighlightedNodes(new Set());
+        setSelectedNode(null);
+      } catch (resetError) {
+        console.warn("Failed to reset view:", resetError);
+      }
+    }
 
-      // Reset all node colors
-      if (graphRef.current) {
+    // Reset all nodes and edges to original state
+    if (graphRef.current && graphRef.current.order > 0) {
+      try {
         graphRef.current.forEachNode((node: string, attributes: any) => {
           const originalColor =
             attributes.nodeType === "occupation"
@@ -632,36 +1236,94 @@ const TabiyaDatasetExplorer: React.FC = () => {
               : attributes.nodeType === "skill"
                 ? "#10b981"
                 : "#f59e0b";
+
+          // Restore original color and size
           graphRef.current.setNodeAttribute(node, "color", originalColor);
+          const baseSize =
+            attributes.nodeType === "group"
+              ? Math.max(8, Math.min(20, (attributes.skillCount || 10) / 15))
+              : attributes.nodeType === "occupation"
+                ? Math.max(8, Math.min(25, (attributes.skillCount || 5) / 2))
+                : Math.max(3, Math.min(8, 5)); // default skill size
+          graphRef.current.setNodeAttribute(node, "size", baseSize);
         });
+
+        // Reset all edges to original state
+        graphRef.current.forEachEdge((edgeKey: string, attributes: any) => {
+          const originalColor =
+            attributes.relationType === "hierarchy"
+              ? "#94a3b8"
+              : attributes.relationType === "essential"
+                ? "#ef4444"
+                : "#64748b";
+
+          const originalSize = attributes.relationType === "hierarchy" ? 2 : 1;
+
+          graphRef.current.setEdgeAttribute(edgeKey, "color", originalColor);
+          graphRef.current.setEdgeAttribute(edgeKey, "size", originalSize);
+        });
+
         sigmaRef.current.refresh();
+      } catch (resetError) {
+        console.warn("Failed to reset view colors and sizes:", resetError);
       }
     }
   };
 
-  // Statistics calculation
+  // Statistics calculation with performance metrics
   const stats = useMemo(() => {
     if (!processedData) return null;
+
+    const visibleNodes = graphData.nodes.length;
+    const visibleEdges = graphData.edges.length;
+    const skillsLoaded = graphData.nodes.filter(
+      (n) => n.type === "skill"
+    ).length;
 
     return {
       occupations: processedData.occupations.size,
       skills: processedData.skills.size,
       groups: processedData.groups.size,
       relations: processedData.relations.length,
+      // Performance metrics
+      visibleNodes,
+      visibleEdges,
+      skillsLoaded,
+      renderQuality,
+      loadProgress:
+        maxSkillsCount > 0
+          ? Math.round((skillsLoaded / maxSkillsCount) * 100)
+          : 0,
     };
-  }, [processedData]);
+  }, [processedData, graphData, renderQuality, maxSkillsCount]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
+        <div className="text-center max-w-md w-full px-6">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg font-medium text-gray-700">
+          <p className="text-lg font-medium text-gray-700 mb-2">
             Loading Tabiya Dataset...
           </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Parsing CSV files and building graph structure
+          <p className="text-sm text-gray-500 mb-4">
+            {loadingStage || "Initializing..."}
           </p>
+
+          {/* Progress Bar */}
+          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+            <div
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+          <p className="text-xs text-gray-400">
+            {loadingProgress.toFixed(0)}% complete
+          </p>
+
+          <div className="mt-4 text-xs text-gray-500 space-y-1">
+            <div>Optimized for 18,000+ nodes</div>
+            <div>Progressive loading • Performance-first rendering</div>
+          </div>
         </div>
       </div>
     );
@@ -702,13 +1364,23 @@ const TabiyaDatasetExplorer: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Target className="h-4 w-4 text-green-600" />
-                <span className="font-medium">{stats.skills}</span>
-                <span className="text-gray-500">skills</span>
+                <span className="font-medium">{stats.skillsLoaded}</span>
+                <span className="text-gray-500">/ {stats.skills} skills</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Users className="h-4 w-4 text-yellow-600" />
                 <span className="font-medium">{stats.groups}</span>
                 <span className="text-gray-500">groups</span>
+              </div>
+              <div className="text-xs text-gray-400">
+                <div>
+                  Visible: {stats.visibleNodes} nodes, {stats.visibleEdges}{" "}
+                  edges
+                </div>
+                <div>
+                  Quality: {stats.renderQuality} | Progress:{" "}
+                  {stats.loadProgress}% | FPS: {performanceMetrics.fps}
+                </div>
               </div>
             </div>
           )}
@@ -738,6 +1410,70 @@ const TabiyaDatasetExplorer: React.FC = () => {
             >
               Search
             </button>
+
+            {/* Progressive Loading Controls */}
+            {loadedSkillsCount < maxSkillsCount && (
+              <button
+                onClick={() => loadMoreSkills(2000)}
+                disabled={isLoadingMore}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoadingMore ? "Loading..." : `Load More Skills`}
+              </button>
+            )}
+
+            {/* Quality Indicator */}
+            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  renderQuality === "high"
+                    ? "bg-green-500"
+                    : renderQuality === "medium"
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                }`}
+              ></div>
+              <span className="text-sm text-gray-600 capitalize">
+                {renderQuality} Quality
+              </span>
+              <span className="text-xs text-gray-500 ml-2">
+                Zoom: {zoomLevel.toFixed(2)}
+              </span>
+              {isInteracting && (
+                <span className="text-xs text-orange-500 ml-1">Moving</span>
+              )}
+            </div>
+
+            {/* Performance Indicator */}
+            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  performanceMetrics.fps >= 30
+                    ? "bg-green-500"
+                    : performanceMetrics.fps >= 15
+                      ? "bg-yellow-500"
+                      : "bg-red-500"
+                }`}
+              ></div>
+              <span className="text-xs text-gray-600">
+                {performanceMetrics.fps} FPS
+              </span>
+            </div>
+
+            {/* Node Count Control */}
+            <div className="flex items-center space-x-2">
+              <label className="text-sm text-gray-600">Max Skills:</label>
+              <select
+                value={visibleNodeCount}
+                onChange={(e) => setVisibleNodeCount(Number(e.target.value))}
+                className="text-sm border border-gray-300 rounded px-2 py-1"
+              >
+                <option value={2000}>2K</option>
+                <option value={5000}>5K</option>
+                <option value={10000}>10K</option>
+                <option value={15000}>15K</option>
+              </select>
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
@@ -770,6 +1506,18 @@ const TabiyaDatasetExplorer: React.FC = () => {
       <div className="flex-1 relative">
         {/* Graph Container */}
         <div ref={containerRef} className="w-full h-full" />
+
+        {/* Loading Progress Indicator */}
+        {isLoadingMore && (
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-sm text-gray-600">
+                Loading more skills...
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Tooltip */}
         {tooltip && (
@@ -884,7 +1632,7 @@ const TabiyaDatasetExplorer: React.FC = () => {
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-green-600"></div>
-              <span>Skills</span>
+              <span>Skills (Progressive)</span>
             </div>
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 rounded-full bg-yellow-600"></div>
@@ -900,9 +1648,24 @@ const TabiyaDatasetExplorer: React.FC = () => {
             </div>
           </div>
 
-          <p className="text-xs text-gray-500 mt-3">
-            Click nodes to explore • Search to find specific items • Node size
-            indicates connections
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <div className="text-xs text-gray-500 space-y-1">
+              <div>
+                Skills: {stats?.skillsLoaded || 0} / {stats?.skills || 0} loaded
+              </div>
+              <div>
+                Click "Load More Skills" button to add more •{" "}
+                {stats?.renderQuality || "medium"} quality mode
+              </div>
+              <div>
+                Nodes: {stats?.visibleNodes || 0} • Edges:{" "}
+                {stats?.visibleEdges || 0}
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-2">
+            Manual skill loading • Zoom-based quality • Click nodes to explore
           </p>
         </div>
       </div>

@@ -25,6 +25,7 @@
     "express": "^5.1.0",
     "graphology": "^0.26.0",
     "graphology-communities-louvain": "^2.0.2",
+    "graphology-layout": "^0.6.1",
     "graphology-layout-forceatlas2": "^0.10.1",
     "papaparse": "^5.5.3",
     "react-beautiful-dnd": "^13.1.1",
