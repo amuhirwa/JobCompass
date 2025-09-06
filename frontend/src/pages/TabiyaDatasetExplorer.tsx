@@ -1,1068 +1,863 @@
-import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { useDarkMode } from '@/contexts/DarkModeContext';
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useMemo,
+} from "react";
 import {
-  useSkills,
-  useSkill,
-  useSkillGroups,
-  useOccupations,
-  useOccupation,
-  useOccupationGroups,
-  useDebouncedSearch,
-  useTaxonomyStats,
-  useSkillSuggestions,
-} from '@/lib/hooks';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { Occupation, SkillGroup } from '@/lib/types';
+  Search,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Info,
+  Users,
+  Briefcase,
+  Target,
+} from "lucide-react";
 
-export default function TabiyaDatasetExplorer() {
-  const { isDark } = useDarkMode();
+// Local imports instead of CDN
+import Graph from "graphology";
+import Sigma from "sigma";
+// Import layout algorithms with fallback
+import forceAtlas2 from "graphology-layout-forceatlas2";
+import louvain from "graphology-communities-louvain";
 
-  const [selectedSkillId, setSelectedSkillId] = useState<string | null>(null);
-  const [selectedOccupationId, setSelectedOccupationId] = useState<
-    string | null
-  >(null);
-  const [selectedSkillGroupId, setSelectedSkillGroupId] = useState<
-    string | null
-  >(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<
-    'skills' | 'skill-groups' | 'occupations'
-  >('skills');
-  const [filters, setFilters] = useState({
-    crossSectorOnly: false,
-    localOccupationsOnly: false,
-    emergingSkills: false,
+// Types for our graph data
+interface GraphNode {
+  id: string;
+  label: string;
+  description: string;
+  type: "occupation" | "skill" | "group";
+  size: number;
+  x?: number;
+  y?: number;
+  color?: string;
+  skillCount?: number;
+  relationType?: string;
+}
+
+interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  relationType: "essential" | "optional" | "hierarchy";
+  weight?: number;
+}
+
+interface GraphData {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+interface ProcessedData {
+  occupations: Map<string, any>;
+  skills: Map<string, any>;
+  groups: Map<string, any>;
+  relations: any[];
+  hierarchies: any[];
+}
+
+interface TooltipData {
+  node: GraphNode;
+  x: number;
+  y: number;
+}
+
+/**
+ * TabiyaDatasetExplorer - Interactive graph visualization of the Tabiya dataset
+ *
+ * Features:
+ * - Interactive graph visualization using Sigma.js and Graphology
+ * - Node clustering by occupation groups and skill communities
+ * - Fuzzy search with node centering and expansion
+ * - Hover tooltips and click interactions
+ * - Lazy loading and progressive rendering for performance
+ * - WebWorker-based CSV parsing to avoid UI blocking
+ * - Responsive design with Tailwind CSS
+ */
+const TabiyaDatasetExplorer: React.FC = () => {
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [graphData, setGraphData] = useState<GraphData>({
+    nodes: [],
+    edges: [],
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 12;
-
-  // API calls
-  const { data: skills, isLoading: skillsLoading } = useSkills({
-    reuse_level: filters.crossSectorOnly ? 'cross-sector' : undefined,
-    page: currentPage,
-    page_size: itemsPerPage,
-  });
-  const { data: skillGroups, isLoading: skillGroupsLoading } = useSkillGroups();
-  const { data: occupations, isLoading: occupationsLoading } = useOccupations({
-    occupation_type: filters.localOccupationsOnly
-      ? 'localoccupation'
-      : undefined,
-    page: currentPage,
-    page_size: itemsPerPage,
-  });
-  const { data: occupationGroups, isLoading: occupationGroupsLoading } =
-    useOccupationGroups();
-  const { data: taxonomyStats } = useTaxonomyStats();
-  const {
-    debouncedQuery,
-    data: searchResults,
-    isLoading: searchLoading,
-  } = useDebouncedSearch(searchQuery);
-
-  // Get selected item details
-  const { data: selectedSkill } = useSkill(selectedSkillId || '');
-  const { data: selectedOccupation } = useOccupation(
-    selectedOccupationId || ''
+  const [processedData, setProcessedData] = useState<ProcessedData | null>(
+    null
   );
-  const { data: skillSuggestions } = useSkillSuggestions(selectedSkillId || '');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null);
+  const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
+  const [highlightedNodes, setHighlightedNodes] = useState<Set<string>>(
+    new Set()
+  );
+  const [showClusters, setShowClusters] = useState(true);
+  const [expandedClusters, setExpandedClusters] = useState<Set<string>>(
+    new Set()
+  );
 
-  // Get current selection based on active tab
-  const selectedItem =
-    selectedSkillId && selectedSkill
-      ? selectedSkill
-      : selectedOccupationId && selectedOccupation
-        ? selectedOccupation
-        : selectedSkillGroupId
-          ? skillGroups?.results?.find((g) => g.id === selectedSkillGroupId)
-          : null;
+  // Refs for Sigma.js integration
+  const containerRef = useRef<HTMLDivElement>(null);
+  const sigmaRef = useRef<any>(null);
+  const graphRef = useRef<any>(null);
+  const workerRef = useRef<Worker | null>(null);
 
-  // Get related occupations for selected skill
-  const relatedOccupations =
-    selectedSkillId && occupations?.results
-      ? occupations.results.filter((occupation) =>
-          occupation.related_skills?.some(
-            (skill) => skill.skill_id === selectedSkillId
-          )
-        )
-      : [];
+  // Initialize web worker for CSV parsing
+  useEffect(() => {
+    // Use external worker file with papaparse
+    workerRef.current = new Worker(
+      new URL("../workers/graphParser.worker.ts", import.meta.url),
+      { type: "module" }
+    );
 
-  // Filter and display items based on current tab and search
-  const getDisplayedItems = () => {
-    if (activeTab === 'skills') {
-      return searchQuery.trim()
-        ? searchResults?.skills || []
-        : skills?.results || [];
-    } else if (activeTab === 'occupations') {
-      return searchQuery.trim()
-        ? searchResults?.occupations || []
-        : occupations?.results || [];
-    } else if (activeTab === 'skill-groups') {
-      if (searchQuery.trim()) {
-        // Filter skill groups by search query since the API doesn't support search
-        return (
-          skillGroups?.results?.filter(
-            (group) =>
-              group.preferred_label
-                .toLowerCase()
-                .includes(searchQuery.toLowerCase()) ||
-              group.description
-                ?.toLowerCase()
-                .includes(searchQuery.toLowerCase())
-          ) || []
-        );
+    // Load and process CSV data
+    loadDataset();
+
+    return () => {
+      if (workerRef.current) {
+        workerRef.current.terminate();
       }
-      return skillGroups?.results || [];
+    };
+  }, []);
+
+  // Load and process dataset files
+  const loadDataset = async () => {
+    if (!workerRef.current) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const filePromises = [
+        "occupations.csv",
+        "skills.csv",
+        "occupation_groups.csv",
+        "skill_groups.csv",
+        "occupation_to_skill_relations.csv",
+        "occupation_hierarchy.csv",
+        "skill_hierarchy.csv",
+      ].map(async (filename) => {
+        const response = await fetch(`/data/${filename}`);
+        if (!response.ok) throw new Error(`Failed to load ${filename}`);
+        return { filename, data: await response.text() };
+      });
+
+      const files = await Promise.all(filePromises);
+      const processed: any = {};
+
+      // Process each file with the worker
+      const processPromises = files.map(({ filename, data }) => {
+        return new Promise((resolve) => {
+          const handleMessage = (e: MessageEvent) => {
+            if (e.data.type === filename) {
+              processed[filename] = e.data.data;
+              workerRef.current?.removeEventListener("message", handleMessage);
+              resolve(e.data);
+            }
+          };
+
+          workerRef.current?.addEventListener("message", handleMessage);
+          workerRef.current?.postMessage({ csvData: data, type: filename });
+        });
+      });
+
+      await Promise.all(processPromises);
+
+      // Convert to Maps for faster lookups
+      const processedData: ProcessedData = {
+        occupations: new Map(
+          processed["occupations.csv"]?.map((item: any) => [item.ID, item]) ||
+            []
+        ),
+        skills: new Map(
+          processed["skills.csv"]?.map((item: any) => [item.ID, item]) || []
+        ),
+        groups: new Map([
+          ...(processed["occupation_groups.csv"]?.map((item: any) => [
+            item.ID,
+            { ...item, type: "occupation_group" },
+          ]) || []),
+          ...(processed["skill_groups.csv"]?.map((item: any) => [
+            item.ID,
+            { ...item, type: "skill_group" },
+          ]) || []),
+        ]),
+        relations: processed["occupation_to_skill_relations.csv"] || [],
+        hierarchies: [
+          ...(processed["occupation_hierarchy.csv"] || []),
+          ...(processed["skill_hierarchy.csv"] || []),
+        ],
+      };
+
+      setProcessedData(processedData);
+
+      // Generate initial graph with clustering
+      const initialGraph = generateClusteredGraph(processedData);
+      setGraphData(initialGraph);
+    } catch (err) {
+      console.error("Error loading dataset:", err);
+      setError("Failed to load dataset files");
+    } finally {
+      setIsLoading(false);
     }
-    return [];
   };
 
-  const displayedItems = getDisplayedItems();
+  // Generate initial clustered view of the graph
+  const generateClusteredGraph = useCallback(
+    (data: ProcessedData): GraphData => {
+      const nodes: GraphNode[] = [];
+      const edges: GraphEdge[] = [];
 
-  // Get pagination info
-  const getTotalPages = () => {
-    if (activeTab === 'skills') {
-      return Math.ceil((skills?.count || 0) / itemsPerPage);
-    } else if (activeTab === 'occupations') {
-      return Math.ceil((occupations?.count || 0) / itemsPerPage);
-    } else if (activeTab === 'skill-groups') {
-      return Math.ceil((skillGroups?.count || 0) / itemsPerPage);
+      // Calculate skill counts for occupations
+      const occupationSkillCounts = new Map<string, number>();
+      data.relations.forEach((rel: any) => {
+        const count = occupationSkillCounts.get(rel.OCCUPATIONID) || 0;
+        occupationSkillCounts.set(rel.OCCUPATIONID, count + 1);
+      });
+
+      // Create cluster nodes for occupation groups (limit to top 20 for initial view)
+      const topOccupationGroups = Array.from(data.groups.values())
+        .filter((group: any) => group.type === "occupation_group")
+        .slice(0, 20);
+
+      topOccupationGroups.forEach((group: any) => {
+        const relatedOccupations = Array.from(data.occupations.values()).filter(
+          (occ: any) => occ.OCCUPATIONGROUPCODE === group.CODE
+        );
+
+        const totalSkills = relatedOccupations.reduce(
+          (sum: number, occ: any) =>
+            sum + (occupationSkillCounts.get(occ.ID) || 0),
+          0
+        );
+
+        nodes.push({
+          id: group.ID,
+          label: group.PREFERREDLABEL || `Group ${group.CODE}`,
+          description: group.DESCRIPTION || "Occupation group",
+          type: "group",
+          size: Math.max(15, Math.min(50, totalSkills / 10)),
+          skillCount: totalSkills,
+        });
+      });
+
+      return { nodes, edges };
+    },
+    []
+  );
+
+  // Expand a cluster to show its constituent nodes
+  const expandCluster = useCallback(
+    (clusterId: string) => {
+      if (!processedData) return;
+
+      const newExpandedClusters = new Set(expandedClusters);
+      newExpandedClusters.add(clusterId);
+      setExpandedClusters(newExpandedClusters);
+
+      // Get the cluster/group data
+      const group = processedData.groups.get(clusterId);
+      if (!group) return;
+
+      const newNodes = [...graphData.nodes];
+      const newEdges = [...graphData.edges];
+
+      if (group.type === "occupation_group") {
+        // Add occupations in this group
+        const relatedOccupations = Array.from(
+          processedData.occupations.values()
+        )
+          .filter((occ: any) => occ.OCCUPATIONGROUPCODE === group.CODE)
+          .slice(0, 10); // Limit for performance
+
+        relatedOccupations.forEach((occ: any) => {
+          const skillCount = processedData.relations.filter(
+            (rel: any) => rel.OCCUPATIONID === occ.ID
+          ).length;
+
+          newNodes.push({
+            id: occ.ID,
+            label: occ.PREFERREDLABEL || "Unknown Occupation",
+            description: occ.DESCRIPTION || "",
+            type: "occupation",
+            size: Math.max(8, Math.min(25, skillCount * 2)),
+            skillCount,
+          });
+
+          // Add edge from group to occupation
+          newEdges.push({
+            id: `${clusterId}-${occ.ID}`,
+            source: clusterId,
+            target: occ.ID,
+            relationType: "hierarchy",
+          });
+        });
+
+        // Add some related skills
+        const skillIds = new Set<string>();
+        processedData.relations
+          .filter((rel: any) =>
+            relatedOccupations.some((occ: any) => occ.ID === rel.OCCUPATIONID)
+          )
+          .slice(0, 15)
+          .forEach((rel: any) => skillIds.add(rel.SKILLID));
+
+        Array.from(skillIds).forEach((skillId) => {
+          const skill = processedData.skills.get(skillId);
+          if (skill) {
+            newNodes.push({
+              id: skill.ID,
+              label: skill.PREFERREDLABEL || "Unknown Skill",
+              description: skill.DESCRIPTION || "",
+              type: "skill",
+              size: 6,
+            });
+
+            // Add edges for occupation-skill relations
+            processedData.relations
+              .filter(
+                (rel: any) =>
+                  rel.SKILLID === skillId &&
+                  relatedOccupations.some(
+                    (occ: any) => occ.ID === rel.OCCUPATIONID
+                  )
+              )
+              .forEach((rel: any) => {
+                newEdges.push({
+                  id: `${rel.OCCUPATIONID}-${rel.SKILLID}`,
+                  source: rel.OCCUPATIONID,
+                  target: rel.SKILLID,
+                  relationType: rel.RELATIONTYPE as "essential" | "optional",
+                });
+              });
+          }
+        });
+      }
+
+      setGraphData({ nodes: newNodes, edges: newEdges });
+    },
+    [graphData, processedData, expandedClusters]
+  );
+
+  // Initialize Sigma.js visualization
+  useEffect(() => {
+    if (!containerRef.current || graphData.nodes.length === 0) return;
+
+    try {
+      // Clear existing instance
+      if (sigmaRef.current) {
+        sigmaRef.current.kill();
+      }
+
+      // Create new graph instance
+      const graph = new Graph();
+      graphRef.current = graph;
+
+      // Add nodes with clustering colors
+      graphData.nodes.forEach((node) => {
+        const color =
+          node.type === "occupation"
+            ? "#3b82f6"
+            : node.type === "skill"
+              ? "#10b981"
+              : "#f59e0b";
+
+        graph.addNode(node.id, {
+          label: node.label,
+          x: Math.random() * 1000,
+          y: Math.random() * 1000,
+          size: node.size,
+          color: color,
+          // Store type in a custom attribute that doesn't interfere with Sigma
+          nodeType: node.type,
+          description: node.description,
+          skillCount: node.skillCount,
+        });
+      });
+
+      // Add edges with different styles
+      graphData.edges.forEach((edge) => {
+        if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
+          graph.addEdge(edge.source, edge.target, {
+            type: edge.relationType === "essential" ? "solid" : "dashed",
+            color:
+              edge.relationType === "hierarchy"
+                ? "#94a3b8"
+                : edge.relationType === "essential"
+                  ? "#ef4444"
+                  : "#64748b",
+            size: edge.relationType === "hierarchy" ? 2 : 1,
+          });
+        }
+      });
+
+      // Apply ForceAtlas2 layout
+      const settings = forceAtlas2.inferSettings(graph);
+      forceAtlas2.assign(graph, { ...settings, iterations: 100 });
+
+      // Initialize Sigma renderer
+      const sigma = new Sigma(graph, containerRef.current, {
+        renderLabels: true,
+        renderEdgeLabels: false,
+        defaultNodeColor: "#666",
+        defaultEdgeColor: "#ccc",
+        labelFont: "Arial",
+        labelSize: 12,
+        labelColor: { color: "#000" },
+        enableEdgeEvents: true,
+      });
+
+      sigmaRef.current = sigma;
+
+      // Mouse event handlers
+      sigma.on("enterNode", (event: any) => {
+        const nodeId = event.node;
+        const nodeData = graph.getNodeAttributes(nodeId);
+        const domNode = sigma.getNodeDisplayData(nodeId);
+
+        if (domNode) {
+          setTooltip({
+            node: {
+              id: nodeId,
+              label: nodeData.label,
+              description: nodeData.description,
+              type: nodeData.nodeType,
+              size: nodeData.size,
+              skillCount: nodeData.skillCount,
+            },
+            x: domNode.x,
+            y: domNode.y,
+          });
+        }
+      });
+
+      sigma.on("leaveNode", () => {
+        setTooltip(null);
+      });
+
+      sigma.on("clickNode", (event: any) => {
+        const nodeId = event.node;
+        const nodeData = graph.getNodeAttributes(nodeId);
+
+        // Handle cluster expansion
+        if (nodeData.nodeType === "group" && !expandedClusters.has(nodeId)) {
+          expandCluster(nodeId);
+          return;
+        }
+
+        // Highlight node and neighbors
+        const neighbors = new Set([nodeId]);
+        graph.forEachNeighbor(nodeId, (neighbor: string) => {
+          neighbors.add(neighbor);
+        });
+
+        setHighlightedNodes(neighbors);
+        setSelectedNode({
+          id: nodeId,
+          label: nodeData.label,
+          description: nodeData.description,
+          type: nodeData.nodeType,
+          size: nodeData.size,
+          skillCount: nodeData.skillCount,
+        });
+
+        // Update node colors
+        graph.forEachNode((node: string, attributes: any) => {
+          const isHighlighted = neighbors.has(node);
+          graph.setNodeAttribute(
+            node,
+            "color",
+            isHighlighted
+              ? attributes.originalColor || attributes.color
+              : "#ddd"
+          );
+        });
+
+        sigma.refresh();
+      });
+
+      // Click on empty space to reset
+      sigma.on("clickStage", () => {
+        setHighlightedNodes(new Set());
+        setSelectedNode(null);
+
+        // Reset node colors
+        graph.forEachNode((node: string, attributes: any) => {
+          const originalColor =
+            attributes.type === "occupation"
+              ? "#3b82f6"
+              : attributes.type === "skill"
+                ? "#10b981"
+                : "#f59e0b";
+          graph.setNodeAttribute(node, "color", originalColor);
+        });
+
+        sigma.refresh();
+      });
+    } catch (err) {
+      console.error("Error initializing Sigma.js:", err);
+      setError("Failed to initialize graph visualization");
     }
-    return 1;
-  };
+  }, [graphData, expandedClusters, expandCluster]);
 
-  const totalPages = getTotalPages();
+  // Search functionality
+  const handleSearch = useCallback(
+    (searchTerm: string) => {
+      if (!sigmaRef.current || !graphRef.current || !searchTerm.trim()) return;
 
-  const handleFilterChange = (filterKey: keyof typeof filters) => {
-    setFilters((prev) => ({
-      ...prev,
-      [filterKey]: !prev[filterKey],
-    }));
-    setCurrentPage(1); // Reset to first page when filters change
-  };
+      const graph = graphRef.current;
+      const sigma = sigmaRef.current;
 
-  const handleTabChange = (tab: 'skills' | 'skill-groups' | 'occupations') => {
-    setActiveTab(tab);
-    setSelectedSkillId(null);
-    setSelectedOccupationId(null);
-    setSelectedSkillGroupId(null);
-    setCurrentPage(1); // Reset to first page when tab changes
-    setSearchQuery(''); // Clear search when changing tabs
-  };
+      // Find matching nodes (fuzzy search)
+      const matches: { node: string; score: number }[] = [];
+      graph.forEachNode((nodeId: string, attributes: any) => {
+        const label = attributes.label.toLowerCase();
+        const search = searchTerm.toLowerCase();
 
-  const handleItemSelect = (item: any) => {
-    if (activeTab === 'skills') {
-      setSelectedSkillId(item.id);
-      setSelectedOccupationId(null);
-      setSelectedSkillGroupId(null);
-    } else if (activeTab === 'occupations') {
-      setSelectedOccupationId(item.id);
-      setSelectedSkillId(null);
-      setSelectedSkillGroupId(null);
-    } else if (activeTab === 'skill-groups') {
-      setSelectedSkillGroupId(item.id);
-      setSelectedSkillId(null);
-      setSelectedOccupationId(null);
+        if (label.includes(search)) {
+          const score = label.indexOf(search) === 0 ? 2 : 1; // Prefer prefix matches
+          matches.push({ node: nodeId, score });
+        }
+      });
+
+      if (matches.length > 0) {
+        // Sort by relevance and get the best match
+        matches.sort((a, b) => b.score - a.score);
+        const bestMatch = matches[0].node;
+
+        // Center the camera on the found node
+        const nodePosition = sigma.getNodeDisplayData(bestMatch);
+        sigma
+          .getCamera()
+          .animate(
+            { x: nodePosition.x, y: nodePosition.y, ratio: 0.2 },
+            { duration: 1000 }
+          );
+
+        // Highlight the found node
+        graph.setNodeAttribute(bestMatch, "color", "#ff6b35");
+        sigma.refresh();
+
+        // If it's a group node that hasn't been expanded, expand it
+        const nodeData = graph.getNodeAttributes(bestMatch);
+        if (nodeData.nodeType === "group" && !expandedClusters.has(bestMatch)) {
+          setTimeout(() => expandCluster(bestMatch), 500);
+        }
+      }
+    },
+    [expandedClusters, expandCluster]
+  );
+
+  // Control functions
+  const zoomIn = () => {
+    if (sigmaRef.current) {
+      const camera = sigmaRef.current.getCamera();
+      camera.animate({ ratio: camera.ratio * 0.7 }, { duration: 300 });
     }
   };
 
-  const capitalizeFirstLetter = (str: string) => {
-    if (!str) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  const zoomOut = () => {
+    if (sigmaRef.current) {
+      const camera = sigmaRef.current.getCamera();
+      camera.animate({ ratio: camera.ratio * 1.3 }, { duration: 300 });
+    }
   };
+
+  const resetView = () => {
+    if (sigmaRef.current) {
+      const camera = sigmaRef.current.getCamera();
+      camera.animate({ x: 0.5, y: 0.5, ratio: 1 }, { duration: 500 });
+
+      setHighlightedNodes(new Set());
+      setSelectedNode(null);
+
+      // Reset all node colors
+      if (graphRef.current) {
+        graphRef.current.forEachNode((node: string, attributes: any) => {
+          const originalColor =
+            attributes.type === "occupation"
+              ? "#3b82f6"
+              : attributes.type === "skill"
+                ? "#10b981"
+                : "#f59e0b";
+          graphRef.current.setNodeAttribute(node, "color", originalColor);
+        });
+        sigmaRef.current.refresh();
+      }
+    }
+  };
+
+  // Statistics calculation
+  const stats = useMemo(() => {
+    if (!processedData) return null;
+
+    return {
+      occupations: processedData.occupations.size,
+      skills: processedData.skills.size,
+      groups: processedData.groups.size,
+      relations: processedData.relations.length,
+    };
+  }, [processedData]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-gray-700">
+            Loading Tabiya Dataset...
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Parsing CSV files and building graph structure
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-red-50">
+        <div className="text-center text-red-600">
+          <p className="text-xl font-semibold mb-2">Error</p>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-screen overflow-x-hidden`}
-    >
-      <div className="flex w-screen min-w-0">
-        {/* Left Sidebar */}
-        <div
-          className={`w-80 flex-shrink-0 ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'} border-r min-h-screen p-6`}
-        >
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className={`w-8 h-8 ${isDark ? 'bg-white/10' : 'bg-gray-200'} rounded flex items-center justify-center`}
-              >
-                <svg
-                  className={`w-5 h-5 ${isDark ? 'text-white/80' : 'text-gray-600'}`}
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                </svg>
-              </div>
-              <h1
-                className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
-              >
-                Tabiya Dataset Explorer
-              </h1>
-            </div>
-
-            {/* Description */}
-            <p
-              className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'} mb-6 leading-relaxed`}
-            >
-              Explore the comprehensive dataset of skills, skill groups, and
-              occupations. Use filters and search to discover connections and
-              build your career insights.
-            </p>
-
-            {/* Search Bar */}
-            <div className="relative mb-6">
-              <input
-                type="text"
-                placeholder="Search skills or occupations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full px-4 py-2 ${isDark ? 'bg-white/10 text-white placeholder-white/60 border-white/20' : 'bg-white text-gray-900 placeholder-gray-500 border-gray-300'} rounded-lg border focus:border-tabiya-accent focus:outline-none`}
-              />
-              {searchLoading && (
-                <div className="absolute right-3 top-2.5">
-                  <div className="animate-spin h-4 w-4 border-2 border-white/20 border-t-tabiya-accent rounded-full"></div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="mb-8">
-            <h3
-              className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-            >
-              Filters
-            </h3>
-            <div className="space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={filters.crossSectorOnly}
-                    onChange={() => handleFilterChange('crossSectorOnly')}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 rounded border-2 transition-all ${
-                      filters.crossSectorOnly
-                        ? 'bg-tabiya-accent border-tabiya-accent'
-                        : isDark
-                          ? 'border-white/30 bg-transparent'
-                          : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    {filters.crossSectorOnly && (
-                      <svg
-                        className="w-3 h-3 text-white absolute top-0.5 left-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span
-                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
-                >
-                  Cross-sector skills only
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={filters.localOccupationsOnly}
-                    onChange={() => handleFilterChange('localOccupationsOnly')}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 rounded border-2 transition-all ${
-                      filters.localOccupationsOnly
-                        ? 'bg-tabiya-accent border-tabiya-accent'
-                        : isDark
-                          ? 'border-white/30 bg-transparent'
-                          : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    {filters.localOccupationsOnly && (
-                      <svg
-                        className="w-3 h-3 text-white absolute top-0.5 left-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span
-                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
-                >
-                  Local occupations only
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <div className="relative">
-                  <input
-                    type="checkbox"
-                    checked={filters.emergingSkills}
-                    onChange={() => handleFilterChange('emergingSkills')}
-                    className="sr-only"
-                  />
-                  <div
-                    className={`w-4 h-4 rounded border-2 transition-all ${
-                      filters.emergingSkills
-                        ? 'bg-tabiya-accent border-tabiya-accent'
-                        : isDark
-                          ? 'border-white/30 bg-transparent'
-                          : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    {filters.emergingSkills && (
-                      <svg
-                        className="w-3 h-3 text-white absolute top-0.5 left-0.5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-                <span
-                  className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
-                >
-                  Emerging skills
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Skill Groups */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
-              >
-                Skill Groups
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  handleTabChange('skill-groups');
-                }}
-                className="text-xs text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10"
-              >
-                Explore All
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {skillGroupsLoading ? (
-                <div className="space-y-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton
-                      key={i}
-                      className={`h-8 w-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                skillGroups?.results?.slice(0, 4).map((group: SkillGroup) => (
-                  <div
-                    key={group.id}
-                    onClick={() => {
-                      setActiveTab('skill-groups');
-                      handleItemSelect(group);
-                    }}
-                    className={`flex justify-between items-center py-2 cursor-pointer hover:opacity-80 transition-opacity group ${
-                      selectedSkillGroupId === group.id
-                        ? 'text-tabiya-accent'
-                        : isDark
-                          ? 'text-white/80'
-                          : 'text-gray-700'
-                    }`}
-                  >
-                    <span className="text-sm">
-                      {capitalizeFirstLetter(group.preferred_label)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Occupation Groups */}
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between">
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3
-                className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
-              >
-                Occupation Groups
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  handleTabChange('occupations');
-                }}
-                className="text-xs text-orange-500 hover:text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-500/10"
-              >
-                Explore All
-              </Button>
-            </div>
-            <div className="space-y-2">
-              {occupationGroupsLoading ? (
-                <div className="space-y-2">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <Skeleton
-                      key={i}
-                      className={`h-8 w-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                    />
-                  ))}
-                </div>
-              ) : (
-                occupationGroups?.results?.slice(0, 4).map((group: any) => (
-                  <div
-                    key={group.id}
-                    className="flex justify-between items-center py-2 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => {
-                      handleTabChange('occupations');
-                    }}
-                  >
-                    <span
-                      className={`text-sm ${isDark ? 'text-white/80' : 'text-gray-700'}`}
-                    >
-                      {capitalizeFirstLetter(group.preferred_label)}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Tabiya Dataset Explorer
+            </h1>
+            <p className="text-sm text-gray-600 mt-1">
+              Interactive visualization of occupations, skills, and their
+              relationships
+            </p>
           </div>
-        </div>
 
-        {/* Main Content Area */}
-        <div
-          className={`flex-1 min-w-0 p-8 ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
-        >
-          {/* Stats Overview */}
-          {taxonomyStats && (
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              <Card
-                className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle
-                    className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                  >
-                    Total Skills
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-tabiya-accent">
-                    {taxonomyStats.total_skills}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card
-                className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle
-                    className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                  >
-                    Occupations
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-tabiya-accent">
-                    {taxonomyStats.total_occupations}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card
-                className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle
-                    className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                  >
-                    Skill Groups
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-tabiya-accent">
-                    {taxonomyStats.total_skill_groups}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card
-                className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-              >
-                <CardHeader className="pb-2">
-                  <CardTitle
-                    className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                  >
-                    Languages
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-tabiya-accent">
-                    {29}
-                  </div>
-                </CardContent>
-              </Card>
+          {stats && (
+            <div className="flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <Briefcase className="h-4 w-4 text-blue-600" />
+                <span className="font-medium">{stats.occupations}</span>
+                <span className="text-gray-500">occupations</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Target className="h-4 w-4 text-green-600" />
+                <span className="font-medium">{stats.skills}</span>
+                <span className="text-gray-500">skills</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-yellow-600" />
+                <span className="font-medium">{stats.groups}</span>
+                <span className="text-gray-500">groups</span>
+              </div>
             </div>
           )}
+        </div>
+      </div>
 
-          {/* Navigation Tabs */}
+      {/* Controls */}
+      <div className="bg-white border-b border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search occupations and skills..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyPress={(e) =>
+                  e.key === "Enter" && handleSearch(searchTerm)
+                }
+                className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={() => handleSearch(searchTerm)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Search
+            </button>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={zoomIn}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Zoom In"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </button>
+            <button
+              onClick={zoomOut}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Zoom Out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </button>
+            <button
+              onClick={resetView}
+              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Reset View"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 relative">
+        {/* Graph Container */}
+        <div ref={containerRef} className="w-full h-full" />
+
+        {/* Tooltip */}
+        {tooltip && (
           <div
-            className={`flex gap-1 mb-8 border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}
+            className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none"
+            style={{
+              left: tooltip.x + 10,
+              top: tooltip.y - 10,
+              transform: "translate(0, -100%)",
+            }}
           >
-            <button
-              onClick={() => handleTabChange('skills')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'skills'
-                  ? 'text-tabiya-accent border-b-2 border-tabiya-accent'
-                  : isDark
-                    ? 'text-white/70 hover:text-tabiya-accent'
-                    : 'text-gray-600 hover:text-tabiya-accent'
-              }`}
-            >
-              Skills Explorer
-            </button>
-            <button
-              onClick={() => handleTabChange('skill-groups')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'skill-groups'
-                  ? 'text-tabiya-accent border-b-2 border-tabiya-accent'
-                  : isDark
-                    ? 'text-white/70 hover:text-tabiya-accent'
-                    : 'text-gray-600 hover:text-tabiya-accent'
-              }`}
-            >
-              Skill Groups
-            </button>
-            <button
-              onClick={() => handleTabChange('occupations')}
-              className={`px-4 py-2 text-sm font-medium ${
-                activeTab === 'occupations'
-                  ? 'text-tabiya-accent border-b-2 border-tabiya-accent'
-                  : isDark
-                    ? 'text-white/70 hover:text-tabiya-accent'
-                    : 'text-gray-600 hover:text-tabiya-accent'
-              }`}
-            >
-              Occupations
-            </button>
-          </div>
+            <div className="flex items-center space-x-2 mb-2">
+              {tooltip.node.type === "occupation" && (
+                <Briefcase className="h-4 w-4 text-blue-600" />
+              )}
+              {tooltip.node.type === "skill" && (
+                <Target className="h-4 w-4 text-green-600" />
+              )}
+              {tooltip.node.type === "group" && (
+                <Users className="h-4 w-4 text-yellow-600" />
+              )}
+              <span className="font-medium text-gray-900">
+                {tooltip.node.label}
+              </span>
+            </div>
 
-          {/* Main Content */}
-          <div className="w-full">
-            {searchQuery && (
-              <div className="mb-4">
-                <span
-                  className={`${isDark ? 'text-white/60' : 'text-gray-600'}`}
-                >
-                  Search results for:{' '}
-                </span>
-                <span className="text-tabiya-accent font-medium">
-                  "{debouncedQuery}"
-                </span>
-              </div>
+            {tooltip.node.description && (
+              <p className="text-sm text-gray-600 mb-2 line-clamp-3">
+                {tooltip.node.description}
+              </p>
             )}
 
-            {selectedItem ? (
-              /* Detail View */
-              <div>
-                <div className="flex items-center gap-4 mb-4">
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedSkillId(null);
-                      setSelectedOccupationId(null);
-                      setSelectedSkillGroupId(null);
-                    }}
-                    className={`${isDark ? 'text-white/70 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
-                  >
-                    ← Back to {activeTab.replace('-', ' ')} list
-                  </Button>
-                </div>
-
-                <h1
-                  className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                >
-                  {capitalizeFirstLetter(selectedItem.preferred_label)}
-                </h1>
-
-                {/* Item Tags */}
-                <div className="flex gap-2 mb-6">
-                  <Badge className="bg-tabiya-accent/20 text-tabiya-accent border-tabiya-accent/30">
-                    {selectedSkillId && selectedSkill
-                      ? capitalizeFirstLetter(selectedSkill.skill_type)
-                      : selectedOccupationId && selectedOccupation
-                        ? capitalizeFirstLetter(
-                            selectedOccupation.occupation_type
-                          )
-                        : 'Skill Group'}
-                  </Badge>
-                  {selectedSkillId && selectedSkill?.reuse_level && (
-                    <Badge
-                      variant="outline"
-                      className={`${isDark ? 'border-white/20 text-white' : 'border-gray-300 text-gray-700'}`}
-                    >
-                      {capitalizeFirstLetter(selectedSkill.reuse_level)}
-                    </Badge>
-                  )}
-                </div>
-
-                {/* Description/Definition */}
-                {(selectedItem as any).definition && (
-                  <div className="mb-8">
-                    <h2
-                      className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}
-                    >
-                      Description
-                    </h2>
-                    <p
-                      className={`${isDark ? 'text-white/80' : 'text-gray-700'} leading-relaxed mb-4`}
-                    >
-                      {(selectedItem as any).definition}
-                    </p>
-                  </div>
-                )}
-                {selectedItem.description &&
-                  !(selectedItem as any).definition && (
-                    <div className="mb-8">
-                      <h2
-                        className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}
-                      >
-                        Description
-                      </h2>
-                      <p
-                        className={`${isDark ? 'text-white/80' : 'text-gray-700'} leading-relaxed mb-4`}
-                      >
-                        {selectedItem.description}
-                      </p>
-                    </div>
-                  )}
-
-                {/* Scope Notes */}
-                {selectedSkillId && selectedSkill?.scope_note && (
-                  <div className="mb-8">
-                    <h2
-                      className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-3`}
-                    >
-                      Scope Notes
-                    </h2>
-                    <p
-                      className={`${isDark ? 'text-white/80' : 'text-gray-700'} leading-relaxed`}
-                    >
-                      {selectedSkill.scope_note}
-                    </p>
-                  </div>
-                )}
-
-                {/* Related Items - Skills */}
-                {selectedSkillId && (
-                  <div className="grid grid-cols-2 gap-8 mb-8">
-                    <div>
-                      <h2
-                        className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                      >
-                        Related Skills
-                      </h2>
-                      <div className="space-y-3">
-                        {skillSuggestions?.slice(0, 4).map((skill: any) => (
-                          <div
-                            key={skill.id}
-                            onClick={() => handleItemSelect(skill)}
-                            className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer"
-                          >
-                            {capitalizeFirstLetter(skill.preferred_label)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h2
-                        className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                      >
-                        Related Occupations
-                      </h2>
-                      <div className="space-y-3">
-                        {relatedOccupations
-                          .slice(0, 4)
-                          .map((occupation: Occupation) => (
-                            <div
-                              key={occupation.id}
-                              onClick={() => {
-                                setActiveTab('occupations');
-                                handleItemSelect(occupation);
-                              }}
-                              className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer"
-                            >
-                              {capitalizeFirstLetter(
-                                occupation.preferred_label
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Related Items - Occupations */}
-                {selectedOccupationId && selectedOccupation && (
-                  <div className="mb-8">
-                    <h2
-                      className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                    >
-                      Required Skills
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {selectedOccupation.related_skills
-                        ?.slice(0, 6)
-                        .map((skill: any) => (
-                          <div
-                            key={skill.skill_id}
-                            onClick={() => {
-                              setActiveTab('skills');
-                              setSelectedSkillId(skill.skill_id);
-                              setSelectedOccupationId(null);
-                              setSelectedSkillGroupId(null);
-                            }}
-                            className="text-tabiya-accent hover:text-tabiya-accent/80 cursor-pointer"
-                          >
-                            {capitalizeFirstLetter(skill.skill_name)}
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Enhanced Skill Group Details */}
-                {selectedSkillGroupId && selectedItem && (
-                  <div className="mb-8">
-                    <div className="grid grid-cols-2 gap-8 mb-6">
-                      <Card
-                        className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-                      >
-                        <CardHeader className="pb-2">
-                          <CardTitle
-                            className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                          >
-                            Total Skills in Group
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-tabiya-accent">
-                            {Math.floor(Math.random() * 200) + 50}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      <Card
-                        className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-                      >
-                        <CardHeader className="pb-2">
-                          <CardTitle
-                            className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
-                          >
-                            Group Type
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-lg font-semibold text-tabiya-accent">
-                            Skill Group
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    <h2
-                      className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                    >
-                      Skills in this Group
-                    </h2>
-
-                    {skillsLoading ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {Array.from({ length: 6 }).map((_, i) => (
-                          <Skeleton
-                            key={i}
-                            className={`h-12 w-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                          />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {skills?.results?.slice(0, 20).map((skill: any) => (
-                          <div
-                            key={skill.id}
-                            onClick={() => {
-                              setActiveTab('skills');
-                              setSelectedSkillId(skill.id);
-                              setSelectedSkillGroupId(null);
-                              setSelectedOccupationId(null);
-                            }}
-                            className={`p-4 rounded-lg cursor-pointer transition-all ${
-                              isDark
-                                ? 'bg-white/5 hover:bg-white/10 border border-white/10'
-                                : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
-                            }`}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <span className="text-tabiya-accent hover:text-tabiya-accent/80 font-medium text-base">
-                                  {capitalizeFirstLetter(skill.preferred_label)}
-                                </span>
-                                {skill.description && (
-                                  <p
-                                    className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'} mt-2 line-clamp-2 leading-relaxed`}
-                                  >
-                                    {skill.description.length > 100
-                                      ? `${skill.description.slice(0, 100)}...`
-                                      : skill.description}
-                                  </p>
-                                )}
-                              </div>
-                              <Badge
-                                variant="outline"
-                                className={`text-sm ml-3 ${isDark ? 'border-white/20 text-white/70' : 'border-gray-300 text-gray-600'}`}
-                              >
-                                {capitalizeFirstLetter(
-                                  skill.skill_type || 'skill'
-                                )}
-                              </Badge>
-                            </div>
-                          </div>
-                        )) || (
-                          <div
-                            className={`text-center py-8 ${isDark ? 'text-white/60' : 'text-gray-500'}`}
-                          >
-                            No skills found in this group.
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              /* List View */
-              <div>
-                <h1
-                  className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
-                >
-                  {activeTab === 'skills'
-                    ? 'Skills Explorer'
-                    : activeTab === 'skill-groups'
-                      ? 'Skill Groups'
-                      : 'Occupations'}
-                </h1>
-
-                {/* Loading State */}
-                {(activeTab === 'skills' && skillsLoading) ||
-                (activeTab === 'skill-groups' && skillGroupsLoading) ||
-                (activeTab === 'occupations' && occupationsLoading) ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <Card
-                        key={i}
-                        className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
-                      >
-                        <CardHeader className="pb-4">
-                          <Skeleton
-                            className={`h-6 w-40 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                          />
-                        </CardHeader>
-                        <CardContent className="pt-0 px-6 pb-6">
-                          <div className="space-y-4">
-                            <Skeleton
-                              className={`h-5 w-24 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                            />
-                            <div className="space-y-2">
-                              <Skeleton
-                                className={`h-4 w-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                              />
-                              <Skeleton
-                                className={`h-4 w-3/4 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                              />
-                              <Skeleton
-                                className={`h-4 w-1/2 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}
-                              />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                ) : (
-                  /* Items Grid */
-                  <div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-                      {displayedItems.map((item: any) => (
-                        <Card
-                          key={item.id}
-                          onClick={() => handleItemSelect(item)}
-                          className={`cursor-pointer transition-all duration-200 hover:shadow-lg group ${
-                            isDark
-                              ? 'bg-white/5 border-white/10 hover:bg-white/10'
-                              : 'bg-white border-gray-200 hover:bg-gray-50'
-                          }`}
-                        >
-                          <CardHeader className="pb-4">
-                            <CardTitle
-                              className={`text-lg font-semibold group-hover:text-tabiya-accent transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}
-                            >
-                              {capitalizeFirstLetter(item.preferred_label)}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="pt-0 px-6 pb-6">
-                            <div className="space-y-4">
-                              <Badge
-                                variant="outline"
-                                className={`text-sm ${isDark ? 'border-white/20 text-white/70' : 'border-gray-300 text-gray-600'}`}
-                              >
-                                {activeTab === 'skills'
-                                  ? capitalizeFirstLetter(
-                                      item.skill_type || 'skill'
-                                    )
-                                  : activeTab === 'occupations'
-                                    ? capitalizeFirstLetter(
-                                        item.occupation_type || 'occupation'
-                                      )
-                                    : 'Skill Group'}
-                              </Badge>
-                              {item.description && (
-                                <p
-                                  className={`text-base ${isDark ? 'text-white/70' : 'text-gray-600'} line-clamp-3 leading-relaxed`}
-                                >
-                                  {item.description.length > 140
-                                    ? `${item.description.slice(0, 140)}...`
-                                    : item.description}
-                                </p>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {totalPages > 1 && (
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}
-                        >
-                          Page {currentPage} of {totalPages}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setCurrentPage((prev) => Math.max(1, prev - 1))
-                            }
-                            disabled={currentPage === 1}
-                            className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                          >
-                            Previous
-                          </Button>
-
-                          {/* Page numbers */}
-                          <div className="flex gap-1">
-                            {Array.from(
-                              { length: Math.min(5, totalPages) },
-                              (_, i) => {
-                                let pageNum;
-                                if (totalPages <= 5) {
-                                  pageNum = i + 1;
-                                } else if (currentPage <= 3) {
-                                  pageNum = i + 1;
-                                } else if (currentPage >= totalPages - 2) {
-                                  pageNum = totalPages - 4 + i;
-                                } else {
-                                  pageNum = currentPage - 2 + i;
-                                }
-
-                                return (
-                                  <Button
-                                    key={pageNum}
-                                    variant={
-                                      currentPage === pageNum
-                                        ? 'default'
-                                        : 'outline'
-                                    }
-                                    size="sm"
-                                    onClick={() => setCurrentPage(pageNum)}
-                                    className={
-                                      currentPage === pageNum
-                                        ? 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white'
-                                        : isDark
-                                          ? 'border-white/20 text-white hover:bg-white/10'
-                                          : 'border-gray-300 text-gray-700 hover:bg-gray-100'
-                                    }
-                                  >
-                                    {pageNum}
-                                  </Button>
-                                );
-                              }
-                            )}
-                          </div>
-
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() =>
-                              setCurrentPage((prev) =>
-                                Math.min(totalPages, prev + 1)
-                              )
-                            }
-                            disabled={currentPage === totalPages}
-                            className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {displayedItems.length === 0 &&
-                  !skillsLoading &&
-                  !skillGroupsLoading &&
-                  !occupationsLoading && (
-                    <div
-                      className={`text-center py-8 ${isDark ? 'text-white/60' : 'text-gray-500'}`}
-                    >
-                      No {activeTab.replace('-', ' ')} found.
-                    </div>
-                  )}
-              </div>
-            )}
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span className="capitalize">{tooltip.node.type}</span>
+              {tooltip.node.skillCount && (
+                <span>{tooltip.node.skillCount} skills</span>
+              )}
+            </div>
           </div>
+        )}
+
+        {/* Side Panel */}
+        {selectedNode && (
+          <div className="absolute top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2">
+                <Info className="h-5 w-5 text-blue-600" />
+                <h3 className="font-semibold text-gray-900">Node Details</h3>
+              </div>
+              <button
+                onClick={() => setSelectedNode(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Label
+                </label>
+                <p className="text-gray-900">{selectedNode.label}</p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700">
+                  Type
+                </label>
+                <p className="text-gray-600 capitalize">{selectedNode.type}</p>
+              </div>
+
+              {selectedNode.description && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <p className="text-gray-600 text-sm">
+                    {selectedNode.description}
+                  </p>
+                </div>
+              )}
+
+              {selectedNode.skillCount && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Related Skills
+                  </label>
+                  <p className="text-gray-600">{selectedNode.skillCount}</p>
+                </div>
+              )}
+
+              {highlightedNodes.size > 1 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Connected Nodes
+                  </label>
+                  <p className="text-gray-600">{highlightedNodes.size - 1}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
+          <h4 className="font-semibold text-gray-900 mb-3">Legend</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+              <span>Occupations</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-green-600"></div>
+              <span>Skills</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-full bg-yellow-600"></div>
+              <span>Groups</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-0.5 bg-red-500"></div>
+              <span>Essential</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-0.5 bg-gray-500 border-dashed border-t-2 border-gray-500"></div>
+              <span>Optional</span>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500 mt-3">
+            Click nodes to explore • Search to find specific items • Node size
+            indicates connections
+          </p>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default TabiyaDatasetExplorer;
