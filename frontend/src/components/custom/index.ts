@@ -5,3 +5,4 @@ export { ToolsSection } from './ToolsSection';
 export { TestimonialsSection } from './TestimonialsSection';
 export { CTASection } from './CTASection';
 export { Footer } from './Footer';
+export { default as SkillLearningModal } from './SkillLearningModal';

@@ -6,6 +6,11 @@ import type {
   OccupationGroupFilters,
   LoginRequest,
   RegisterRequest,
+  MarketInsight,
+  CareerPath,
+  LearningResource,
+  GenerateAllInsightsResponse,
+  PaginatedResponse,
 } from './types';
 
 // Query Keys
@@ -229,7 +234,6 @@ export const useDebouncedSearch = (initialQuery = '', delay = 300) => {
 
 // Custom hook for infinite scroll (for pagination)
 import { useInfiniteQuery } from '@tanstack/react-query';
-import type { PaginatedResponse } from './types';
 
 export const useInfiniteSkills = (filters?: SkillFilters) => {
   return useInfiniteQuery<PaginatedResponse<any>, Error>({
@@ -264,5 +268,88 @@ export const useInfiniteOccupations = (filters?: OccupationFilters) => {
     },
     initialPageParam: 1,
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+// AI Services Hooks
+export const aiQueryKeys = {
+  marketInsights: (occupationId: string) => ['ai', 'marketInsights', occupationId] as const,
+  careerPaths: (occupationId: string) => ['ai', 'careerPaths', occupationId] as const,
+  learningResources: (skillId: string) => ['ai', 'learningResources', skillId] as const,
+} as const;
+
+export const useMarketInsights = (occupationId: string) => {
+  return useQuery<MarketInsight, Error>({
+    queryKey: aiQueryKeys.marketInsights(occupationId),
+    queryFn: () => api.getMarketInsights(occupationId),
+    enabled: !!occupationId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useGenerateMarketInsights = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<MarketInsight, Error, string>({
+    mutationFn: (occupationId: string) => api.generateMarketInsights(occupationId),
+    onSuccess: (_, occupationId) => {
+      // Invalidate to trigger refetch and update UI
+      queryClient.invalidateQueries({ queryKey: aiQueryKeys.marketInsights(occupationId) });
+    },
+  });
+};
+
+export const useCareerPaths = (occupationId: string) => {
+  return useQuery<CareerPath[], Error>({
+    queryKey: aiQueryKeys.careerPaths(occupationId),
+    queryFn: () => api.getCareerPaths(occupationId),
+    enabled: !!occupationId,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  });
+};
+
+export const useGenerateCareerPaths = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<CareerPath[], Error, string>({
+    mutationFn: (occupationId: string) => api.generateCareerPaths(occupationId),
+    onSuccess: (_, occupationId) => {
+      // Invalidate to trigger refetch and update UI
+      queryClient.invalidateQueries({ queryKey: aiQueryKeys.careerPaths(occupationId) });
+    },
+  });
+};
+
+export const useLearningResources = (skillId: string) => {
+  return useQuery<LearningResource[], Error>({
+    queryKey: aiQueryKeys.learningResources(skillId),
+    queryFn: () => api.getLearningResources(skillId),
+    enabled: !!skillId,
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+};
+
+export const useGenerateLearningResources = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<LearningResource[], Error, string>({
+    mutationFn: (skillId: string) => api.generateLearningResources(skillId),
+    onSuccess: (_, skillId) => {
+      // Invalidate to trigger refetch and update UI
+      queryClient.invalidateQueries({ queryKey: aiQueryKeys.learningResources(skillId) });
+    },
+  });
+};
+
+export const useGenerateAllInsights = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation<GenerateAllInsightsResponse, Error, string>({
+    mutationFn: (occupationId: string) => api.generateAllInsights(occupationId),
+    onSuccess: (_, occupationId) => {
+      // Invalidate to trigger refetch and update UI
+      queryClient.invalidateQueries({ queryKey: aiQueryKeys.marketInsights(occupationId) });
+      queryClient.invalidateQueries({ queryKey: aiQueryKeys.careerPaths(occupationId) });
+    },
   });
 };

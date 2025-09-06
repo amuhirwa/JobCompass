@@ -287,3 +287,64 @@ export interface OccupationGroupFilters {
   page?: number;
   page_size?: number;
 }
+
+// AI Services Types
+export interface MarketInsight {
+  id: string;
+  average_salary: number;
+  growth_rate: number;
+  remote_opportunities_percentage: number;
+  demand_level: 'low' | 'medium' | 'high' | 'very_high';
+  market_trends: string;
+  key_regions: string[];
+  industry_outlook: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LearningResource {
+  id: string;
+  title: string;
+  description: string;
+  resource_type: 'course' | 'book' | 'tutorial' | 'certification' | 'bootcamp' | 'workshop' | 'documentation' | 'practice';
+  url: string;
+  provider: string;
+  duration: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  is_free: boolean;
+  rating: number | null;
+  cost: string;
+}
+
+export interface CareerStepSkill {
+  id: string;
+  skill: Skill;
+  importance_level: 'essential' | 'important' | 'helpful' | 'optional';
+  proficiency_level: 'basic' | 'intermediate' | 'advanced' | 'expert';
+  learning_resources: LearningResource[];
+}
+
+export interface CareerStep {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string;
+  estimated_duration: string;
+  requirements: string;
+  typical_salary_range: string;
+  required_skills: CareerStepSkill[];
+}
+
+export interface CareerPath {
+  id: string;
+  path_name: string;
+  description: string;
+  estimated_duration: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  steps: CareerStep[];
+}
+
+export interface GenerateAllInsightsResponse {
+  market_insights: MarketInsight;
+  career_paths: CareerPath[];
+}
