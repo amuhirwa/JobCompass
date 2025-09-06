@@ -104,7 +104,6 @@ export const FAQSection = () => {
       </div>
 
       <div className="w-full max-w-4xl mx-auto relative z-10">
-        {/* Header */}
         <ScrollAnimation>
           <div className="text-center mb-16">
             <h2
@@ -126,7 +125,6 @@ export const FAQSection = () => {
           </div>
         </ScrollAnimation>
 
-        {/* FAQ Items */}
         <ScrollAnimation delay={0.2}>
           <div className="space-y-4">
             {faqs.map((faq) => (
@@ -214,7 +212,6 @@ export const FAQSection = () => {
           </div>
         </ScrollAnimation>
 
-        {/* Contact CTA */}
         <ScrollAnimation delay={0.4}>
           <div className="mt-16 text-center">
             <Card

@@ -78,7 +78,6 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
       `}
     >
       <CardContent className="p-6 h-full flex items-center gap-6">
-        {/* Profile Image */}
         <div className="flex-shrink-0">
           <div
             className={`w-20 h-20 rounded-full overflow-hidden shadow-lg ${
@@ -96,9 +95,7 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Stars */}
           <div className="flex items-center gap-1 mb-3">
             {[...Array(5)].map((_, i) => (
               <svg
@@ -113,7 +110,6 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
             ))}
           </div>
 
-          {/* Quote */}
           <blockquote
             className={`font-sans text-sm leading-relaxed mb-3 line-clamp-3 ${
               isDark ? 'text-white' : 'text-gray-700'
@@ -122,7 +118,6 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
             "{testimonial.quote}"
           </blockquote>
 
-          {/* Author Info */}
           <div className="flex items-center justify-between">
             <div>
               <div
@@ -161,7 +156,6 @@ export const TestimonialsSection = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const { isDark } = useDarkMode();
 
-  // Auto-advance testimonials every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isAnimating) {
@@ -203,7 +197,6 @@ export const TestimonialsSection = () => {
           : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
       }`}
     >
-      {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none">
         <div
           className={`absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
@@ -218,7 +211,6 @@ export const TestimonialsSection = () => {
       </div>
 
       <div className="w-full max-w-6xl mx-auto relative z-10">
-        {/* Header */}
         <ScrollAnimation>
           <div className="text-center mb-16">
             <h2
@@ -241,9 +233,7 @@ export const TestimonialsSection = () => {
 
         <ScrollAnimation delay={0.2}>
           <div className="flex items-center justify-center gap-8 lg:gap-16">
-            {/* Navigation Controls */}
             <div className="flex flex-col items-center gap-8">
-              {/* Up Button */}
               <Button
                 onClick={prevTestimonial}
                 disabled={isAnimating}
@@ -264,7 +254,6 @@ export const TestimonialsSection = () => {
                 </svg>
               </Button>
 
-              {/* Slide Indicators */}
               <div className="flex flex-col gap-2">
                 {testimonials.map((_, index) => (
                   <button
@@ -287,7 +276,6 @@ export const TestimonialsSection = () => {
                 ))}
               </div>
 
-              {/* Down Button */}
               <Button
                 onClick={nextTestimonial}
                 disabled={isAnimating}
@@ -309,10 +297,8 @@ export const TestimonialsSection = () => {
               </Button>
             </div>
 
-            {/* Testimonial Cards Container */}
             <div className="flex-1 max-w-3xl">
               <div className="relative h-[600px] overflow-hidden">
-                {/* Card Stack */}
                 <div
                   className="absolute inset-0 transition-transform duration-700 ease-out"
                   style={{

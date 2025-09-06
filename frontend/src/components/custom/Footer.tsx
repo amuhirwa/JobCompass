@@ -17,7 +17,6 @@ export const Footer = () => {
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16">
         <ScrollAnimation>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            {/* Logo and Description */}
             <div className="lg:col-span-1 space-y-6">
               <div className="flex items-center gap-3">
                 <img
@@ -25,7 +24,6 @@ export const Footer = () => {
                   alt="JobCompass Logo"
                   className="h-10 object-contain"
                   onError={(e) => {
-                    // Fallback to text logo if image fails
                     e.currentTarget.style.display = 'none';
                     e.currentTarget.nextElementSibling?.classList.remove(
                       'hidden'
@@ -87,7 +85,6 @@ export const Footer = () => {
               </div>
             </div>
 
-            {/* Career Insights */}
             <div className="space-y-6">
               <h4
                 className={`font-sans text-lg font-bold ${
@@ -148,7 +145,6 @@ export const Footer = () => {
               </ul>
             </div>
 
-            {/* Contact Us */}
             <div className="space-y-6">
               <h4
                 className={`font-sans text-lg font-bold ${
@@ -209,7 +205,6 @@ export const Footer = () => {
               </ul>
             </div>
 
-            {/* Social Media */}
             <div className="space-y-6">
               <div className="flex gap-4">
                 <a
@@ -288,7 +283,6 @@ export const Footer = () => {
             </div>
           </div>
 
-          {/* Bottom border */}
           <div
             className={`mt-12 pt-8 border-t ${
               isDark ? 'border-white/10' : 'border-gray-300'

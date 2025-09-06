@@ -13,13 +13,11 @@ export const HeroSection = () => {
     <section
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 lg:py-20 ${isDark ? 'bg-tabiya-dark' : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50'} relative overflow-hidden`}
     >
-      {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div
           className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-tabiya-dark via-tabiya-dark/90 to-tabiya-medium/50' : 'bg-gradient-to-br from-blue-50/50 via-white/70 to-indigo-100/50'}`}
         ></div>
 
-        {/* Floating geometric shapes */}
         <div
           className={`absolute top-10 right-10 w-32 h-32 ${isDark ? 'bg-tabiya-accent/20' : 'bg-blue-500/10'} rounded-full blur-xl animate-pulse`}
         ></div>
@@ -33,7 +31,6 @@ export const HeroSection = () => {
           className={`absolute top-20 left-1/2 w-20 h-20 ${isDark ? 'bg-white/10' : 'bg-purple-400/10'} rounded-full blur-lg animate-pulse`}
         ></div>
 
-        {/* Grid pattern */}
         <div
           className={`absolute inset-0 ${isDark ? 'opacity-10' : 'opacity-5'}`}
         >
@@ -50,7 +47,6 @@ export const HeroSection = () => {
 
       <div className="w-full relative z-10">
         <div className="flex flex-col lg:flex-row items-center min-h-[600px] lg:min-h-[700px] gap-12 lg:gap-16">
-          {/* Left Content */}
           <div className="flex-1 lg:pr-10">
             <div className="max-w-none">
               <ScrollAnimation delay={0.2}>
@@ -94,7 +90,6 @@ export const HeroSection = () => {
             </div>
           </div>
 
-          {/* Right Content - Enhanced Image Grid */}
           <ScrollAnimationContainer
             className="flex-1 relative"
             staggerDelay={0.1}
@@ -104,7 +99,6 @@ export const HeroSection = () => {
             ></div>
 
             <div className="relative grid grid-cols-2 gap-4 sm:gap-6 max-w-lg mx-auto">
-              {/* Top Left - WAY UP HIGH */}
               <ScrollAnimationItem
                 className="transform -translate-y-24 sm:-translate-y-32 translate-x-2 rotate-2"
                 direction="left"
@@ -124,7 +118,6 @@ export const HeroSection = () => {
                 </div>
               </ScrollAnimationItem>
 
-              {/* Top Right - WAY DOWN LOW */}
               <ScrollAnimationItem
                 className="transform translate-y-20 sm:translate-y-28 -translate-x-1 -rotate-1"
                 direction="right"
@@ -144,7 +137,6 @@ export const HeroSection = () => {
                 </div>
               </ScrollAnimationItem>
 
-              {/* Bottom Left - DOWN LOW */}
               <ScrollAnimationItem
                 className="transform translate-y-16 sm:translate-y-24 translate-x-3 -rotate-2"
                 direction="left"
@@ -164,7 +156,6 @@ export const HeroSection = () => {
                 </div>
               </ScrollAnimationItem>
 
-              {/* Bottom Right - UP HIGH */}
               <ScrollAnimationItem
                 className="transform -translate-y-12 sm:-translate-y-20 -translate-x-2 rotate-1"
                 direction="right"
@@ -185,7 +176,6 @@ export const HeroSection = () => {
               </ScrollAnimationItem>
             </div>
 
-            {/* Floating accent elements around images */}
             <div className="absolute -top-4 -right-4 w-8 h-8 bg-tabiya-accent rounded-full animate-ping opacity-30"></div>
             <div
               className={`absolute -bottom-4 -left-4 w-6 h-6 ${isDark ? 'bg-white/30' : 'bg-gray-400/40'} rounded-full animate-pulse`}

@@ -31,7 +31,6 @@ export const ToolsSection = () => {
         </ScrollAnimation>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
-          {/* AI Career Assistant */}
           <Card
             className={`${isDark ? 'bg-tabiya-dark/50 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
           >
@@ -82,7 +81,6 @@ export const ToolsSection = () => {
             </CardContent>
           </Card>
 
-          {/* Jobs Around You */}
           <Card
             className={`${isDark ? 'bg-tabiya-dark/50 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
           >
@@ -133,7 +131,6 @@ export const ToolsSection = () => {
             </CardContent>
           </Card>
 
-          {/* Skill Graph Explorer */}
           <Card
             className={`${isDark ? 'bg-tabiya-dark/50 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
           >
@@ -183,7 +180,6 @@ export const ToolsSection = () => {
             </CardContent>
           </Card>
 
-          {/* Community Insights */}
           <Card
             className={`${isDark ? 'bg-tabiya-dark/50 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
           >
@@ -235,7 +231,6 @@ export const ToolsSection = () => {
           </Card>
         </div>
 
-        {/* Featured Tool - Tabiya Dataset Explorer */}
         <Card
           className={`${isDark ? 'bg-tabiya-dark/30 border-tabiya-accent/20' : 'bg-white border-tabiya-accent/30'} border backdrop-blur-sm shadow-lg hover:border-tabiya-accent/40 transition-all duration-300 group hover:shadow-xl`}
         >

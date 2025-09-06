@@ -28,7 +28,6 @@ const Navigation = () => {
     threshold: 0.1,
   });
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -56,8 +55,7 @@ const Navigation = () => {
               Job<span className="text-tabiya-accent">Compass</span>
             </span>
           </Link>
-          {/* Navigation Links */}
-          {/* Desktop Nav Links - Hidden below 1400px */}
+          {/* Navigation Links - Hidden below 1400px */}
           <div className="hidden nav:flex items-center gap-6 lg:gap-8">
             <button
               onClick={() => navigateToSection('features')}
@@ -96,15 +94,12 @@ const Navigation = () => {
               Key Tools
             </button>
             <button
-              onClick={() => {
-                /* Job Insights logic */
-              }}
+              onClick={() => {}}
               className={`${isDark ? 'text-white' : 'text-gray-700'} font-sans text-base font-medium leading-6 hover:text-tabiya-accent transition-colors focus:outline-none focus:text-tabiya-accent`}
             >
               Job Insights
             </button>
 
-            {/* Career Explore Dropdown */}
             <div
               className="relative dropdown-container"
               onMouseEnter={() => setIsCareerExploreDropdownOpen(true)}
@@ -202,7 +197,6 @@ const Navigation = () => {
 
         {/* Right Side - Theme Toggle & Auth Buttons - Hidden below 1400px */}
         <div className="hidden nav:flex items-center gap-3">
-          {/* Dark Mode Toggle */}
           <button
             onClick={() => changeMode()}
             className={`p-2 rounded-lg ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
@@ -243,7 +237,6 @@ const Navigation = () => {
 
         {/* Hamburger Menu - Show below 1400px */}
         <div className="nav:hidden flex items-center gap-2">
-          {/* Mobile/Tablet Dark Mode Toggle */}
           <button
             onClick={() => changeMode()}
             className={`p-2 rounded-lg ${isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-100 hover:bg-gray-200'} transition-colors`}
@@ -361,7 +354,6 @@ const Navigation = () => {
               Job Insights
             </button>
 
-            {/* Career Explore Mobile Submenu */}
             <div className="py-2 px-2">
               <button
                 onClick={() =>

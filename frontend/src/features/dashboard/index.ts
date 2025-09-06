@@ -1,3 +1,3 @@
-export { default as Dashboard } from './Dashboard';
+export { Dashboard } from '../../pages/Dashboard';
 export * from './components';
 export * from './types';
