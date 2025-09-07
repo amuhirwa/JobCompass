@@ -22,7 +22,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   User,
-  Briefcase,
   Shield,
   Eye,
   EyeOff,
@@ -170,12 +169,22 @@ export function ProfilePage({
   const allSkills = skillGroups.flatMap((group) => group.skills);
 
   return (
-    <div className="space-y-6 w-full">
+    <div
+      className="space-y-6 w-full"
+      role="main"
+      aria-labelledby="profile-page-heading"
+    >
+      <h2 id="profile-page-heading" className="sr-only">
+        User Profile Management
+      </h2>
+
       <Tabs defaultValue="personal" className="space-y-6">
         <TabsList
-          className={`grid w-full grid-cols-4 ${
+          className={`grid w-full grid-cols-3 ${
             isDark ? 'bg-tabiya-dark border-gray-700' : 'bg-gray-100'
           }`}
+          role="tablist"
+          aria-label="Profile sections"
         >
           <TabsTrigger
             value="personal"
@@ -184,20 +193,12 @@ export function ProfilePage({
                 ? 'data-[state=active]:bg-tabiya-medium data-[state=active]:text-white text-gray-300'
                 : 'data-[state=active]:bg-white data-[state=active]:text-gray-900'
             }
+            role="tab"
+            aria-controls="personal-panel"
+            aria-selected="true"
           >
-            <User className="h-4 w-4 mr-2" />
+            <User className="h-4 w-4 mr-2" aria-hidden="true" />
             Personal
-          </TabsTrigger>
-          <TabsTrigger
-            value="professional"
-            className={
-              isDark
-                ? 'data-[state=active]:bg-tabiya-medium data-[state=active]:text-white text-gray-300'
-                : 'data-[state=active]:bg-white data-[state=active]:text-gray-900'
-            }
-          >
-            <Briefcase className="h-4 w-4 mr-2" />
-            Professional
           </TabsTrigger>
           <TabsTrigger
             value="skills"
@@ -206,8 +207,10 @@ export function ProfilePage({
                 ? 'data-[state=active]:bg-tabiya-medium data-[state=active]:text-white text-gray-300'
                 : 'data-[state=active]:bg-white data-[state=active]:text-gray-900'
             }
+            role="tab"
+            aria-controls="skills-panel"
           >
-            <Target className="h-4 w-4 mr-2" />
+            <Target className="h-4 w-4 mr-2" aria-hidden="true" />
             Skills
           </TabsTrigger>
           <TabsTrigger
@@ -217,23 +220,36 @@ export function ProfilePage({
                 ? 'data-[state=active]:bg-tabiya-medium data-[state=active]:text-white text-gray-300'
                 : 'data-[state=active]:bg-white data-[state=active]:text-gray-900'
             }
+            role="tab"
+            aria-controls="security-panel"
           >
-            <Shield className="h-4 w-4 mr-2" />
+            <Shield className="h-4 w-4 mr-2" aria-hidden="true" />
             Security
           </TabsTrigger>
         </TabsList>
 
         {/* Personal Information Tab */}
-        <TabsContent value="personal" className="space-y-6">
+        <TabsContent
+          value="personal"
+          className="space-y-6"
+          role="tabpanel"
+          id="personal-panel"
+          aria-labelledby="personal-tab"
+        >
           <Card
-            className={`border-gray-200 ${
-              isDark ? 'bg-tabiya-dark border-gray-700' : 'bg-white'
-            }`}
+            className={
+              isDark
+                ? 'border-tabiya-dark bg-tabiya-medium'
+                : 'border-gray-200 bg-white'
+            }
+            role="region"
+            aria-labelledby="personal-info-heading"
           >
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle
+                    id="personal-info-heading"
                     className={isDark ? 'text-white' : 'text-gray-900'}
                   >
                     Personal Information
@@ -253,12 +269,17 @@ export function ProfilePage({
                         ? 'border-gray-600 text-white hover:bg-tabiya-medium'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
+                    aria-label="Edit personal information"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4" aria-hidden="true" />
                     Edit Profile
                   </Button>
                 ) : (
-                  <div className="flex gap-2">
+                  <div
+                    className="flex gap-2"
+                    role="group"
+                    aria-label="Profile editing actions"
+                  >
                     <Button
                       onClick={handleCancelEdit}
                       variant="outline"
@@ -267,14 +288,16 @@ export function ProfilePage({
                           ? 'border-gray-600 text-white hover:bg-tabiya-medium'
                           : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                       }
+                      aria-label="Cancel profile editing"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleSaveProfile}
                       className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+                      aria-label="Save profile changes"
                     >
-                      <Save className="h-4 w-4" />
+                      <Save className="h-4 w-4" aria-hidden="true" />
                       Save Changes
                     </Button>
                   </div>
@@ -283,15 +306,26 @@ export function ProfilePage({
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Avatar Section */}
-              <div className="flex items-center gap-6">
+              <div
+                className="flex items-center gap-6"
+                role="group"
+                aria-labelledby="avatar-section"
+              >
+                <h4 id="avatar-section" className="sr-only">
+                  Profile Picture
+                </h4>
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={user.avatar} alt={user.firstName} />
+                  <AvatarImage
+                    src={user.avatar}
+                    alt={`${user.firstName} ${user.lastName}'s profile picture`}
+                  />
                   <AvatarFallback
                     className={`text-2xl ${
                       isDark
                         ? 'bg-tabiya-medium text-white'
                         : 'bg-gray-100 text-gray-700'
                     }`}
+                    aria-label={`${user.firstName} ${user.lastName}'s initials`}
                   >
                     {user.firstName[0]}
                     {user.lastName[0]}
@@ -302,6 +336,7 @@ export function ProfilePage({
                     className={`text-xl font-semibold ${
                       isDark ? 'text-white' : 'text-gray-900'
                     }`}
+                    aria-label={`User name: ${user.firstName} ${user.lastName}`}
                   >
                     {user.firstName} {user.lastName}
                   </h3>
@@ -309,6 +344,7 @@ export function ProfilePage({
                     className={
                       isDark ? 'text-gray-300' : 'text-muted-foreground'
                     }
+                    aria-label={`Email address: ${user.email}`}
                   >
                     {user.email}
                   </p>
@@ -320,6 +356,7 @@ export function ProfilePage({
                         ? 'border-gray-600 text-white hover:bg-tabiya-medium'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
+                    aria-label="Change profile picture"
                   >
                     Change Photo
                   </Button>
@@ -327,7 +364,11 @@ export function ProfilePage({
               </div>
 
               {/* Form Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                role="form"
+                aria-labelledby="personal-info-heading"
+              >
                 <div className="space-y-2">
                   <Label
                     htmlFor="firstName"
@@ -337,6 +378,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="firstName"
+                    name="firstName"
                     value={isEditing ? editedUser.firstName : user.firstName}
                     onChange={(e) =>
                       setEditedUser((prev) => ({
@@ -350,7 +392,17 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'firstName-help' : undefined}
+                    required={isEditing}
                   />
+                  {isEditing && (
+                    <p
+                      id="firstName-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter your first name
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -362,6 +414,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="lastName"
+                    name="lastName"
                     value={isEditing ? editedUser.lastName : user.lastName}
                     onChange={(e) =>
                       setEditedUser((prev) => ({
@@ -375,7 +428,17 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'lastName-help' : undefined}
+                    required={isEditing}
                   />
+                  {isEditing && (
+                    <p
+                      id="lastName-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter your last name
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -387,6 +450,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="email"
+                    name="email"
                     type="email"
                     value={isEditing ? editedUser.email : user.email}
                     onChange={(e) =>
@@ -401,7 +465,17 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'email-help' : undefined}
+                    required={isEditing}
                   />
+                  {isEditing && (
+                    <p
+                      id="email-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter a valid email address
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -413,6 +487,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="phone"
+                    name="phone"
                     type="tel"
                     placeholder="+1 (555) 123-4567"
                     disabled={!isEditing}
@@ -421,7 +496,16 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300 placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'phone-help' : undefined}
                   />
+                  {isEditing && (
+                    <p
+                      id="phone-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter your phone number with country code
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -433,6 +517,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="location"
+                    name="location"
                     placeholder="City, Country"
                     disabled={!isEditing}
                     className={
@@ -440,7 +525,16 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300 placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'location-help' : undefined}
                   />
+                  {isEditing && (
+                    <p
+                      id="location-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter your current city and country
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -452,6 +546,7 @@ export function ProfilePage({
                   </Label>
                   <Input
                     id="jobTitle"
+                    name="jobTitle"
                     placeholder="Your current position"
                     disabled={!isEditing}
                     className={
@@ -459,9 +554,18 @@ export function ProfilePage({
                         ? 'bg-tabiya-medium border-gray-600 text-white disabled:bg-gray-700 disabled:text-gray-300 placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 disabled:bg-gray-100'
                     }
+                    aria-describedby={isEditing ? 'jobTitle-help' : undefined}
                   />
+                  {isEditing && (
+                    <p
+                      id="jobTitle-help"
+                      className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                    >
+                      Enter your current job title or position
+                    </p>
+                  )}
                 </div>
-              </div>
+              </form>
 
               {/* Professional Summary */}
               <div className="space-y-2">
@@ -488,16 +592,27 @@ export function ProfilePage({
         </TabsContent>
 
         {/* Security Tab */}
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent
+          value="security"
+          className="space-y-6"
+          role="tabpanel"
+          id="security-panel"
+          aria-labelledby="security-tab"
+        >
           <Card
             className={
               isDark
-                ? 'bg-tabiya-dark border-gray-700'
-                : 'bg-white border-gray-200'
+                ? 'border-tabiya-dark bg-tabiya-medium'
+                : 'border-gray-200 bg-white'
             }
+            role="region"
+            aria-labelledby="security-settings-heading"
           >
             <CardHeader>
-              <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+              <CardTitle
+                id="security-settings-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
                 Security Settings
               </CardTitle>
               <CardDescription
@@ -507,8 +622,13 @@ export function ProfilePage({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="space-y-4">
+              <section
+                className="space-y-4"
+                role="form"
+                aria-labelledby="change-password-heading"
+              >
                 <h4
+                  id="change-password-heading"
                   className={`text-lg font-medium ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
@@ -516,7 +636,8 @@ export function ProfilePage({
                   Change Password
                 </h4>
 
-                <div className="space-y-4">
+                <fieldset className="space-y-4">
+                  <legend className="sr-only">Password Change Form</legend>
                   <div className="space-y-2">
                     <Label
                       htmlFor="currentPassword"
@@ -540,7 +661,12 @@ export function ProfilePage({
                             ? 'bg-tabiya-medium border-gray-600 text-white'
                             : 'bg-white border-gray-300 text-gray-900'
                         }
+                        aria-describedby="current-password-help"
+                        required
                       />
+                      <p id="current-password-help" className="sr-only">
+                        Enter your current password to verify your identity
+                      </p>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -550,11 +676,15 @@ export function ProfilePage({
                             : 'text-gray-500 hover:bg-gray-100'
                         }`}
                         onClick={() => setShowPassword(!showPassword)}
+                        type="button"
+                        aria-label={
+                          showPassword ? 'Hide password' : 'Show password'
+                        }
                       >
                         {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
+                          <EyeOff className="h-4 w-4" aria-hidden="true" />
                         ) : (
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-4 w-4" aria-hidden="true" />
                         )}
                       </Button>
                     </div>
@@ -582,7 +712,16 @@ export function ProfilePage({
                           ? 'bg-tabiya-medium border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
                       }
+                      aria-describedby="new-password-help"
+                      required
+                      minLength={8}
                     />
+                    <p
+                      id="new-password-help"
+                      className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+                    >
+                      Password must be at least 8 characters long
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -607,56 +746,129 @@ export function ProfilePage({
                           ? 'bg-tabiya-medium border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
                       }
+                      aria-describedby="confirm-password-help"
+                      required
                     />
+                    <p
+                      id="confirm-password-help"
+                      className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
+                    >
+                      Re-enter your new password to confirm
+                    </p>
                   </div>
 
                   <Button
                     onClick={handlePasswordChange}
                     className="w-full bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+                    type="submit"
+                    aria-describedby="password-change-status"
                   >
                     Update Password
                   </Button>
-                </div>
-              </div>
+                  <div
+                    id="password-change-status"
+                    className="sr-only"
+                    aria-live="polite"
+                  >
+                    {/* Status messages for password change will appear here */}
+                  </div>
+                </fieldset>
+              </section>
 
-              <div className="border-t pt-6">
-                <h4 className="text-lg font-medium mb-4">Account Activity</h4>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+              <section
+                className={`border-t pt-6 ${isDark ? 'border-gray-600' : 'border-gray-200'}`}
+                role="region"
+                aria-labelledby="account-activity-heading"
+              >
+                <h4
+                  id="account-activity-heading"
+                  className={`text-lg font-medium mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}
+                >
+                  Account Activity
+                </h4>
+                <div className="space-y-3" role="list">
+                  <div
+                    className={`flex items-center justify-between p-3 border rounded-lg ${
+                      isDark
+                        ? 'border-gray-600 bg-tabiya-medium'
+                        : 'border-gray-200 bg-white'
+                    }`}
+                    role="listitem"
+                  >
                     <div>
-                      <p className="font-medium">Last Login</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p
+                        className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      >
+                        Last Login
+                      </p>
+                      <p
+                        className={`text-sm ${isDark ? 'text-gray-300' : 'text-muted-foreground'}`}
+                      >
                         Today at 2:30 PM from Chrome on Windows
                       </p>
                     </div>
-                    <Badge variant="outline">Active</Badge>
+                    <Badge
+                      variant="outline"
+                      aria-label="Current session is active"
+                    >
+                      Active
+                    </Badge>
                   </div>
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div
+                    className={`flex items-center justify-between p-3 border rounded-lg ${
+                      isDark
+                        ? 'border-gray-600 bg-tabiya-medium'
+                        : 'border-gray-200 bg-white'
+                    }`}
+                    role="listitem"
+                  >
                     <div>
-                      <p className="font-medium">Previous Session</p>
-                      <p className="text-sm text-muted-foreground">
+                      <p
+                        className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      >
+                        Previous Session
+                      </p>
+                      <p
+                        className={`text-sm ${isDark ? 'text-gray-300' : 'text-muted-foreground'}`}
+                      >
                         Yesterday at 10:15 AM from Safari on macOS
                       </p>
                     </div>
-                    <Badge variant="secondary">Inactive</Badge>
+                    <Badge
+                      variant="secondary"
+                      aria-label="Previous session is inactive"
+                    >
+                      Inactive
+                    </Badge>
                   </div>
                 </div>
-              </div>
+              </section>
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Skills Tab */}
-        <TabsContent value="skills" className="space-y-6">
+        <TabsContent
+          value="skills"
+          className="space-y-6"
+          role="tabpanel"
+          id="skills-panel"
+          aria-labelledby="skills-tab"
+        >
           <Card
             className={
               isDark
-                ? 'bg-tabiya-dark border-gray-700'
-                : 'bg-white border-gray-200'
+                ? 'border-tabiya-dark bg-tabiya-medium'
+                : 'border-gray-200 bg-white'
             }
+            role="region"
+            aria-labelledby="skills-management-heading"
           >
             <CardHeader>
-              <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+              <CardTitle
+                id="skills-management-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
                 Skills Management
               </CardTitle>
               <CardDescription
@@ -668,14 +880,17 @@ export function ProfilePage({
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Add New Skill */}
-              <div
+              <section
                 className={`border rounded-lg p-4 ${
                   isDark
                     ? 'border-gray-600 bg-tabiya-medium'
                     : 'border-gray-200 bg-muted/30'
                 }`}
+                role="form"
+                aria-labelledby="add-skill-heading"
               >
                 <h4
+                  id="add-skill-heading"
                   className={`font-medium mb-3 ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
@@ -692,7 +907,13 @@ export function ProfilePage({
                         ? 'bg-tabiya-dark border-gray-600 text-white placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900'
                     }
+                    aria-label="Enter skill name"
+                    aria-describedby="skill-name-help"
                   />
+                  <p id="skill-name-help" className="sr-only">
+                    Enter the name of the skill you want to add
+                  </p>
+
                   <Input
                     placeholder="Category"
                     value={newSkillCategory}
@@ -702,7 +923,13 @@ export function ProfilePage({
                         ? 'bg-tabiya-dark border-gray-600 text-white placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900'
                     }
+                    aria-label="Enter skill category"
+                    aria-describedby="skill-category-help"
                   />
+                  <p id="skill-category-help" className="sr-only">
+                    Enter the category this skill belongs to
+                  </p>
+
                   <Select
                     value={newSkillLevel}
                     onValueChange={(value: any) => setNewSkillLevel(value)}
@@ -713,8 +940,9 @@ export function ProfilePage({
                           ? 'bg-tabiya-dark border-gray-600 text-white'
                           : 'bg-white border-gray-300 text-gray-900'
                       }
+                      aria-label="Select skill level"
                     >
-                      <SelectValue />
+                      <SelectValue placeholder="Select level" />
                     </SelectTrigger>
                     <SelectContent
                       className={
@@ -758,21 +986,31 @@ export function ProfilePage({
                   <Button
                     onClick={handleAddSkill}
                     className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+                    aria-label="Add new skill to your profile"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-4 w-4" aria-hidden="true" />
                     Add Skill
                   </Button>
                 </div>
-              </div>
+              </section>
 
               {/* Skills Summary */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <section
+                className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                role="region"
+                aria-labelledby="skills-summary-heading"
+              >
+                <h4 id="skills-summary-heading" className="sr-only">
+                  Skills Summary
+                </h4>
                 <div
                   className={`text-center p-4 border rounded-lg ${
                     isDark
                       ? 'border-gray-600 bg-tabiya-medium'
                       : 'border-gray-200 bg-white'
                   }`}
+                  role="status"
+                  aria-label="Total skills count"
                 >
                   <div className="text-2xl font-bold text-tabiya-accent">
                     {allSkills.length}
@@ -791,6 +1029,8 @@ export function ProfilePage({
                       ? 'border-gray-600 bg-tabiya-medium'
                       : 'border-gray-200 bg-white'
                   }`}
+                  role="status"
+                  aria-label="Advanced skills count"
                 >
                   <div className="text-2xl font-bold text-green-600">
                     {allSkills.filter((s) => s.level === 'Advanced').length}
@@ -809,6 +1049,8 @@ export function ProfilePage({
                       ? 'border-gray-600 bg-tabiya-medium'
                       : 'border-gray-200 bg-white'
                   }`}
+                  role="status"
+                  aria-label="Intermediate skills count"
                 >
                   <div className="text-2xl font-bold text-yellow-600">
                     {allSkills.filter((s) => s.level === 'Intermediate').length}
@@ -821,21 +1063,41 @@ export function ProfilePage({
                     Intermediate
                   </div>
                 </div>
-              </div>
+              </section>
 
               {/* Skills by Category */}
-              <div className="space-y-4">
+              <section
+                className="space-y-4"
+                role="region"
+                aria-labelledby="skills-by-category-heading"
+              >
+                <h4
+                  id="skills-by-category-heading"
+                  className={`font-medium mb-4 ${
+                    isDark ? 'text-white' : 'text-gray-900'
+                  }`}
+                >
+                  Skills by Category
+                </h4>
                 {skillGroups.map((group) => (
-                  <div key={group.id}>
+                  <div
+                    key={group.id}
+                    role="group"
+                    aria-labelledby={`group-${group.id}-heading`}
+                  >
                     <div className="flex items-center gap-2 mb-3">
-                      <h4
+                      <h5
+                        id={`group-${group.id}-heading`}
                         className={`font-medium ${
                           isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                         }`}
                       >
                         {group.name}
-                      </h4>
-                      <Badge variant="outline">
+                      </h5>
+                      <Badge
+                        variant="outline"
+                        aria-label={`${group.skills.length} skills in ${group.name} category`}
+                      >
                         {group.skills.length} skills
                       </Badge>
                     </div>
@@ -843,17 +1105,31 @@ export function ProfilePage({
                       {group.skills.map((skill) => (
                         <div
                           key={skill.id}
-                          className="border rounded-lg p-3 space-y-2"
+                          className={`border rounded-lg p-3 space-y-2 ${
+                            isDark
+                              ? 'border-gray-600 bg-tabiya-medium'
+                              : 'border-gray-200 bg-white'
+                          }`}
+                          role="article"
+                          aria-labelledby={`skill-${skill.id}-name`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-medium">{skill.name}</span>
+                            <span
+                              id={`skill-${skill.id}-name`}
+                              className={`font-medium ${
+                                isDark ? 'text-white' : 'text-gray-900'
+                              }`}
+                            >
+                              {skill.name}
+                            </span>
                             <Button
                               variant="ghost"
                               size="sm"
                               onClick={() => handleRemoveSkill(skill.id)}
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                              aria-label={`Remove ${skill.name} skill`}
                             >
-                              ×
+                              <span aria-hidden="true">×</span>
                             </Button>
                           </div>
                           <div className="flex items-center gap-2">
@@ -863,10 +1139,23 @@ export function ProfilePage({
                                 handleUpdateSkillLevel(skill.id, value)
                               }
                             >
-                              <SelectTrigger className="h-8">
+                              <SelectTrigger
+                                className={`h-8 ${
+                                  isDark
+                                    ? 'bg-tabiya-dark border-gray-600 text-white'
+                                    : 'bg-white border-gray-300 text-gray-900'
+                                }`}
+                                aria-label={`Change level for ${skill.name} skill`}
+                              >
                                 <SelectValue />
                               </SelectTrigger>
-                              <SelectContent>
+                              <SelectContent
+                                className={
+                                  isDark
+                                    ? 'bg-tabiya-medium border-gray-600'
+                                    : 'bg-white border-gray-200'
+                                }
+                              >
                                 <SelectItem value="Beginner">
                                   Beginner
                                 </SelectItem>
@@ -883,6 +1172,7 @@ export function ProfilePage({
                                 skill.level || 'Beginner'
                               )}
                               variant="secondary"
+                              aria-label={`Current level: ${skill.level || 'Beginner'}`}
                             >
                               {skill.level || 'Beginner'}
                             </Badge>
@@ -892,7 +1182,7 @@ export function ProfilePage({
                     </div>
                   </div>
                 ))}
-              </div>
+              </section>
             </CardContent>
           </Card>
         </TabsContent>

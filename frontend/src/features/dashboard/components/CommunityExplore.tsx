@@ -119,14 +119,17 @@ export function CommunityExplore({
       className={`w-full border-gray-200 ${
         isDark ? 'bg-tabiya-dark border-gray-700' : 'bg-white'
       }`}
+      role="main"
+      aria-labelledby="community-explore-heading"
     >
       <CardHeader>
         <CardTitle
+          id="community-explore-heading"
           className={`flex items-center gap-2 ${
             isDark ? 'text-white' : 'text-gray-900'
           }`}
         >
-          <Users className="h-5 w-5 text-tabiya-accent" />
+          <Users className="h-5 w-5 text-tabiya-accent" aria-hidden="true" />
           Community Explore
         </CardTitle>
         <CardDescription className={isDark ? 'text-gray-300' : 'text-gray-600'}>
@@ -139,8 +142,9 @@ export function CommunityExplore({
           <Button
             onClick={() => setIsCreating(true)}
             className="w-full bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+            aria-label="Create a new community post"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
             Share Your Insights
           </Button>
         )}
@@ -151,9 +155,12 @@ export function CommunityExplore({
             className={`border-2 border-tabiya-accent/20 ${
               isDark ? 'bg-tabiya-dark' : 'bg-white'
             }`}
+            role="form"
+            aria-labelledby="create-post-heading"
           >
             <CardHeader>
               <CardTitle
+                id="create-post-heading"
                 className={`text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}
               >
                 Create New Post
@@ -171,6 +178,8 @@ export function CommunityExplore({
                     ? 'bg-tabiya-medium border-gray-600 text-white placeholder:text-gray-400'
                     : 'bg-white border-gray-300 text-gray-900'
                 }
+                aria-label="Post title"
+                required
               />
               <Textarea
                 placeholder="Share your insights, experiences, or questions..."
@@ -184,10 +193,17 @@ export function CommunityExplore({
                     ? 'bg-tabiya-medium border-gray-600 text-white placeholder:text-gray-400'
                     : 'bg-white border-gray-300 text-gray-900'
                 }
+                aria-label="Post content"
+                required
               />
 
               {/* Tags */}
               <div className="space-y-2">
+                <label
+                  className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                >
+                  Tags (optional)
+                </label>
                 <div className="flex gap-2">
                   <Input
                     placeholder="Add tags..."
@@ -199,6 +215,7 @@ export function CommunityExplore({
                         ? 'bg-tabiya-medium border-gray-600 text-white placeholder:text-gray-400'
                         : 'bg-white border-gray-300 text-gray-900'
                     }
+                    aria-label="Add tag to post"
                   />
                   <Button
                     onClick={addTag}
@@ -208,12 +225,18 @@ export function CommunityExplore({
                         ? 'border-gray-600 text-white hover:bg-tabiya-medium'
                         : 'border-gray-300 text-gray-900 hover:bg-gray-50'
                     }
+                    aria-label="Add tag"
+                    type="button"
                   >
                     Add
                   </Button>
                 </div>
                 {newPost.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
+                  <div
+                    className="flex flex-wrap gap-2"
+                    role="list"
+                    aria-label="Post tags"
+                  >
                     {newPost.tags.map((tag) => (
                       <Badge
                         key={tag}
@@ -224,6 +247,15 @@ export function CommunityExplore({
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                         onClick={() => removeTag(tag)}
+                        role="listitem"
+                        aria-label={`Remove tag: ${tag}`}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            removeTag(tag);
+                          }
+                        }}
                       >
                         {tag} ×
                       </Badge>
@@ -236,7 +268,8 @@ export function CommunityExplore({
                 <Button
                   onClick={handleCreatePost}
                   disabled={!newPost.title.trim() || !newPost.content.trim()}
-                  className="bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+                  className="bg-tabiya-accent hover:bg-tabiya-accent/90 text-white disabled:opacity-50"
+                  aria-label="Publish post"
                 >
                   Post
                 </Button>
@@ -248,6 +281,7 @@ export function CommunityExplore({
                       ? 'border-gray-600 text-white hover:bg-tabiya-medium'
                       : 'border-gray-300 text-gray-900 hover:bg-gray-50'
                   }
+                  aria-label="Cancel post creation"
                 >
                   Cancel
                 </Button>
@@ -257,12 +291,17 @@ export function CommunityExplore({
         )}
 
         {/* Filters and Search */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div
+          className="flex flex-col sm:flex-row gap-4"
+          role="group"
+          aria-label="Post search and filtering options"
+        >
           <div className="relative flex-1">
             <Search
               className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 ${
                 isDark ? 'text-gray-400' : 'text-muted-foreground'
               }`}
+              aria-hidden="true"
             />
             <Input
               placeholder="Search posts..."
@@ -273,6 +312,7 @@ export function CommunityExplore({
                   ? 'bg-tabiya-medium border-gray-600 text-white placeholder:text-gray-400'
                   : 'bg-white border-gray-300 text-gray-900'
               }`}
+              aria-label="Search community posts"
             />
           </div>
           <Select
@@ -285,6 +325,7 @@ export function CommunityExplore({
                   ? 'bg-tabiya-medium border-gray-600 text-white'
                   : 'bg-white border-gray-300 text-gray-900'
               }`}
+              aria-label="Sort posts by"
             >
               <SelectValue />
             </SelectTrigger>
@@ -299,12 +340,12 @@ export function CommunityExplore({
                 value="recent"
                 className={
                   isDark
-                    ? 'text-white hover:bg-gray-600'
-                    : 'text-gray-900 hover:bg-gray-50'
+                    ? 'text-white hover:bg-gray-600 focus:bg-gray-600'
+                    : 'text-gray-900 hover:bg-gray-50 focus:bg-gray-50'
                 }
               >
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
+                  <Clock className="h-4 w-4" aria-hidden="true" />
                   Most Recent
                 </div>
               </SelectItem>
@@ -312,12 +353,12 @@ export function CommunityExplore({
                 value="popular"
                 className={
                   isDark
-                    ? 'text-white hover:bg-gray-600'
-                    : 'text-gray-900 hover:bg-gray-50'
+                    ? 'text-white hover:bg-gray-600 focus:bg-gray-600'
+                    : 'text-gray-900 hover:bg-gray-50 focus:bg-gray-50'
                 }
               >
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" />
+                  <TrendingUp className="h-4 w-4" aria-hidden="true" />
                   Most Popular
                 </div>
               </SelectItem>
@@ -331,13 +372,30 @@ export function CommunityExplore({
             className={`text-center py-8 ${
               isDark ? 'text-gray-400' : 'text-muted-foreground'
             }`}
+            role="status"
+            aria-live="polite"
           >
-            <MessageSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>No posts found</p>
+            <MessageSquare
+              className="h-8 w-8 mx-auto mb-2 opacity-50"
+              aria-hidden="true"
+            />
+            <p
+              className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+            >
+              No posts found
+            </p>
             <p className="text-sm">Be the first to share your insights!</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <section
+            className="space-y-4"
+            role="feed"
+            aria-labelledby="posts-heading"
+            aria-live="polite"
+          >
+            <h3 id="posts-heading" className="sr-only">
+              Community Posts ({filteredPosts.length} posts)
+            </h3>
             {filteredPosts.map((post) => (
               <Card
                 key={post.id}
@@ -346,18 +404,24 @@ export function CommunityExplore({
                     ? 'bg-tabiya-dark border-gray-700'
                     : 'bg-white border-gray-200'
                 }`}
+                role="article"
+                aria-labelledby={`post-${post.id}-title`}
               >
                 <CardContent className="p-6 space-y-4">
                   {/* Author and timestamp */}
                   <div className="flex items-center gap-3">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={post.author.avatar} />
+                      <AvatarImage
+                        src={post.author.avatar}
+                        alt={`${post.author.name}'s profile picture`}
+                      />
                       <AvatarFallback
                         className={
                           isDark
                             ? 'bg-tabiya-medium text-white'
                             : 'bg-gray-100 text-gray-700'
                         }
+                        aria-label={`${post.author.name}'s initials`}
                       >
                         {post.author.name
                           .split(' ')
@@ -377,6 +441,7 @@ export function CommunityExplore({
                         className={`text-xs ${
                           isDark ? 'text-gray-400' : 'text-muted-foreground'
                         }`}
+                        aria-label={`Posted ${formatTimeAgo(post.createdAt)}`}
                       >
                         {formatTimeAgo(post.createdAt)}
                       </p>
@@ -386,6 +451,7 @@ export function CommunityExplore({
                   {/* Content */}
                   <div>
                     <h3
+                      id={`post-${post.id}-title`}
                       className={`font-semibold mb-2 ${
                         isDark ? 'text-white' : 'text-gray-900'
                       }`}
@@ -396,6 +462,7 @@ export function CommunityExplore({
                       className={`text-sm leading-relaxed ${
                         isDark ? 'text-gray-300' : 'text-muted-foreground'
                       }`}
+                      aria-describedby={`post-${post.id}-title`}
                     >
                       {post.content}
                     </p>
@@ -403,7 +470,11 @@ export function CommunityExplore({
 
                   {/* Tags */}
                   {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div
+                      className="flex flex-wrap gap-2"
+                      role="list"
+                      aria-label="Post tags"
+                    >
                       {post.tags.map((tag) => (
                         <Badge
                           key={tag}
@@ -413,6 +484,8 @@ export function CommunityExplore({
                               ? 'border-gray-600 text-gray-300'
                               : 'border-gray-300 text-gray-700'
                           }`}
+                          role="listitem"
+                          aria-label={`Tag: ${tag}`}
                         >
                           #{tag}
                         </Badge>
@@ -425,6 +498,8 @@ export function CommunityExplore({
                     className={`flex items-center gap-4 pt-2 border-t ${
                       isDark ? 'border-gray-700' : 'border-gray-200'
                     }`}
+                    role="group"
+                    aria-label="Post interaction options"
                   >
                     <Button
                       variant="ghost"
@@ -433,20 +508,11 @@ export function CommunityExplore({
                       className={`flex items-center gap-2 hover:text-red-600 ${
                         isDark ? 'text-gray-400' : 'text-muted-foreground'
                       }`}
+                      aria-label={`Like post${post.likes > 0 ? ` (${post.likes} likes)` : ''}`}
                     >
-                      <Heart className="h-4 w-4" />
-                      {post.likes > 0 && <span>{post.likes}</span>}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={`flex items-center gap-2 ${
-                        isDark ? 'text-gray-400' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                      {post.comments.length > 0 && (
-                        <span>{post.comments.length}</span>
+                      <Heart className="h-4 w-4" aria-hidden="true" />
+                      {post.likes > 0 && (
+                        <span aria-hidden="true">{post.likes}</span>
                       )}
                     </Button>
                     <Button
@@ -455,14 +521,28 @@ export function CommunityExplore({
                       className={`flex items-center gap-2 ${
                         isDark ? 'text-gray-400' : 'text-muted-foreground'
                       }`}
+                      aria-label={`View comments${post.comments.length > 0 ? ` (${post.comments.length} comments)` : ''}`}
                     >
-                      <Share2 className="h-4 w-4" />
+                      <MessageSquare className="h-4 w-4" aria-hidden="true" />
+                      {post.comments.length > 0 && (
+                        <span aria-hidden="true">{post.comments.length}</span>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className={`flex items-center gap-2 ${
+                        isDark ? 'text-gray-400' : 'text-muted-foreground'
+                      }`}
+                      aria-label="Share post"
+                    >
+                      <Share2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </CardContent>
               </Card>
             ))}
-          </div>
+          </section>
         )}
       </CardContent>
     </Card>

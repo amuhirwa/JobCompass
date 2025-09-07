@@ -12,8 +12,12 @@ export const HeroSection = () => {
   return (
     <section
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 lg:py-20 ${isDark ? 'bg-tabiya-dark' : 'bg-gradient-to-br from-blue-50 via-white to-indigo-50'} relative overflow-hidden`}
+      id="hero"
+      aria-labelledby="hero-heading"
+      role="banner"
     >
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Decorative elements with aria-hidden */}
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div
           className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-tabiya-dark via-tabiya-dark/90 to-tabiya-medium/50' : 'bg-gradient-to-br from-blue-50/50 via-white/70 to-indigo-100/50'}`}
         ></div>
@@ -51,6 +55,7 @@ export const HeroSection = () => {
             <div className="max-w-none">
               <ScrollAnimation delay={0.2}>
                 <h1
+                  id="hero-heading"
                   className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[110%] tracking-tight mb-8`}
                 >
                   Discover Your Path in the{' '}
@@ -61,6 +66,7 @@ export const HeroSection = () => {
               <ScrollAnimation delay={0.4}>
                 <p
                   className={`${isDark ? 'text-white/90' : 'text-gray-700'} font-medium font-sans text-lg sm:text-xl leading-[140%] mb-10 max-w-2xl`}
+                  id="hero-description"
                 >
                   At JobCompass, we help individuals explore jobs and skills by
                   making the connections between occupations clearer and more
@@ -70,18 +76,27 @@ export const HeroSection = () => {
               </ScrollAnimation>
 
               <ScrollAnimation delay={0.6}>
-                <div className="flex flex-row items-center gap-4 sm:gap-6">
+                <div
+                  className="flex flex-row items-center gap-4 sm:gap-6"
+                  role="group"
+                  aria-labelledby="hero-actions"
+                >
+                  <span id="hero-actions" className="sr-only">
+                    Hero call-to-action buttons
+                  </span>
                   <Button
                     variant="accent"
                     size="hero"
-                    className="font-sans font-semibold leading-6 transition-all duration-300"
+                    className="font-sans font-semibold leading-6 transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
+                    aria-describedby="hero-description"
                   >
                     Explore Now
                   </Button>
                   <Button
                     variant="accent-outline"
                     size="hero"
-                    className="font-sans font-medium leading-6 transition-all duration-300"
+                    className="font-sans font-medium leading-6 transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
+                    aria-describedby="hero-description"
                   >
                     Learn More
                   </Button>
@@ -93,9 +108,11 @@ export const HeroSection = () => {
           <ScrollAnimationContainer
             className="flex-1 relative"
             staggerDelay={0.1}
+            aria-label="Career exploration visual gallery"
           >
             <div
               className={`absolute inset-0 ${isDark ? 'bg-gradient-to-r from-tabiya-accent/5 to-transparent' : 'bg-gradient-to-r from-blue-500/5 to-transparent'} rounded-3xl blur-3xl`}
+              aria-hidden="true"
             ></div>
 
             <div className="relative grid grid-cols-2 gap-4 sm:gap-6 max-w-lg mx-auto">
@@ -106,14 +123,18 @@ export const HeroSection = () => {
                 <div className="relative group">
                   <div
                     className={`absolute inset-0 ${isDark ? 'bg-tabiya-accent/20' : 'bg-blue-500/15'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}
+                    aria-hidden="true"
                   ></div>
                   <img
                     src="https://api.builder.io/api/v1/image/assets/TEMP/08f049040e7e14881aa077d0f299b083e7bdc2ca?width=623"
-                    alt="Career exploration"
+                    alt="Professional using digital tools for career exploration and planning"
                     className={`relative w-full aspect-[4/5] object-cover rounded-2xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 border ${isDark ? 'border-white/10' : 'border-gray-200/30'}`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-black/20' : 'from-gray-900/10'} to-transparent rounded-2xl`}
+                    aria-hidden="true"
                   ></div>
                 </div>
               </ScrollAnimationItem>
@@ -125,14 +146,18 @@ export const HeroSection = () => {
                 <div className="relative group">
                   <div
                     className={`absolute inset-0 ${isDark ? 'bg-white/10' : 'bg-indigo-500/15'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}
+                    aria-hidden="true"
                   ></div>
                   <img
                     src="https://api.builder.io/api/v1/image/assets/TEMP/133b6f62c0ddedbe91c116845a8fe3f43a144ee5?width=623"
-                    alt="Job opportunities"
+                    alt="Diverse professionals collaborating and exploring job opportunities in modern workplace"
                     className={`relative w-full aspect-[4/5] object-cover rounded-2xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 border ${isDark ? 'border-white/10' : 'border-gray-200/30'}`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-black/20' : 'from-gray-900/10'} to-transparent rounded-2xl`}
+                    aria-hidden="true"
                   ></div>
                 </div>
               </ScrollAnimationItem>
@@ -144,14 +169,18 @@ export const HeroSection = () => {
                 <div className="relative group">
                   <div
                     className={`absolute inset-0 ${isDark ? 'bg-white/10' : 'bg-purple-500/15'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}
+                    aria-hidden="true"
                   ></div>
                   <img
                     src="https://api.builder.io/api/v1/image/assets/TEMP/2733900e63b37a281a3197b89178581ed6aa52e8?width=623"
-                    alt="Professional development"
+                    alt="Professional development and skill building through structured learning programs"
                     className={`relative w-full aspect-[4/5] object-cover rounded-2xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 border ${isDark ? 'border-white/10' : 'border-gray-200/30'}`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-black/20' : 'from-gray-900/10'} to-transparent rounded-2xl`}
+                    aria-hidden="true"
                   ></div>
                 </div>
               </ScrollAnimationItem>
@@ -163,22 +192,30 @@ export const HeroSection = () => {
                 <div className="relative group">
                   <div
                     className={`absolute inset-0 ${isDark ? 'bg-tabiya-accent/20' : 'bg-green-500/15'} rounded-2xl blur-lg group-hover:blur-xl transition-all duration-300`}
+                    aria-hidden="true"
                   ></div>
                   <img
                     src="https://api.builder.io/api/v1/image/assets/TEMP/fb964eae91a7157c5fe531c08c77b5b5dd0fb411?width=623"
-                    alt="Career guidance"
+                    alt="Career guidance and mentorship session helping professionals navigate their career path"
                     className={`relative w-full aspect-[4/5] object-cover rounded-2xl shadow-2xl transform group-hover:scale-105 transition-all duration-500 border ${isDark ? 'border-white/10' : 'border-gray-200/30'}`}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <div
                     className={`absolute inset-0 bg-gradient-to-t ${isDark ? 'from-black/20' : 'from-gray-900/10'} to-transparent rounded-2xl`}
+                    aria-hidden="true"
                   ></div>
                 </div>
               </ScrollAnimationItem>
             </div>
 
-            <div className="absolute -top-4 -right-4 w-8 h-8 bg-tabiya-accent rounded-full animate-ping opacity-30"></div>
+            <div
+              className="absolute -top-4 -right-4 w-8 h-8 bg-tabiya-accent rounded-full animate-ping opacity-30"
+              aria-hidden="true"
+            ></div>
             <div
               className={`absolute -bottom-4 -left-4 w-6 h-6 ${isDark ? 'bg-white/30' : 'bg-gray-400/40'} rounded-full animate-pulse`}
+              aria-hidden="true"
             ></div>
           </ScrollAnimationContainer>
         </div>

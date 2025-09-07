@@ -10,7 +10,11 @@ export function TabButtons({ activeTab, onTabChange }: TabButtonsProps) {
   const { isDark } = useDarkMode();
 
   return (
-    <div className="flex gap-1">
+    <div
+      className="flex gap-1"
+      role="tablist"
+      aria-label="Choose between skills and occupations"
+    >
       <Button
         variant={activeTab === 'skills' ? 'default' : 'outline'}
         size="sm"
@@ -22,6 +26,11 @@ export function TabButtons({ activeTab, onTabChange }: TabButtonsProps) {
               : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`}
         onClick={() => onTabChange('skills')}
+        role="tab"
+        aria-selected={activeTab === 'skills'}
+        aria-controls="content-panel"
+        id="skills-tab"
+        type="button"
       >
         Skills
       </Button>
@@ -36,6 +45,11 @@ export function TabButtons({ activeTab, onTabChange }: TabButtonsProps) {
               : 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-900'
         }`}
         onClick={() => onTabChange('occupations')}
+        role="tab"
+        aria-selected={activeTab === 'occupations'}
+        aria-controls="content-panel"
+        id="occupations-tab"
+        type="button"
       >
         Occupations
       </Button>

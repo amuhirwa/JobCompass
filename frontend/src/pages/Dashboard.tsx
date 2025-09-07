@@ -10,6 +10,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { NavigationLogo, IconLogo } from '@/components/ui/Logo';
 import {
   User,
   Target,
@@ -415,113 +416,132 @@ export function Dashboard() {
   return (
     <div
       className={`flex h-screen dashboard-container ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
+      role="application"
+      aria-label="JobCompass Dashboard"
     >
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
-      <div
+      <aside
         className={cn(
           `fixed inset-y-0 left-0 z-50 w-64 ${isDark ? 'bg-tabiya-medium border-tabiya-dark' : 'bg-white border-gray-200'} border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex-shrink-0`,
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
+        role="navigation"
+        aria-label="Main navigation"
+        aria-hidden={!sidebarOpen ? 'true' : undefined}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div
+          <header
             className={`flex items-center justify-between px-6 py-6 border-b ${isDark ? 'border-tabiya-dark' : 'border-gray-200'}`}
           >
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+              className="flex items-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 rounded"
+              aria-label="Go to JobCompass homepage"
             >
-              <div className="w-8 h-8 bg-tabiya-accent rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">JC</span>
-              </div>
-              <span
-                className={`font-bold text-xl ${isDark ? 'text-white' : 'text-gray-900'}`}
-              >
-                JobCompass
-              </span>
+              <NavigationLogo />
             </button>
             <Button
               variant="ghost"
               size="sm"
-              className={`lg:hidden ${isDark ? 'hover:bg-tabiya-dark/50' : 'hover:bg-gray-100'}`}
+              className={`lg:hidden ${isDark ? 'hover:bg-tabiya-dark/50' : 'hover:bg-gray-100'} focus:ring-2 focus:ring-tabiya-accent/20`}
               onClick={() => setSidebarOpen(false)}
+              aria-label="Close navigation menu"
             >
               <X
                 className={`h-4 w-4 ${isDark ? 'text-white' : 'text-gray-600'}`}
+                aria-hidden="true"
               />
             </Button>
-          </div>
+          </header>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6">
+          <nav
+            className="flex-1 px-4 py-6"
+            role="navigation"
+            aria-label="Dashboard sections"
+          >
             <TooltipProvider>
-              <div className="space-y-2">
+              <ul className="space-y-2" role="list">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeSection === item.id;
 
                   return (
-                    <Tooltip key={item.id} delayDuration={300}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className={cn(
-                            `w-full justify-start gap-3 px-4 py-3 h-auto transition-colors ${
-                              isDark
-                                ? `text-white/80 hover:bg-tabiya-dark/50 ${
-                                    isActive
-                                      ? 'bg-tabiya-accent/20 text-tabiya-accent hover:bg-tabiya-accent/25 border-r-2 border-tabiya-accent'
-                                      : ''
-                                  }`
-                                : `text-gray-700 hover:bg-gray-100 ${
-                                    isActive
-                                      ? 'bg-tabiya-accent/10 text-tabiya-accent hover:bg-tabiya-accent/15 border-r-2 border-tabiya-accent'
-                                      : ''
-                                  }`
-                            }`
-                          )}
-                          onClick={() => {
-                            setActiveSection(item.id);
-                            setSidebarOpen(false);
-                          }}
+                    <li key={item.id} role="listitem">
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className={cn(
+                              `w-full justify-start gap-3 px-4 py-3 h-auto transition-colors focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${
+                                isDark
+                                  ? `text-white/80 hover:bg-tabiya-dark/50 ${
+                                      isActive
+                                        ? 'bg-tabiya-accent/20 text-tabiya-accent hover:bg-tabiya-accent/25 border-r-2 border-tabiya-accent'
+                                        : ''
+                                    }`
+                                  : `text-gray-700 hover:bg-gray-100 ${
+                                      isActive
+                                        ? 'bg-tabiya-accent/10 text-tabiya-accent hover:bg-tabiya-accent/15 border-r-2 border-tabiya-accent'
+                                        : ''
+                                    }`
+                              }`
+                            )}
+                            onClick={() => {
+                              setActiveSection(item.id);
+                              setSidebarOpen(false);
+                            }}
+                            aria-current={isActive ? 'page' : undefined}
+                            aria-label={`Navigate to ${item.label}`}
+                            aria-describedby={`tooltip-${item.id}`}
+                          >
+                            <Icon
+                              className="h-5 w-5 flex-shrink-0"
+                              aria-hidden="true"
+                            />
+                            <span className="font-medium">{item.label}</span>
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent
+                          id={`tooltip-${item.id}`}
+                          side="right"
+                          className={
+                            isDark
+                              ? 'bg-tabiya-medium text-white border-tabiya-dark'
+                              : 'bg-white text-gray-900 border-gray-200'
+                          }
                         >
-                          <Icon className="h-5 w-5 flex-shrink-0" />
-                          <span className="font-medium">{item.label}</span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className={
-                          isDark
-                            ? 'bg-tabiya-medium text-white border-tabiya-dark'
-                            : 'bg-white text-gray-900 border-gray-200'
-                        }
-                      >
-                        <p>{item.description}</p>
-                      </TooltipContent>
-                    </Tooltip>
+                          <p>{item.description}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             </TooltipProvider>
           </nav>
 
           {/* User info */}
-          <div
+          <footer
             className={`px-6 py-4 border-t ${isDark ? 'border-tabiya-dark' : 'border-gray-200'}`}
+            role="contentinfo"
           >
             <div className="flex items-center gap-3 mb-4">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user.avatar} alt={user.firstName} />
+                <AvatarImage
+                  src={user.avatar}
+                  alt={`${user.firstName} ${user.lastName} profile picture`}
+                />
                 <AvatarFallback className="bg-tabiya-accent text-white">
                   {user.firstName[0]}
                   {user.lastName[0]}
@@ -530,65 +550,74 @@ export function Dashboard() {
               <div className="flex-1 min-w-0">
                 <p
                   className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}
+                  id="user-full-name"
                 >
                   {user.firstName} {user.lastName}
                 </p>
                 <p
                   className={`text-sm truncate ${isDark ? 'text-white/60' : 'text-gray-500'}`}
+                  aria-describedby="user-full-name"
                 >
                   {user.email}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2">
+            <nav
+              className="space-y-2"
+              role="navigation"
+              aria-label="User actions"
+            >
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-3 px-3 py-2 ${
+                className={`w-full justify-start gap-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${
                   isDark
                     ? 'text-white/80 hover:text-tabiya-accent hover:bg-tabiya-accent/10'
                     : 'text-gray-700 hover:text-tabiya-accent hover:bg-orange-50'
                 }`}
                 onClick={() => navigate('/')}
+                aria-label="Return to JobCompass homepage"
               >
-                <Home className="h-4 w-4" />
+                <Home className="h-4 w-4" aria-hidden="true" />
                 Back to Home
               </Button>
 
               {/* Theme Toggle */}
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-3 px-3 py-2 ${
+                className={`w-full justify-start gap-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${
                   isDark
                     ? 'text-white/80 hover:text-yellow-400 hover:bg-yellow-400/10'
                     : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                 }`}
                 onClick={() => changeMode()}
+                aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
               >
                 {isDark ? (
-                  <Sun className="h-4 w-4" />
+                  <Sun className="h-4 w-4" aria-hidden="true" />
                 ) : (
-                  <Moon className="h-4 w-4" />
+                  <Moon className="h-4 w-4" aria-hidden="true" />
                 )}
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </Button>
 
               <Button
                 variant="ghost"
-                className={`w-full justify-start gap-3 px-3 py-2 ${
+                className={`w-full justify-start gap-3 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500/20 ${
                   isDark
                     ? 'text-red-400 hover:text-red-300 hover:bg-red-400/10'
                     : 'text-red-600 hover:text-red-700 hover:bg-red-50'
                 }`}
                 onClick={handleLogout}
+                aria-label="Sign out of your account"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4 w-4" aria-hidden="true" />
                 Logout
               </Button>
-            </div>
-          </div>
+            </nav>
+          </footer>
         </div>
-      </div>
+      </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden w-full">
@@ -599,32 +628,30 @@ export function Dashboard() {
               ? 'border-tabiya-dark bg-tabiya-medium'
               : 'border-gray-200 bg-white'
           } lg:hidden`}
+          role="banner"
         >
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarOpen(true)}
-              className={
+              className={`focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${
                 isDark ? 'hover:bg-tabiya-dark/50' : 'hover:bg-gray-100'
-              }
+              }`}
+              aria-label="Open navigation menu"
+              aria-expanded={sidebarOpen}
             >
               <Menu
                 className={`h-4 w-4 ${isDark ? 'text-white' : 'text-gray-600'}`}
+                aria-hidden="true"
               />
             </Button>
             <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              className="flex items-center hover:opacity-80 transition-opacity focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 rounded"
+              aria-label="Go to JobCompass homepage"
             >
-              <div className="w-6 h-6 bg-tabiya-accent rounded flex items-center justify-center">
-                <span className="text-white font-bold text-xs">JC</span>
-              </div>
-              <h1
-                className={`font-semibold text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}
-              >
-                JobCompass
-              </h1>
+              <IconLogo />
             </button>
           </div>
 
@@ -633,15 +660,18 @@ export function Dashboard() {
             variant="ghost"
             size="sm"
             onClick={() => changeMode()}
-            className={isDark ? 'hover:bg-tabiya-dark/50' : 'hover:bg-gray-100'}
+            className={`focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${isDark ? 'hover:bg-tabiya-dark/50' : 'hover:bg-gray-100'}`}
+            aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
           >
             {isDark ? (
               <Sun
                 className={`h-4 w-4 ${isDark ? 'text-white' : 'text-gray-600'}`}
+                aria-hidden="true"
               />
             ) : (
               <Moon
                 className={`h-4 w-4 ${isDark ? 'text-white' : 'text-gray-600'}`}
+                aria-hidden="true"
               />
             )}
           </Button>
@@ -650,18 +680,22 @@ export function Dashboard() {
         {/* Content area */}
         <main
           className={`flex-1 overflow-auto w-full ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
+          role="main"
+          aria-labelledby="main-heading"
         >
           <div className="w-full h-full">
             <div className="p-6 w-full">
               <div className="mb-6 hidden lg:flex lg:items-center lg:justify-between">
                 <div>
                   <h1
+                    id="main-heading"
                     className={`text-3xl font-bold tracking-tight capitalize ${isDark ? 'text-white' : 'text-gray-900'}`}
                   >
                     {activeSection}
                   </h1>
                   <p
                     className={`mt-1 ${isDark ? 'text-white/70' : 'text-gray-600'}`}
+                    aria-describedby="main-heading"
                   >
                     {
                       sidebarItems.find((item) => item.id === activeSection)
@@ -675,20 +709,27 @@ export function Dashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => changeMode()}
-                  className={`${
+                  className={`focus:outline-none focus:ring-2 focus:ring-tabiya-accent/20 ${
                     isDark
                       ? 'text-white/80 hover:text-yellow-400 hover:bg-yellow-400/10'
                       : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100'
                   }`}
+                  aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
                 >
                   {isDark ? (
-                    <Sun className="h-5 w-5" />
+                    <Sun className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <Moon className="h-5 w-5" />
+                    <Moon className="h-5 w-5" aria-hidden="true" />
                   )}
                 </Button>
               </div>
-              <div className="w-full">{renderContent()}</div>
+              <div
+                className="w-full"
+                role="region"
+                aria-labelledby="main-heading"
+              >
+                {renderContent()}
+              </div>
             </div>
           </div>
         </main>

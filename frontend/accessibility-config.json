@@ -1,0 +1,332 @@
+{
+  "name": "JobCompass Accessibility Testing Configuration",
+  "version": "1.0.0",
+  "description": "Comprehensive accessibility testing setup for JobCompass",
+
+  "axe-core": {
+    "rules": {
+      "color-contrast": { "enabled": true },
+      "focus-order-semantics": { "enabled": true },
+      "keyboard": { "enabled": true },
+      "label": { "enabled": true },
+      "language": { "enabled": true },
+      "name-role-value": { "enabled": true },
+      "parsing": { "enabled": true },
+      "structure": { "enabled": true },
+      "aria-allowed-attr": { "enabled": true },
+      "aria-allowed-role": { "enabled": true },
+      "aria-dpub-role-fallback": { "enabled": true },
+      "aria-hidden-body": { "enabled": true },
+      "aria-hidden-focus": { "enabled": true },
+      "aria-input-field-name": { "enabled": true },
+      "aria-meter-name": { "enabled": true },
+      "aria-progressbar-name": { "enabled": true },
+      "aria-required-attr": { "enabled": true },
+      "aria-required-children": { "enabled": true },
+      "aria-required-parent": { "enabled": true },
+      "aria-roledescription": { "enabled": true },
+      "aria-roles": { "enabled": true },
+      "aria-toggle-field-name": { "enabled": true },
+      "aria-tooltip-name": { "enabled": true },
+      "aria-valid-attr-value": { "enabled": true },
+      "aria-valid-attr": { "enabled": true }
+    },
+    "tags": ["wcag2a", "wcag2aa", "wcag21aa"],
+    "locale": "en"
+  },
+
+  "lighthouse": {
+    "accessibility": {
+      "scoreThreshold": 95,
+      "categories": ["accessibility"],
+      "audits": [
+        "aria-allowed-attr",
+        "aria-hidden-body",
+        "aria-hidden-focus",
+        "aria-input-field-name",
+        "aria-required-attr",
+        "aria-required-children",
+        "aria-required-parent",
+        "aria-roles",
+        "aria-valid-attr-value",
+        "aria-valid-attr",
+        "button-name",
+        "bypass",
+        "color-contrast",
+        "definition-list",
+        "dlitem",
+        "document-title",
+        "duplicate-id-aria",
+        "form-field-multiple-labels",
+        "frame-title",
+        "heading-order",
+        "html-has-lang",
+        "html-lang-valid",
+        "image-alt",
+        "input-image-alt",
+        "label",
+        "landmark-one-main",
+        "link-name",
+        "list",
+        "listitem",
+        "meta-refresh",
+        "meta-viewport",
+        "object-alt",
+        "tabindex",
+        "table-fake-caption",
+        "td-headers-attr",
+        "th-has-data-cells",
+        "valid-lang"
+      ]
+    }
+  },
+
+  "pa11y": {
+    "standard": "WCAG2AA",
+    "runners": ["axe", "htmlcs"],
+    "ignore": [],
+    "hideElements": ".sr-only",
+    "includeNotices": false,
+    "includeWarnings": true,
+    "level": "error",
+    "reporter": "json",
+    "threshold": 0,
+    "timeout": 30000,
+    "wait": 500,
+    "chromeLaunchConfig": {
+      "executablePath": null,
+      "ignoreHTTPSErrors": false
+    }
+  },
+
+  "testPages": [
+    {
+      "name": "Landing Page",
+      "url": "/",
+      "description": "Main landing page with hero, features, and CTA",
+      "expectedElements": ["main", "nav", "h1", "button[aria-label]"]
+    },
+    {
+      "name": "Dashboard",
+      "url": "/dashboard",
+      "description": "User dashboard with analytics and navigation",
+      "expectedElements": [
+        "main[role='main']",
+        "nav[aria-label]",
+        "section[aria-labelledby]"
+      ]
+    },
+    {
+      "name": "Skills Mapping",
+      "url": "/skills",
+      "description": "Interactive skills mapping interface",
+      "expectedElements": [
+        "form[aria-labelledby]",
+        "button[aria-expanded]",
+        "list[role='list']"
+      ]
+    },
+    {
+      "name": "Tabiya Dataset Explorer",
+      "url": "/explorer",
+      "description": "Data exploration and visualization tool",
+      "expectedElements": [
+        "table[role='table']",
+        "button[aria-label]",
+        "region[aria-labelledby]"
+      ]
+    },
+    {
+      "name": "Profile Page",
+      "url": "/profile",
+      "description": "User profile management with tabs",
+      "expectedElements": [
+        "tablist[role='tablist']",
+        "tabpanel[role='tabpanel']",
+        "form[aria-labelledby]"
+      ]
+    }
+  ],
+
+  "screenReaderTesting": {
+    "nvda": {
+      "enabled": true,
+      "commands": [
+        { "key": "h", "description": "Navigate by headings" },
+        { "key": "k", "description": "Navigate by links" },
+        { "key": "b", "description": "Navigate by buttons" },
+        { "key": "f", "description": "Navigate by form fields" },
+        { "key": "t", "description": "Navigate by tables" },
+        { "key": "l", "description": "Navigate by lists" },
+        { "key": "r", "description": "Navigate by regions" }
+      ]
+    },
+    "jaws": {
+      "enabled": true,
+      "commands": [
+        { "key": "Insert+F6", "description": "List headings" },
+        { "key": "Insert+F7", "description": "List links" },
+        { "key": "Insert+F5", "description": "List form fields" },
+        { "key": "Insert+;", "description": "List regions" }
+      ]
+    },
+    "voiceover": {
+      "enabled": true,
+      "commands": [
+        { "key": "VO+U", "description": "Open rotor" },
+        { "key": "VO+Command+H", "description": "Navigate by headings" },
+        { "key": "VO+Command+L", "description": "Navigate by links" },
+        { "key": "VO+Command+J", "description": "Navigate by form controls" }
+      ]
+    }
+  },
+
+  "keyboardTesting": {
+    "navigation": {
+      "tab": "Move focus forward",
+      "shift+tab": "Move focus backward",
+      "enter": "Activate buttons and links",
+      "space": "Activate buttons and checkboxes",
+      "escape": "Close modals and menus",
+      "arrow": "Navigate within components"
+    },
+    "shortcuts": {
+      "alt+h": "Focus main heading",
+      "alt+n": "Focus navigation",
+      "alt+m": "Focus main content",
+      "ctrl+/": "Show keyboard shortcuts"
+    }
+  },
+
+  "colorContrast": {
+    "minimumRatio": 4.5,
+    "largeTextRatio": 3.0,
+    "nonTextRatio": 3.0,
+    "testColors": [
+      {
+        "foreground": "#1f2937",
+        "background": "#ffffff",
+        "use": "Primary text on white"
+      },
+      {
+        "foreground": "#ffffff",
+        "background": "#1f2937",
+        "use": "White text on primary"
+      },
+      {
+        "foreground": "#059669",
+        "background": "#ffffff",
+        "use": "Success text on white"
+      },
+      {
+        "foreground": "#dc2626",
+        "background": "#ffffff",
+        "use": "Error text on white"
+      },
+      {
+        "foreground": "#d97706",
+        "background": "#ffffff",
+        "use": "Warning text on white"
+      },
+      {
+        "foreground": "#2563eb",
+        "background": "#ffffff",
+        "use": "Link text on white"
+      }
+    ]
+  },
+
+  "responsiveTesting": {
+    "breakpoints": [
+      { "name": "mobile", "width": 375, "height": 812 },
+      { "name": "tablet", "width": 768, "height": 1024 },
+      { "name": "desktop", "width": 1440, "height": 900 },
+      { "name": "large", "width": 1920, "height": 1080 }
+    ],
+    "zoomLevels": [100, 125, 150, 175, 200],
+    "touchTargets": {
+      "minimumSize": 44,
+      "testElements": ["button", "a", "input", "select", "textarea"]
+    }
+  },
+
+  "formTesting": {
+    "requiredFields": {
+      "testEmptySubmission": true,
+      "testPartialSubmission": true,
+      "testValidSubmission": true
+    },
+    "validation": {
+      "testInlineValidation": true,
+      "testErrorMessages": true,
+      "testSuccessMessages": true,
+      "testAriaDescribedBy": true
+    },
+    "labels": {
+      "testExplicitLabels": true,
+      "testAriaLabel": true,
+      "testAriaLabelledBy": true,
+      "testPlaceholders": true
+    }
+  },
+
+  "dynamicContent": {
+    "liveRegions": {
+      "testPolite": true,
+      "testAssertive": true,
+      "testAtomic": true,
+      "testRelevant": true
+    },
+    "stateChanges": {
+      "testAriaExpanded": true,
+      "testAriaSelected": true,
+      "testAriaChecked": true,
+      "testAriaDisabled": true
+    }
+  },
+
+  "modalTesting": {
+    "focusManagement": {
+      "testInitialFocus": true,
+      "testFocusTrapping": true,
+      "testFocusRestore": true,
+      "testEscapeKey": true
+    },
+    "announcements": {
+      "testModalTitle": true,
+      "testModalDescription": true,
+      "testStateChanges": true
+    }
+  },
+
+  "testEnvironments": {
+    "browsers": [
+      { "name": "Chrome", "version": "latest", "platform": "Windows" },
+      { "name": "Firefox", "version": "latest", "platform": "Windows" },
+      { "name": "Safari", "version": "latest", "platform": "macOS" },
+      { "name": "Edge", "version": "latest", "platform": "Windows" }
+    ],
+    "screenReaders": [
+      { "name": "NVDA", "version": "2021.1+", "platform": "Windows" },
+      { "name": "JAWS", "version": "2021+", "platform": "Windows" },
+      { "name": "VoiceOver", "version": "latest", "platform": "macOS" },
+      { "name": "TalkBack", "version": "latest", "platform": "Android" }
+    ]
+  },
+
+  "reportingConfig": {
+    "format": "json",
+    "includeScreenshots": true,
+    "includeCodeExamples": true,
+    "includeSuggestions": true,
+    "outputPath": "./accessibility-reports/",
+    "generateSummary": true
+  },
+
+  "automationScripts": {
+    "preCommit": "npm run accessibility:quick",
+    "fullSuite": "npm run accessibility:full",
+    "ci": "npm run accessibility:ci",
+    "report": "npm run accessibility:report"
+  }
+}

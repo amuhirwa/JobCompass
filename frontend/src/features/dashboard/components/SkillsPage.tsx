@@ -146,47 +146,76 @@ export function SkillsPage({
   };
 
   return (
-    <div className="space-y-6 w-full">
+    <div
+      className="space-y-6 w-full"
+      role="main"
+      aria-labelledby="skills-page-heading"
+    >
+      <h2 id="skills-page-heading" className="sr-only">
+        Skills Management
+      </h2>
+
       {/* Header Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Your Skills Profile */}
         <Card
           className={`lg:col-span-2 ${isDark ? 'border-tabiya-dark bg-tabiya-medium' : 'border-gray-200 bg-white'}`}
+          role="region"
+          aria-labelledby="skills-profile-heading"
         >
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-tabiya-accent" />
-              <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+              <Target
+                className="h-5 w-5 text-tabiya-accent"
+                aria-hidden="true"
+              />
+              <CardTitle
+                id="skills-profile-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
                 Your Skills Profile
               </CardTitle>
             </div>
             <div
               className={`flex items-center gap-4 text-sm ${isDark ? 'text-white/70' : 'text-gray-600'}`}
+              role="list"
+              aria-label="Skills statistics"
             >
-              <span className="flex items-center gap-1">
-                <Plus className="h-4 w-4" />
+              <span
+                className="flex items-center gap-1"
+                role="listitem"
+                aria-label={`${allSkills.length} total skills`}
+              >
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 {allSkills.length} Skills
               </span>
-              <span className="flex items-center gap-1">
-                <Users className="h-4 w-4" />
+              <span
+                className="flex items-center gap-1"
+                role="listitem"
+                aria-label={`${skillGroups.length} skill categories`}
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
                 {skillGroups.length} Categories
               </span>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Add New Skill */}
-            <div
+            <section
               className={`border rounded-lg p-4 ${
                 isDark
                   ? 'border-tabiya-dark bg-tabiya-dark/50'
                   : 'border-gray-200 bg-gray-50'
               }`}
+              role="form"
+              aria-labelledby="add-skill-heading"
             >
-              <h4
+              <h3
+                id="add-skill-heading"
                 className={`font-medium mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}
               >
                 Add New Skill
-              </h4>
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <Input
                   placeholder="Skill name"
@@ -197,6 +226,7 @@ export function SkillsPage({
                       ? 'border-tabiya-dark bg-tabiya-medium text-white placeholder:text-white/60'
                       : ''
                   }
+                  aria-label="Skill name"
                 />
                 <Input
                   placeholder="Category"
@@ -207,6 +237,7 @@ export function SkillsPage({
                       ? 'border-tabiya-dark bg-tabiya-medium text-white placeholder:text-white/60'
                       : ''
                   }
+                  aria-label="Skill category"
                 />
                 <Select
                   value={newSkillLevel}
@@ -218,8 +249,9 @@ export function SkillsPage({
                         ? 'border-tabiya-dark bg-tabiya-medium text-white'
                         : ''
                     }
+                    aria-label="Skill level"
                   >
-                    <SelectValue />
+                    <SelectValue placeholder="Select level" />
                   </SelectTrigger>
                   <SelectContent
                     className={
@@ -261,46 +293,120 @@ export function SkillsPage({
                 <Button
                   onClick={handleAddSkill}
                   className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+                  aria-label="Add skill to profile"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                   Add Skill
                 </Button>
               </div>
-            </div>
+            </section>
 
             {/* Skills Groups */}
-            <div className="space-y-4">
+            <section
+              className="space-y-4"
+              role="region"
+              aria-labelledby="skills-groups-heading"
+            >
+              <h3 id="skills-groups-heading" className="sr-only">
+                Skills by Category
+              </h3>
               {skillGroups.map((group) => (
-                <div key={group.id} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-medium text-primary">{group.name}</h4>
-                    <Badge variant="outline">
+                <article
+                  key={group.id}
+                  className="space-y-3"
+                  role="group"
+                  aria-labelledby={`group-${group.id}-heading`}
+                >
+                  <header className="flex items-center gap-2">
+                    <h4
+                      id={`group-${group.id}-heading`}
+                      className={`font-medium ${isDark ? 'text-tabiya-accent' : 'text-primary'}`}
+                    >
+                      {group.name}
+                    </h4>
+                    <Badge
+                      variant="outline"
+                      className={isDark ? 'border-white/20 text-white' : ''}
+                      aria-label={`${group.skills.length} skills in ${group.name} category`}
+                    >
                       {group.skills.length} skills
                     </Badge>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  </header>
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-3"
+                    role="list"
+                    aria-labelledby={`group-${group.id}-heading`}
+                  >
                     {group.skills.map((skill) => (
                       <div
                         key={skill.id}
-                        className="border rounded-lg p-3 space-y-2"
+                        className={`border rounded-lg p-3 space-y-2 ${
+                          isDark
+                            ? 'border-tabiya-dark bg-tabiya-medium/50'
+                            : 'border-gray-200 bg-white'
+                        }`}
+                        role="listitem"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">{skill.name}</span>
+                          <span
+                            className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                            id={`skill-${skill.id}-name`}
+                          >
+                            {skill.name}
+                          </span>
                           <Select
                             value={skill.level}
                             onValueChange={(value) =>
                               handleUpdateSkillLevel(skill.id, value)
                             }
                           >
-                            <SelectTrigger className="w-32 h-8">
+                            <SelectTrigger
+                              className={`w-32 h-8 ${
+                                isDark
+                                  ? 'border-tabiya-dark bg-tabiya-medium text-white'
+                                  : ''
+                              }`}
+                              aria-label={`Change level for ${skill.name}`}
+                            >
                               <SelectValue />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="Beginner">Beginner</SelectItem>
-                              <SelectItem value="Intermediate">
+                            <SelectContent
+                              className={
+                                isDark
+                                  ? 'border-tabiya-dark bg-tabiya-medium'
+                                  : ''
+                              }
+                            >
+                              <SelectItem
+                                value="Beginner"
+                                className={
+                                  isDark
+                                    ? 'text-white hover:bg-tabiya-dark focus:bg-tabiya-dark'
+                                    : ''
+                                }
+                              >
+                                Beginner
+                              </SelectItem>
+                              <SelectItem
+                                value="Intermediate"
+                                className={
+                                  isDark
+                                    ? 'text-white hover:bg-tabiya-dark focus:bg-tabiya-dark'
+                                    : ''
+                                }
+                              >
                                 Intermediate
                               </SelectItem>
-                              <SelectItem value="Advanced">Advanced</SelectItem>
+                              <SelectItem
+                                value="Advanced"
+                                className={
+                                  isDark
+                                    ? 'text-white hover:bg-tabiya-dark focus:bg-tabiya-dark'
+                                    : ''
+                                }
+                              >
+                                Advanced
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -311,67 +417,131 @@ export function SkillsPage({
                                 skill.level || 'Beginner'
                               )}
                               variant="secondary"
+                              aria-label={`Skill level: ${skill.level || 'Beginner'}`}
                             >
                               {skill.level || 'Beginner'}
                             </Badge>
-                            <span className="text-muted-foreground">
+                            <span
+                              className={`${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+                              aria-live="polite"
+                              aria-label={`Progress: ${getLevelProgress(skill.level || 'Beginner')}%`}
+                            >
                               {getLevelProgress(skill.level || 'Beginner')}%
                             </span>
                           </div>
                           <Progress
                             value={getLevelProgress(skill.level || 'Beginner')}
                             className="h-2"
+                            aria-labelledby={`skill-${skill.id}-name`}
+                            aria-label={`Progress for ${skill.name}: ${getLevelProgress(skill.level || 'Beginner')}%`}
                           />
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
+                </article>
               ))}
-            </div>
+            </section>
           </CardContent>
         </Card>
 
         {/* Top Match Card */}
-        <Card>
+        <Card
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
+          role="region"
+          aria-labelledby="top-match-heading"
+        >
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-yellow-500" />
-              <CardTitle className="text-lg">Top Match</CardTitle>
+              <Star className="h-5 w-5 text-yellow-500" aria-hidden="true" />
+              <CardTitle
+                id="top-match-heading"
+                className={`text-lg ${isDark ? 'text-white' : 'text-gray-900'}`}
+              >
+                Top Match
+              </CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {topOccupationMatch && (
-              <>
+              <article aria-labelledby="match-title">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-1">
+                  <div
+                    className={`text-3xl font-bold mb-1 ${
+                      isDark ? 'text-tabiya-accent' : 'text-primary'
+                    }`}
+                    aria-label={`${topOccupationMatch.matchPercentage} percent match`}
+                  >
                     {topOccupationMatch.matchPercentage}%
                   </div>
-                  <h3 className="font-semibold">{topOccupationMatch.title}</h3>
-                  <p className="text-sm text-muted-foreground">Match Score</p>
+                  <h3
+                    id="match-title"
+                    className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
+                  >
+                    {topOccupationMatch.title}
+                  </h3>
+                  <p
+                    className={`text-sm ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+                    aria-label="This is your overall match score"
+                  >
+                    Match Score
+                  </p>
                 </div>
 
-                <div className="space-y-2">
+                <div
+                  className="space-y-2"
+                  role="group"
+                  aria-labelledby="skill-match-details"
+                >
+                  <h4 id="skill-match-details" className="sr-only">
+                    Skill Match Details
+                  </h4>
                   <div className="flex justify-between text-sm">
-                    <span>Skill Match</span>
-                    <span className="font-medium">
+                    <span
+                      className={isDark ? 'text-white/70' : 'text-gray-600'}
+                    >
+                      Skill Match
+                    </span>
+                    <span
+                      className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      aria-label={`${getSkillMatchForOccupation(topOccupationMatch)}% skill match`}
+                    >
                       {getSkillMatchForOccupation(topOccupationMatch)}%
                     </span>
                   </div>
                   <Progress
                     value={getSkillMatchForOccupation(topOccupationMatch)}
                     className="h-2"
+                    aria-label={`Skill match progress: ${getSkillMatchForOccupation(topOccupationMatch)}%`}
                   />
                 </div>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Location:</span>
-                    <span>{topOccupationMatch.location}</span>
+                    <span
+                      className={
+                        isDark ? 'text-white/70' : 'text-muted-foreground'
+                      }
+                    >
+                      Location:
+                    </span>
+                    <span className={isDark ? 'text-white' : 'text-gray-900'}>
+                      {topOccupationMatch.location}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Salary Range:</span>
-                    <span>
+                    <span
+                      className={
+                        isDark ? 'text-white/70' : 'text-muted-foreground'
+                      }
+                    >
+                      Salary Range:
+                    </span>
+                    <span className={isDark ? 'text-white' : 'text-gray-900'}>
                       {topOccupationMatch.salaryRange
                         ? `$${topOccupationMatch.salaryRange.min.toLocaleString()} - 
                         $${topOccupationMatch.salaryRange.max.toLocaleString()}`
@@ -380,73 +550,166 @@ export function SkillsPage({
                   </div>
                 </div>
 
-                <Button className="w-full gap-2" variant="outline">
+                <Button
+                  className={`w-full gap-2 ${
+                    isDark
+                      ? 'border-tabiya-dark text-white hover:bg-tabiya-dark'
+                      : ''
+                  }`}
+                  variant="outline"
+                  aria-label={`View details for ${topOccupationMatch.title}`}
+                >
                   View Details
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Button>
-              </>
+              </article>
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Top Occupation Matches */}
-      <Card>
+      <Card
+        className={
+          isDark
+            ? 'border-tabiya-dark bg-tabiya-medium'
+            : 'border-gray-200 bg-white'
+        }
+        role="region"
+        aria-labelledby="occupation-matches-heading"
+      >
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5" />
-              <CardTitle>Top Occupation Matches</CardTitle>
+              <Briefcase
+                className="h-5 w-5 text-tabiya-accent"
+                aria-hidden="true"
+              />
+              <CardTitle
+                id="occupation-matches-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
+                Top Occupation Matches
+              </CardTitle>
             </div>
-            <Badge variant="outline">All Industries</Badge>
+            <Badge
+              variant="outline"
+              className={isDark ? 'border-white/20 text-white' : ''}
+              aria-label="Showing results for all industries"
+            >
+              All Industries
+            </Badge>
           </div>
-          <CardDescription>
+          <CardDescription className={isDark ? 'text-white/70' : ''}>
             Career opportunities ranked by skill compatibility
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div
+            className="space-y-4"
+            role="list"
+            aria-label="Top occupation matches ranked by compatibility"
+          >
             {occupations.slice(0, 5).map((occupation, index) => (
-              <div
+              <article
                 key={occupation.id}
-                className="flex items-center gap-4 p-4 border rounded-lg"
+                className={`flex items-center gap-4 p-4 border rounded-lg ${
+                  isDark
+                    ? 'border-tabiya-dark bg-tabiya-dark/30'
+                    : 'border-gray-200 bg-white'
+                }`}
+                role="listitem"
               >
                 <div className="flex items-center gap-3 flex-1">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-medium text-primary">
+                  <div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isDark ? 'bg-tabiya-accent/20' : 'bg-primary/10'
+                    }`}
+                    aria-label={`Rank ${index + 1}`}
+                  >
+                    <span
+                      className={`text-sm font-medium ${
+                        isDark ? 'text-tabiya-accent' : 'text-primary'
+                      }`}
+                    >
                       #{index + 1}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="font-medium">{occupation.title}</h4>
-                    <p className="text-sm text-muted-foreground">
+                    <h3
+                      className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      id={`occupation-${occupation.id}-title`}
+                    >
+                      {occupation.title}
+                    </h3>
+                    <p
+                      className={`text-sm ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+                      aria-label={`Location: ${occupation.location}`}
+                    >
                       {occupation.location}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-primary">
+                  <div
+                    className="text-right"
+                    role="group"
+                    aria-labelledby={`occupation-${occupation.id}-title`}
+                  >
+                    <div
+                      className={`text-lg font-bold ${
+                        isDark ? 'text-tabiya-accent' : 'text-primary'
+                      }`}
+                      aria-label={`${occupation.matchPercentage}% compatibility match`}
+                    >
                       {occupation.matchPercentage}%
                     </div>
-                    <div className="text-xs text-muted-foreground">Match</div>
+                    <div
+                      className={`text-xs ${isDark ? 'text-white/60' : 'text-muted-foreground'}`}
+                      aria-hidden="true"
+                    >
+                      Match
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium">
+                  <div
+                    className="text-right"
+                    role="group"
+                    aria-labelledby={`occupation-${occupation.id}-title`}
+                  >
+                    <div
+                      className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      aria-label={`Average salary: ${
+                        occupation.salaryRange
+                          ? `$${Math.round((occupation.salaryRange.min + occupation.salaryRange.max) / 2 / 1000)} thousand`
+                          : 'Not available'
+                      }`}
+                    >
                       {occupation.salaryRange
                         ? `$${Math.round((occupation.salaryRange.min + occupation.salaryRange.max) / 2 / 1000)}k`
                         : 'N/A'}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div
+                      className={`text-xs ${isDark ? 'text-white/60' : 'text-muted-foreground'}`}
+                      aria-hidden="true"
+                    >
                       Avg Salary
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
-                    <ExternalLink className="h-3 w-3" />
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={
+                      isDark
+                        ? 'border-tabiya-dark text-white hover:bg-tabiya-dark'
+                        : ''
+                    }
+                    aria-label={`View external details for ${occupation.title}`}
+                  >
+                    <ExternalLink className="h-3 w-3" aria-hidden="true" />
                   </Button>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </CardContent>
@@ -455,18 +718,38 @@ export function SkillsPage({
       {/* Skills Enhancement & Career Pathways */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Skill Enhancement */}
-        <Card>
+        <Card
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
+          role="region"
+          aria-labelledby="skill-enhancement-heading"
+        >
           <CardHeader>
             <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-green-600" />
-              <CardTitle>Skill Enhancement</CardTitle>
+              <TrendingUp
+                className="h-5 w-5 text-green-600"
+                aria-hidden="true"
+              />
+              <CardTitle
+                id="skill-enhancement-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
+                Skill Enhancement
+              </CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className={isDark ? 'text-white/70' : ''}>
               Recommended skills to improve your matches
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div
+              className="space-y-3"
+              role="list"
+              aria-label="Recommended skills for enhancement"
+            >
               {[
                 { skill: 'Docker', priority: 'High Priority', growth: 'High' },
                 {
@@ -482,11 +765,24 @@ export function SkillsPage({
               ].map((item, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className={`flex items-center justify-between p-3 border rounded-lg ${
+                    isDark
+                      ? 'border-tabiya-dark bg-tabiya-dark/30'
+                      : 'border-gray-200 bg-white'
+                  }`}
+                  role="listitem"
                 >
                   <div>
-                    <div className="font-medium">{item.skill}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div
+                      className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                      id={`enhance-skill-${index}`}
+                    >
+                      {item.skill}
+                    </div>
+                    <div
+                      className={`text-sm ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+                      aria-describedby={`enhance-skill-${index}`}
+                    >
                       {item.priority}
                     </div>
                   </div>
@@ -494,13 +790,17 @@ export function SkillsPage({
                     <Badge
                       className={
                         item.growth === 'High'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-green-100 text-green-800 border-green-200'
+                          : 'bg-yellow-100 text-yellow-800 border-yellow-200'
                       }
+                      aria-label={`${item.growth} growth potential for ${item.skill}`}
                     >
                       {item.growth}
                     </Badge>
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div
+                      className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-muted-foreground'}`}
+                      aria-hidden="true"
+                    >
                       Learn Now
                     </div>
                   </div>
@@ -511,18 +811,38 @@ export function SkillsPage({
         </Card>
 
         {/* Career Pathways */}
-        <Card>
+        <Card
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
+          role="region"
+          aria-labelledby="career-pathways-heading"
+        >
           <CardHeader>
             <div className="flex items-center gap-2">
-              <ArrowRight className="h-5 w-5 text-blue-600" />
-              <CardTitle>Career Pathways</CardTitle>
+              <ArrowRight
+                className="h-5 w-5 text-blue-600"
+                aria-hidden="true"
+              />
+              <CardTitle
+                id="career-pathways-heading"
+                className={isDark ? 'text-white' : 'text-gray-900'}
+              >
+                Career Pathways
+              </CardTitle>
             </div>
-            <CardDescription>
+            <CardDescription className={isDark ? 'text-white/70' : ''}>
               Potential career progression paths
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div
+              className="space-y-4"
+              role="list"
+              aria-label="Career progression pathway options"
+            >
               {[
                 {
                   title: 'Software Developer',
@@ -549,25 +869,59 @@ export function SkillsPage({
                   timeframe: '3+ years',
                 },
               ].map((pathway, index) => (
-                <div key={index} className="relative">
+                <div key={index} className="relative" role="listitem">
                   {index > 0 && (
-                    <div className="absolute left-4 -top-2 w-0.5 h-4 bg-border" />
+                    <div
+                      className={`absolute left-4 -top-2 w-0.5 h-4 ${
+                        isDark ? 'bg-tabiya-dark' : 'bg-border'
+                      }`}
+                      aria-hidden="true"
+                    />
                   )}
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-primary" />
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        isDark ? 'bg-tabiya-accent/20' : 'bg-primary/10'
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <div
+                        className={`w-3 h-3 rounded-full ${
+                          isDark ? 'bg-tabiya-accent' : 'bg-primary'
+                        }`}
+                      />
                     </div>
                     <div className="flex-1">
-                      <div className="font-medium">{pathway.title}</div>
-                      <div className="text-sm text-muted-foreground">
+                      <div
+                        className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}
+                        id={`pathway-${index}-title`}
+                      >
+                        {pathway.title}
+                      </div>
+                      <div
+                        className={`text-sm ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+                        aria-describedby={`pathway-${index}-title`}
+                      >
                         {pathway.level}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-primary">
+                    <div
+                      className="text-right"
+                      role="group"
+                      aria-labelledby={`pathway-${index}-title`}
+                    >
+                      <div
+                        className={`text-sm font-medium ${
+                          isDark ? 'text-tabiya-accent' : 'text-primary'
+                        }`}
+                        aria-label={`${pathway.match} match for ${pathway.title}`}
+                      >
                         {pathway.match}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div
+                        className={`text-xs ${isDark ? 'text-white/60' : 'text-muted-foreground'}`}
+                        aria-label={`Estimated timeframe: ${pathway.timeframe}`}
+                      >
                         {pathway.timeframe}
                       </div>
                     </div>

@@ -44,8 +44,13 @@ export function ItemsList({
     (activeTab === 'occupations' && occupationsLoading);
 
   return (
-    <div>
+    <div
+      role="tabpanel"
+      id={`${activeTab}-panel`}
+      aria-labelledby={`${activeTab}-tab`}
+    >
       <h1
+        id={`${activeTab}-heading`}
         className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4`}
       >
         {activeTab === 'skills'
@@ -56,7 +61,7 @@ export function ItemsList({
       </h1>
 
       {searchQuery && (
-        <div className="mb-4">
+        <div className="mb-4" role="status" aria-live="polite">
           <span className={`${isDark ? 'text-white/60' : 'text-gray-600'}`}>
             Search results for:{' '}
           </span>
@@ -68,11 +73,16 @@ export function ItemsList({
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          role="status"
+          aria-label={`Loading ${activeTab.replace('-', ' ')}`}
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <Card
               key={i}
               className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
+              aria-hidden="true"
             >
               <CardHeader className="pb-4">
                 <Skeleton
@@ -103,74 +113,102 @@ export function ItemsList({
       ) : (
         /* Items Grid */
         <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+          <div
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8"
+            role="list"
+            aria-label={`${activeTab.replace('-', ' ')} items`}
+          >
             {displayedItems.map((item: any) => (
               <Card
                 key={item.id}
-                onClick={() => onItemSelect(item)}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg group ${
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg group focus-within:ring-2 focus-within:ring-tabiya-accent/20 ${
                   isDark
                     ? 'bg-white/5 border-white/10 hover:bg-white/10'
                     : 'bg-white border-gray-200 hover:bg-gray-50'
                 }`}
+                role="listitem"
               >
-                <CardHeader className="pb-4">
-                  <CardTitle
-                    className={`text-lg font-semibold group-hover:text-tabiya-accent transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}
-                  >
-                    {capitalizeFirstLetter(item.preferred_label)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0 px-6 pb-6">
-                  <div className="space-y-4">
-                    <Badge
-                      variant="outline"
-                      className={`text-sm ${isDark ? 'border-white/20 text-white/70' : 'border-gray-300 text-gray-600'}`}
+                <button
+                  onClick={() => onItemSelect(item)}
+                  className="w-full h-full text-left focus:outline-none"
+                  aria-labelledby={`item-${item.id}-title`}
+                  aria-describedby={`item-${item.id}-description`}
+                >
+                  <CardHeader className="pb-4">
+                    <CardTitle
+                      id={`item-${item.id}-title`}
+                      className={`text-lg font-semibold group-hover:text-tabiya-accent transition-colors ${isDark ? 'text-white' : 'text-gray-900'}`}
                     >
-                      {activeTab === 'skills'
-                        ? capitalizeFirstLetter(item.skill_type || 'skill')
-                        : activeTab === 'occupations'
-                          ? capitalizeFirstLetter(
-                              item.occupation_type || 'occupation'
-                            )
-                          : 'Skill Group'}
-                    </Badge>
-                    {item.description && (
-                      <p
-                        className={`text-base ${isDark ? 'text-white/70' : 'text-gray-600'} line-clamp-3 leading-relaxed`}
+                      {capitalizeFirstLetter(item.preferred_label)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-6 pb-6">
+                    <div className="space-y-4">
+                      <Badge
+                        variant="outline"
+                        className={`text-sm ${isDark ? 'border-white/20 text-white/70' : 'border-gray-300 text-gray-600'}`}
+                        aria-hidden="true"
                       >
-                        {item.description.length > 140
-                          ? `${item.description.slice(0, 140)}...`
-                          : item.description}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
+                        {activeTab === 'skills'
+                          ? capitalizeFirstLetter(item.skill_type || 'skill')
+                          : activeTab === 'occupations'
+                            ? capitalizeFirstLetter(
+                                item.occupation_type || 'occupation'
+                              )
+                            : 'Skill Group'}
+                      </Badge>
+                      {item.description && (
+                        <p
+                          id={`item-${item.id}-description`}
+                          className={`text-base ${isDark ? 'text-white/70' : 'text-gray-600'} line-clamp-3 leading-relaxed`}
+                        >
+                          {item.description.length > 140
+                            ? `${item.description.slice(0, 140)}...`
+                            : item.description}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </button>
               </Card>
             ))}
           </div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between">
+            <nav
+              className="flex items-center justify-between"
+              aria-label="Pagination navigation"
+            >
               <div
                 className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-500'}`}
+                role="status"
+                aria-label={`Page ${currentPage} of ${totalPages}`}
               >
                 Page {currentPage} of {totalPages}
               </div>
-              <div className="flex gap-2">
+              <div
+                className="flex gap-2"
+                role="group"
+                aria-label="Pagination controls"
+              >
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                  className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'} focus:ring-2 focus:ring-tabiya-accent/20`}
+                  aria-label="Go to previous page"
                 >
                   Previous
                 </Button>
 
                 {/* Page numbers */}
-                <div className="flex gap-1">
+                <div
+                  className="flex gap-1"
+                  role="group"
+                  aria-label="Page numbers"
+                >
                   {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                     let pageNum;
                     if (totalPages <= 5) {
@@ -193,10 +231,14 @@ export function ItemsList({
                         onClick={() => onPageChange(pageNum)}
                         className={
                           currentPage === pageNum
-                            ? 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white'
+                            ? 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white focus:ring-2 focus:ring-tabiya-accent/20'
                             : isDark
-                              ? 'border-white/20 text-white hover:bg-white/10'
-                              : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                              ? 'border-white/20 text-white hover:bg-white/10 focus:ring-2 focus:ring-tabiya-accent/20'
+                              : 'border-gray-300 text-gray-700 hover:bg-gray-100 focus:ring-2 focus:ring-tabiya-accent/20'
+                        }
+                        aria-label={`Go to page ${pageNum}`}
+                        aria-current={
+                          currentPage === pageNum ? 'page' : undefined
                         }
                       >
                         {pageNum}
@@ -212,12 +254,13 @@ export function ItemsList({
                     onPageChange(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
+                  className={`${isDark ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 text-gray-700 hover:bg-gray-100'} focus:ring-2 focus:ring-tabiya-accent/20`}
+                  aria-label="Go to next page"
                 >
                   Next
                 </Button>
               </div>
-            </div>
+            </nav>
           )}
         </div>
       )}
@@ -225,6 +268,8 @@ export function ItemsList({
       {displayedItems.length === 0 && !isLoading && (
         <div
           className={`text-center py-8 ${isDark ? 'text-white/60' : 'text-gray-500'}`}
+          role="status"
+          aria-live="polite"
         >
           No {activeTab.replace('-', ' ')} found.
         </div>

@@ -8,6 +8,8 @@ export const DemoSection = () => {
   return (
     <section
       id="demo"
+      aria-labelledby="demo-heading"
+      role="region"
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
         isDark
           ? 'bg-tabiya-dark'
@@ -15,7 +17,7 @@ export const DemoSection = () => {
       }`}
     >
       {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/3 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse ${
             isDark ? 'bg-tabiya-accent/5' : 'bg-tabiya-accent/5'
@@ -35,6 +37,7 @@ export const DemoSection = () => {
             <div className="space-y-8">
               <div className="space-y-6">
                 <h2
+                  id="demo-heading"
                   className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
@@ -66,7 +69,7 @@ export const DemoSection = () => {
                 </p>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-6" role="list" aria-label="Demo features">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div
                     className={`flex items-center gap-3 p-4 rounded-xl border ${
@@ -74,11 +77,13 @@ export const DemoSection = () => {
                         ? 'bg-tabiya-medium/30 border-tabiya-accent/20'
                         : 'bg-orange-50/80 border-orange-200'
                     }`}
+                    role="listitem"
                   >
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         isDark ? 'bg-tabiya-accent/20' : 'bg-orange-100'
                       }`}
+                      aria-hidden="true"
                     >
                       <svg
                         className={`w-4 h-4 ${
@@ -86,6 +91,7 @@ export const DemoSection = () => {
                         }`}
                         fill="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
@@ -105,11 +111,13 @@ export const DemoSection = () => {
                         ? 'bg-tabiya-medium/30 border-tabiya-accent/20'
                         : 'bg-orange-50/80 border-orange-200'
                     }`}
+                    role="listitem"
                   >
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         isDark ? 'bg-tabiya-accent/20' : 'bg-orange-100'
                       }`}
+                      aria-hidden="true"
                     >
                       <svg
                         className={`w-4 h-4 ${
@@ -117,6 +125,7 @@ export const DemoSection = () => {
                         }`}
                         fill="currentColor"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <path d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
@@ -134,7 +143,14 @@ export const DemoSection = () => {
             </div>
 
             {/* Right Content - Video Preview */}
-            <div className="relative">
+            <div
+              className="relative"
+              role="img"
+              aria-labelledby="demo-video-heading"
+            >
+              <h3 id="demo-video-heading" className="sr-only">
+                Interactive Demo Video
+              </h3>
               <Card
                 className={`shadow-2xl backdrop-blur-sm overflow-hidden border ${
                   isDark
@@ -155,16 +171,19 @@ export const DemoSection = () => {
                       <div className="relative">
                         {/* Play button */}
                         <button
-                          className={`group relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-2xl ${
+                          className={`group relative w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300 transform hover:scale-110 focus:scale-110 shadow-2xl focus:outline-none focus:ring-4 focus:ring-tabiya-accent/50 ${
                             isDark
                               ? 'bg-tabiya-accent/90 hover:bg-tabiya-accent shadow-tabiya-accent/50'
                               : 'bg-tabiya-accent hover:bg-tabiya-accent/90 shadow-tabiya-accent/50'
                           }`}
+                          aria-label="Play demo video"
+                          type="button"
                         >
                           <svg
                             className="w-8 h-8 text-white ml-1"
                             fill="currentColor"
                             viewBox="0 0 24 24"
+                            aria-hidden="true"
                           >
                             <path d="M8 5v14l11-7z" />
                           </svg>
@@ -176,6 +195,7 @@ export const DemoSection = () => {
                                 ? 'border-tabiya-accent'
                                 : 'border-tabiya-accent'
                             }`}
+                            aria-hidden="true"
                           ></div>
                           <div
                             className={`absolute inset-0 rounded-full border-2 animate-ping opacity-20 animation-delay-300 ${
@@ -183,6 +203,7 @@ export const DemoSection = () => {
                                 ? 'border-tabiya-accent'
                                 : 'border-tabiya-accent'
                             }`}
+                            aria-hidden="true"
                           ></div>
                         </button>
                       </div>
@@ -195,10 +216,14 @@ export const DemoSection = () => {
                           ? 'bg-gradient-to-tr from-tabiya-dark/80 via-transparent to-tabiya-accent/20'
                           : 'bg-gradient-to-tr from-gray-900/20 via-transparent to-tabiya-accent/20'
                       }`}
+                      aria-hidden="true"
                     ></div>
 
                     {/* Demo preview elements */}
-                    <div className="absolute top-4 left-4 right-4">
+                    <div
+                      className="absolute top-4 left-4 right-4"
+                      aria-hidden="true"
+                    >
                       <div className="flex items-center gap-2 mb-4">
                         <div
                           className={`w-3 h-3 rounded-full animate-pulse ${
@@ -236,7 +261,10 @@ export const DemoSection = () => {
                       </div>
                     </div>
 
-                    <div className="absolute bottom-4 left-4 right-4">
+                    <div
+                      className="absolute bottom-4 left-4 right-4"
+                      aria-hidden="true"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div
@@ -283,11 +311,13 @@ export const DemoSection = () => {
                 className={`absolute -top-4 -right-4 w-16 h-16 rounded-full blur-xl animate-bounce ${
                   isDark ? 'bg-tabiya-accent/20' : 'bg-tabiya-accent/20'
                 }`}
+                aria-hidden="true"
               ></div>
               <div
                 className={`absolute -bottom-4 -left-4 w-12 h-12 rounded-full blur-lg animate-pulse ${
                   isDark ? 'bg-white/10' : 'bg-orange-300/20'
                 }`}
+                aria-hidden="true"
               ></div>
             </div>
           </div>

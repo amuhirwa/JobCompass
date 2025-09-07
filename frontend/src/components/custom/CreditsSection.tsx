@@ -8,13 +8,15 @@ export const CreditsSection = () => {
   return (
     <section
       id="credits"
+      aria-labelledby="credits-heading"
+      role="region"
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
         isDark
           ? 'bg-gradient-to-br from-tabiya-darker via-tabiya-dark to-tabiya-darker'
           : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
       }`}
     >
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 right-1/3 w-80 h-80 rounded-full blur-3xl animate-pulse ${
             isDark ? 'bg-tabiya-accent/5' : 'bg-tabiya-accent/5'
@@ -34,18 +36,20 @@ export const CreditsSection = () => {
             <div className="flex justify-center lg:justify-start">
               <div className="relative">
                 <Card
-                  className={`shadow-2xl backdrop-blur-sm p-8 md:p-12 rounded-3xl transform hover:scale-105 transition-all duration-500 ${
+                  className={`shadow-2xl backdrop-blur-sm p-8 md:p-12 rounded-3xl transform hover:scale-105 focus-within:scale-105 transition-all duration-500 ${
                     isDark
                       ? 'bg-gradient-to-br from-tabiya-medium/90 via-tabiya-medium/80 to-tabiya-dark/90 border-2 border-tabiya-accent/30'
                       : 'bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200'
                   }`}
+                  role="img"
+                  aria-labelledby="tabiya-logo-caption"
                 >
                   <CardContent className="p-0 flex items-center justify-center">
                     <div className="text-center space-y-4">
                       <div className="flex items-center justify-center mb-6">
                         <img
                           src="/images/tabiya_logo.png"
-                          alt="Tabiya Logo"
+                          alt="Tabiya - Open Career Data Provider"
                           className={`h-16 md:h-20 object-contain ${
                             isDark ? 'filter brightness-0 invert' : ''
                           }`}
@@ -65,11 +69,15 @@ export const CreditsSection = () => {
                                   className="w-7 h-7 text-white"
                                   fill="currentColor"
                                   viewBox="0 0 24 24"
+                                  aria-hidden="true"
                                 >
                                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                 </svg>
                               </div>
-                              <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full opacity-60"></div>
+                              <div
+                                className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full opacity-60"
+                                aria-hidden="true"
+                              ></div>
                             </div>
                             <div>
                               <div className="text-2xl font-bold text-gray-900">
@@ -80,7 +88,7 @@ export const CreditsSection = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2" id="tabiya-logo-caption">
                         <div
                           className={`font-sans text-lg font-bold ${
                             isDark ? 'text-white' : 'text-gray-900'
@@ -100,14 +108,21 @@ export const CreditsSection = () => {
                   </CardContent>
                 </Card>
 
-                <div className="absolute -top-3 -left-3 w-6 h-6 bg-tabiya-accent/30 rounded-full blur-sm animate-bounce"></div>
-                <div className="absolute -bottom-3 -right-3 w-8 h-8 bg-emerald-400/20 rounded-full blur-md animate-pulse"></div>
+                <div
+                  className="absolute -top-3 -left-3 w-6 h-6 bg-tabiya-accent/30 rounded-full blur-sm animate-bounce"
+                  aria-hidden="true"
+                ></div>
+                <div
+                  className="absolute -bottom-3 -right-3 w-8 h-8 bg-emerald-400/20 rounded-full blur-md animate-pulse"
+                  aria-hidden="true"
+                ></div>
               </div>
             </div>
 
             <div className="space-y-8">
               <div className="space-y-6">
                 <h2
+                  id="credits-heading"
                   className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
@@ -134,19 +149,25 @@ export const CreditsSection = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div
+                className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                role="list"
+                aria-label="Tabiya dataset statistics"
+              >
                 <Card
                   className={`transition-all duration-300 ${
                     isDark
                       ? 'bg-tabiya-medium/40 border border-tabiya-accent/20 hover:border-tabiya-accent/40'
                       : 'bg-orange-50/80 border border-orange-200 hover:border-orange-300 hover:shadow-lg'
                   }`}
+                  role="listitem"
                 >
                   <CardContent className="p-4 text-center">
                     <div
                       className={`font-sans text-2xl font-bold mb-1 ${
                         isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                       }`}
+                      aria-label="3,000 plus occupations"
                     >
                       3K+
                     </div>
@@ -166,12 +187,14 @@ export const CreditsSection = () => {
                       ? 'bg-tabiya-medium/40 border border-tabiya-accent/20 hover:border-tabiya-accent/40'
                       : 'bg-orange-50/80 border border-orange-200 hover:border-orange-300 hover:shadow-lg'
                   }`}
+                  role="listitem"
                 >
                   <CardContent className="p-4 text-center">
                     <div
                       className={`font-sans text-2xl font-bold mb-1 ${
                         isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                       }`}
+                      aria-label="14,000 plus skills"
                     >
                       14K+
                     </div>
@@ -191,12 +214,14 @@ export const CreditsSection = () => {
                       ? 'bg-tabiya-medium/40 border border-tabiya-accent/20 hover:border-tabiya-accent/40'
                       : 'bg-orange-50/80 border border-orange-200 hover:border-orange-300 hover:shadow-lg'
                   }`}
+                  role="listitem"
                 >
                   <CardContent className="p-4 text-center">
                     <div
                       className={`font-sans text-2xl font-bold mb-1 ${
                         isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                       }`}
+                      aria-label="650 plus groups"
                     >
                       650+
                     </div>
@@ -216,12 +241,14 @@ export const CreditsSection = () => {
                       ? 'bg-tabiya-medium/40 border border-tabiya-accent/20 hover:border-tabiya-accent/40'
                       : 'bg-orange-50/80 border border-orange-200 hover:border-orange-300 hover:shadow-lg'
                   }`}
+                  role="listitem"
                 >
                   <CardContent className="p-4 text-center">
                     <div
                       className={`font-sans text-2xl font-bold mb-1 ${
                         isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                       }`}
+                      aria-label="130,000 plus connections"
                     >
                       130K+
                     </div>
@@ -236,18 +263,24 @@ export const CreditsSection = () => {
                 </Card>
               </div>
 
-              <div className="space-y-4">
+              <div
+                className="space-y-4"
+                role="list"
+                aria-label="Tabiya features"
+              >
                 <div
                   className={`flex items-start gap-3 p-4 rounded-xl ${
                     isDark
                       ? 'bg-tabiya-medium/20 border border-tabiya-accent/10'
                       : 'bg-orange-50/80 border border-orange-200'
                   }`}
+                  role="listitem"
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center mt-1 flex-shrink-0 ${
                       isDark ? 'bg-tabiya-accent/20' : 'bg-orange-100'
                     }`}
+                    aria-hidden="true"
                   >
                     <svg
                       className={`w-4 h-4 ${
@@ -255,6 +288,7 @@ export const CreditsSection = () => {
                       }`}
                       fill="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -284,11 +318,13 @@ export const CreditsSection = () => {
                       ? 'bg-tabiya-medium/20 border border-tabiya-accent/10'
                       : 'bg-orange-50/80 border border-orange-200'
                   }`}
+                  role="listitem"
                 >
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center mt-1 flex-shrink-0 ${
                       isDark ? 'bg-tabiya-accent/20' : 'bg-orange-100'
                     }`}
+                    aria-hidden="true"
                   >
                     <svg
                       className={`w-4 h-4 ${
@@ -296,6 +332,7 @@ export const CreditsSection = () => {
                       }`}
                       fill="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>

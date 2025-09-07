@@ -175,27 +175,36 @@ export default function SkillMapping() {
   const availableItems = getAvailableItems();
 
   return (
-    <div
-      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-screen overflow-x-hidden pt-20`}
+    <main
+      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-full overflow-x-hidden pt-6`}
+      role="main"
+      aria-labelledby="skill-mapping-title"
     >
       {/* Stats Overview */}
       {selectedItem && (
-        <StatsOverview
-          activeTab={activeTab}
-          skillSuggestionsLength={skillSuggestions?.length || 0}
-          selectedOccupationSkillsLength={
-            selectedOccupation?.related_skills?.length || 0
-          }
-          relatedOccupationsLength={relatedOccupations.length}
-        />
+        <section aria-label="Statistics overview" role="region">
+          <StatsOverview
+            activeTab={activeTab}
+            skillSuggestionsLength={skillSuggestions?.length || 0}
+            selectedOccupationSkillsLength={
+              selectedOccupation?.related_skills?.length || 0
+            }
+            relatedOccupationsLength={relatedOccupations.length}
+          />
+        </section>
       )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 px-6 pb-6">
         {/* Sidebar */}
-        <div className="space-y-6">
+        <aside
+          className="space-y-6"
+          role="complementary"
+          aria-label="Search and navigation"
+        >
           <div className="space-y-3">
             <h1
+              id="skill-mapping-title"
               className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-xl md:text-2xl font-medium`}
             >
               Skill Mapping
@@ -230,9 +239,13 @@ export default function SkillMapping() {
             selectedOccupation={selectedOccupation}
             activeTab={activeTab}
           />
-        </div>
+        </aside>
 
-        <div className="lg:col-span-3 space-y-6">
+        <section
+          className="lg:col-span-3 space-y-6"
+          role="region"
+          aria-label="Related skills and career opportunities"
+        >
           <RelatedSkillsSection
             activeTab={activeTab}
             suggestionsLoading={suggestionsLoading}
@@ -252,7 +265,6 @@ export default function SkillMapping() {
             onPaginationReset={resetPagination}
           />
 
-        
           <CareerOpportunitiesSection
             selectedSkill={selectedSkill}
             relatedOccupations={relatedOccupations}
@@ -263,27 +275,31 @@ export default function SkillMapping() {
             onToggleCardExpansion={toggleCardExpansion}
             onPageChange={setCareerOpportunitiesPage}
           />
-        </div>
+        </section>
       </div>
 
       {/* Market Insights Section */}
-      <MarketInsightsSection
-        selectedOccupationId={selectedOccupationId}
-        marketInsights={marketInsights}
-        marketInsightsLoading={marketInsightsLoading}
-        generateMarketInsights={generateMarketInsights}
-        generateCareerPaths={generateCareerPaths}
-        onGenerateInsights={handleGenerateInsights}
-        onGenerateCareerPaths={handleGenerateCareerPaths}
-      />
+      <section role="region" aria-labelledby="market-insights-heading">
+        <MarketInsightsSection
+          selectedOccupationId={selectedOccupationId}
+          marketInsights={marketInsights}
+          marketInsightsLoading={marketInsightsLoading}
+          generateMarketInsights={generateMarketInsights}
+          generateCareerPaths={generateCareerPaths}
+          onGenerateInsights={handleGenerateInsights}
+          onGenerateCareerPaths={handleGenerateCareerPaths}
+        />
+      </section>
 
       {/* Career Paths Section */}
-      <CareerPathsSection
-        selectedOccupationId={selectedOccupationId}
-        careerPaths={careerPaths}
-        careerPathsLoading={careerPathsLoading}
-        onSkillClick={handleSkillClick}
-      />
+      <section role="region" aria-labelledby="career-paths-heading">
+        <CareerPathsSection
+          selectedOccupationId={selectedOccupationId}
+          careerPaths={careerPaths}
+          careerPathsLoading={careerPathsLoading}
+          onSkillClick={handleSkillClick}
+        />
+      </section>
 
       {/* Skill Learning Modal */}
       <SkillLearningModal
@@ -291,6 +307,6 @@ export default function SkillMapping() {
         onClose={handleCloseSkillModal}
         skillInfo={skillLearningModal.skillInfo}
       />
-    </div>
+    </main>
   );
 }

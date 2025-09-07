@@ -49,11 +49,18 @@ const Navigation = () => {
         <div className="flex items-center gap-4 md:gap-8">
           {/* JobCompass Modern Logo */}
           <Link to="/" className="flex items-center group select-none">
-            <span
-              className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} tracking-wide font-sans group-hover:text-tabiya-accent transition-colors`}
-            >
-              Job<span className="text-tabiya-accent">Compass</span>
-            </span>
+            <div className="flex items-center gap-3">
+              <img
+                src="/images/JobCompass Logo.png"
+                alt="JobCompass"
+                className={`h-8 w-auto transition-all duration-300 ${isDark ? 'brightness-100' : 'brightness-90'} group-hover:scale-105`}
+              />
+              <span
+                className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'} tracking-wide font-sans group-hover:text-tabiya-accent transition-colors`}
+              >
+                JobCompass
+              </span>
+            </div>
           </Link>
           {/* Navigation Links - Hidden below 1400px */}
           <div className="hidden nav:flex items-center gap-6 lg:gap-8">

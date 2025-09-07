@@ -182,33 +182,63 @@ export default function TabiyaDatasetExplorer() {
     >
       <div className="flex w-screen min-w-0">
         {/* Left Sidebar */}
-        <Sidebar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchLoading={searchLoading}
-          filters={filters}
-          onFilterChange={handleFilterChange}
-          skillGroups={skillGroups}
-          skillGroupsLoading={skillGroupsLoading}
-          occupationGroups={occupationGroups}
-          occupationGroupsLoading={occupationGroupsLoading}
-          selectedSkillGroupId={selectedSkillGroupId}
-          onTabChange={handleTabChange}
-          onItemSelect={handleItemSelect}
-        />
+        <aside
+          className="flex-shrink-0"
+          role="complementary"
+          aria-label="Dataset explorer filters and navigation"
+        >
+          <Sidebar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            searchLoading={searchLoading}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            skillGroups={skillGroups}
+            skillGroupsLoading={skillGroupsLoading}
+            occupationGroups={occupationGroups}
+            occupationGroupsLoading={occupationGroupsLoading}
+            selectedSkillGroupId={selectedSkillGroupId}
+            onTabChange={handleTabChange}
+            onItemSelect={handleItemSelect}
+          />
+        </aside>
 
         {/* Main Content Area */}
-        <div
+        <main
           className={`flex-1 min-w-0 p-8 ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
+          role="main"
+          aria-labelledby="dataset-explorer-heading"
         >
+          <h1 id="dataset-explorer-heading" className="sr-only">
+            Tabiya Dataset Explorer
+          </h1>
+
           {/* Stats Overview */}
-          <StatsOverview taxonomyStats={taxonomyStats} />
+          <section aria-labelledby="stats-overview-heading">
+            <h2 id="stats-overview-heading" className="sr-only">
+              Dataset Statistics Overview
+            </h2>
+            <StatsOverview taxonomyStats={taxonomyStats} />
+          </section>
 
           {/* Navigation Tabs */}
-          <NavigationTabs activeTab={activeTab} onTabChange={handleTabChange} />
+          <section aria-labelledby="navigation-tabs-heading">
+            <h2 id="navigation-tabs-heading" className="sr-only">
+              Dataset Category Navigation
+            </h2>
+            <NavigationTabs
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+            />
+          </section>
 
           {/* Main Content */}
-          <div className="w-full">
+          <section className="w-full" aria-labelledby="content-section-heading">
+            <h2 id="content-section-heading" className="sr-only">
+              {selectedItem
+                ? 'Item Details'
+                : `${activeTab.replace('-', ' ')} List`}
+            </h2>
             {selectedItem ? (
               /* Detail View */
               <DetailView
@@ -246,8 +276,8 @@ export default function TabiyaDatasetExplorer() {
                 onPageChange={setCurrentPage}
               />
             )}
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </div>
   );
