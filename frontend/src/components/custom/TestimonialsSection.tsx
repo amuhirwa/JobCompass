@@ -76,9 +76,11 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
             : 'bg-gradient-to-br from-white via-gray-50 to-white border-gray-200 hover:border-gray-300 hover:shadow-lg'
         } backdrop-blur-sm hover:shadow-2xl
       `}
+      role="article"
+      aria-labelledby={`testimonial-author-${testimonial.id}`}
+      aria-describedby={`testimonial-quote-${testimonial.id}`}
     >
       <CardContent className="p-6 h-full flex items-center gap-6">
-        {/* Profile Image */}
         <div className="flex-shrink-0">
           <div
             className={`w-20 h-20 rounded-full overflow-hidden shadow-lg ${
@@ -89,17 +91,20 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
           >
             <img
               src={testimonial.image}
-              alt={testimonial.name}
+              alt={`Profile photo of ${testimonial.name}, ${testimonial.position} at ${testimonial.company}`}
               className="w-full h-full object-cover"
               loading="lazy"
+              decoding="async"
             />
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          {/* Stars */}
-          <div className="flex items-center gap-1 mb-3">
+          <div
+            className="flex items-center gap-1 mb-3"
+            role="img"
+            aria-label="5 star rating"
+          >
             {[...Array(5)].map((_, i) => (
               <svg
                 key={i}
@@ -107,14 +112,15 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
                   isDark ? 'text-tabiya-accent' : 'text-tabiya-accent'
                 }`}
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
             ))}
           </div>
 
-          {/* Quote */}
           <blockquote
+            id={`testimonial-quote-${testimonial.id}`}
             className={`font-sans text-sm leading-relaxed mb-3 line-clamp-3 ${
               isDark ? 'text-white' : 'text-gray-700'
             }`}
@@ -122,10 +128,10 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
             "{testimonial.quote}"
           </blockquote>
 
-          {/* Author Info */}
           <div className="flex items-center justify-between">
             <div>
               <div
+                id={`testimonial-author-${testimonial.id}`}
                 className={`font-sans font-bold text-sm ${
                   isDark ? 'text-white' : 'text-gray-900'
                 }`}
@@ -146,6 +152,7 @@ const TestimonialCard = ({ testimonial, isVisible }: TestimonialCardProps) => {
                   ? 'text-white/70 bg-tabiya-accent/20 border border-tabiya-accent/20'
                   : 'text-gray-600 bg-orange-50 border border-tabiya-accent/20'
               }`}
+              aria-label={`Company: ${testimonial.company}`}
             >
               {testimonial.company}
             </div>
@@ -161,7 +168,6 @@ export const TestimonialsSection = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const { isDark } = useDarkMode();
 
-  // Auto-advance testimonials every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       if (!isAnimating) {
@@ -197,14 +203,16 @@ export const TestimonialsSection = () => {
 
   return (
     <section
+      id="testimonials"
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
         isDark
           ? 'bg-gradient-to-br from-tabiya-darker via-tabiya-dark to-tabiya-darker'
           : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
       }`}
+      aria-labelledby="testimonials-heading"
     >
-      {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
             isDark ? 'bg-tabiya-accent/3' : 'bg-tabiya-accent/5'
@@ -218,10 +226,10 @@ export const TestimonialsSection = () => {
       </div>
 
       <div className="w-full max-w-6xl mx-auto relative z-10">
-        {/* Header */}
         <ScrollAnimation>
           <div className="text-center mb-16">
             <h2
+              id="testimonials-heading"
               className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}
@@ -232,6 +240,7 @@ export const TestimonialsSection = () => {
               className={`font-sans text-lg leading-relaxed max-w-3xl mx-auto ${
                 isDark ? 'text-white/80' : 'text-gray-600'
               }`}
+              id="testimonials-description"
             >
               Discover how JobCompass has transformed careers and helped
               professionals unlock their potential.
@@ -242,37 +251,50 @@ export const TestimonialsSection = () => {
         <ScrollAnimation delay={0.2}>
           <div className="flex items-center justify-center gap-8 lg:gap-16">
             {/* Navigation Controls */}
-            <div className="flex flex-col items-center gap-8">
-              {/* Up Button */}
+            <div
+              className="flex flex-col items-center gap-8"
+              role="group"
+              aria-label="Testimonial navigation"
+            >
               <Button
                 onClick={prevTestimonial}
                 disabled={isAnimating}
                 variant="outline"
                 size="icon"
-                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group ${
+                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none ${
                   isDark
                     ? 'bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
                     : 'bg-white border-tabiya-accent text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
                 }`}
+                aria-label="Previous testimonial"
               >
                 <svg
                   className="w-5 h-5 group-hover:scale-110 transition-transform"
                   fill="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
                 </svg>
               </Button>
 
-              {/* Slide Indicators */}
-              <div className="flex flex-col gap-2">
-                {testimonials.map((_, index) => (
+              {/* Pagination Indicators */}
+              <div
+                className="flex flex-col gap-2"
+                role="tablist"
+                aria-label="Testimonial pagination"
+              >
+                {testimonials.map((testimonial, index) => (
                   <button
                     key={index}
                     onClick={() => goToTestimonial(index)}
                     disabled={isAnimating}
+                    role="tab"
+                    aria-selected={index === currentIndex}
+                    aria-controls={`testimonial-panel-${testimonial.id}`}
+                    aria-label={`View testimonial from ${testimonial.name}`}
                     className={`
-                      rounded-full transition-all duration-300 cursor-pointer
+                      rounded-full transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none
                       ${
                         index === currentIndex
                           ? isDark
@@ -287,32 +309,38 @@ export const TestimonialsSection = () => {
                 ))}
               </div>
 
-              {/* Down Button */}
               <Button
                 onClick={nextTestimonial}
                 disabled={isAnimating}
                 variant="outline"
                 size="icon"
-                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group ${
+                className={`w-12 h-12 rounded-full transition-all duration-300 disabled:opacity-50 group focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none ${
                   isDark
                     ? 'bg-tabiya-medium/80 border-tabiya-accent/40 text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
                     : 'bg-white border-tabiya-accent text-tabiya-accent hover:bg-tabiya-accent hover:text-white'
                 }`}
+                aria-label="Next testimonial"
               >
                 <svg
                   className="w-5 h-5 group-hover:scale-110 transition-transform"
                   fill="currentColor"
                   viewBox="0 0 24 24"
+                  aria-hidden="true"
                 >
                   <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                 </svg>
               </Button>
             </div>
 
-            {/* Testimonial Cards Container */}
+            {/* Testimonials Display */}
             <div className="flex-1 max-w-3xl">
-              <div className="relative h-[600px] overflow-hidden">
-                {/* Card Stack */}
+              <div
+                className="relative h-[600px] overflow-hidden"
+                role="region"
+                aria-labelledby="testimonials-heading"
+                aria-live="polite"
+                aria-atomic="true"
+              >
                 <div
                   className="absolute inset-0 transition-transform duration-700 ease-out"
                   style={{
@@ -322,6 +350,9 @@ export const TestimonialsSection = () => {
                   {testimonials.map((testimonial, index) => (
                     <div
                       key={testimonial.id}
+                      id={`testimonial-panel-${testimonial.id}`}
+                      role="tabpanel"
+                      aria-labelledby={`testimonial-author-${testimonial.id}`}
                       className="absolute inset-x-0 transition-all duration-700 ease-out"
                       style={{
                         transform: `translateY(${index * 200}px)`,

@@ -13,7 +13,16 @@
     "build": "vite build",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "accessibility:install": "npm install --save-dev @axe-core/cli @axe-core/react lighthouse pa11y",
+    "accessibility:quick": "axe --config ./accessibility-config.json http://localhost:5173",
+    "accessibility:full": "npm run accessibility:axe && npm run accessibility:lighthouse && npm run accessibility:pa11y",
+    "accessibility:axe": "axe --config ./accessibility-config.json --include main --dir ./accessibility-reports/axe http://localhost:5173",
+    "accessibility:lighthouse": "lighthouse http://localhost:5173 --only-categories=accessibility --output=json --output-path=./accessibility-reports/lighthouse.json",
+    "accessibility:pa11y": "pa11y --config ./accessibility-config.json --reporter json > ./accessibility-reports/pa11y.json http://localhost:5173",
+    "accessibility:ci": "npm run accessibility:axe -- --exit-code",
+    "accessibility:report": "node scripts/generate-accessibility-report.js",
+    "accessibility:serve": "npm run dev & sleep 5 && npm run accessibility:full && pkill -f vite"
   },
   "dependencies": {
     "@tanstack/react-query-devtools": "^5.86.0",

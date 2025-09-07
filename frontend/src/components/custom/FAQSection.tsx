@@ -83,6 +83,8 @@ export const FAQSection = () => {
   return (
     <section
       id="faq"
+      aria-labelledby="faq-heading"
+      role="region"
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 relative overflow-hidden ${
         isDark
           ? 'bg-gradient-to-br from-tabiya-darker via-tabiya-dark to-tabiya-darker'
@@ -90,7 +92,7 @@ export const FAQSection = () => {
       }`}
     >
       {/* Background Elements */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
             isDark ? 'bg-tabiya-accent/3' : 'bg-tabiya-accent/5'
@@ -104,10 +106,10 @@ export const FAQSection = () => {
       </div>
 
       <div className="w-full max-w-4xl mx-auto relative z-10">
-        {/* Header */}
         <ScrollAnimation>
           <div className="text-center mb-16">
             <h2
+              id="faq-heading"
               className={`font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6 ${
                 isDark ? 'text-white' : 'text-gray-900'
               }`}
@@ -126,12 +128,16 @@ export const FAQSection = () => {
           </div>
         </ScrollAnimation>
 
-        {/* FAQ Items */}
         <ScrollAnimation delay={0.2}>
-          <div className="space-y-4">
+          <div
+            className="space-y-4"
+            role="list"
+            aria-label="Frequently asked questions"
+          >
             {faqs.map((faq) => (
               <Card
                 key={faq.id}
+                role="listitem"
                 className={`
                   border transition-all duration-300 cursor-pointer overflow-hidden backdrop-blur-sm
                   ${
@@ -148,7 +154,10 @@ export const FAQSection = () => {
                 <CardContent className="p-0">
                   <button
                     onClick={() => toggleFAQ(faq.id)}
-                    className="w-full text-left p-6 focus:outline-none"
+                    className="w-full text-left p-6 focus:outline-none focus:ring-4 focus:ring-tabiya-accent/50"
+                    aria-expanded={openFAQ === faq.id}
+                    aria-controls={`faq-answer-${faq.id}`}
+                    type="button"
                   >
                     <div className="flex items-center justify-between">
                       <h3
@@ -172,6 +181,7 @@ export const FAQSection = () => {
                               : 'bg-gray-100 hover:bg-orange-100'
                         }
                       `}
+                        aria-hidden="true"
                       >
                         <svg
                           className={`w-6 h-6 transition-transform duration-300 ${
@@ -179,6 +189,7 @@ export const FAQSection = () => {
                           }`}
                           fill="currentColor"
                           viewBox="0 0 24 24"
+                          aria-hidden="true"
                         >
                           <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
                         </svg>
@@ -187,10 +198,13 @@ export const FAQSection = () => {
                   </button>
 
                   <div
+                    id={`faq-answer-${faq.id}`}
                     className={`
                   transition-all duration-500 ease-out overflow-hidden
                   ${openFAQ === faq.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
                 `}
+                    role="region"
+                    aria-labelledby={`faq-question-${faq.id}`}
                   >
                     <div className="px-6 pb-6">
                       <div
@@ -214,7 +228,6 @@ export const FAQSection = () => {
           </div>
         </ScrollAnimation>
 
-        {/* Contact CTA */}
         <ScrollAnimation delay={0.4}>
           <div className="mt-16 text-center">
             <Card
@@ -246,21 +259,25 @@ export const FAQSection = () => {
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <button
-                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 shadow-lg ${
+                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 transform hover:scale-105 focus:scale-105 shadow-lg focus:outline-none focus:ring-4 focus:ring-tabiya-accent/50 ${
                         isDark
                           ? 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white shadow-tabiya-accent/30'
                           : 'bg-tabiya-accent hover:bg-tabiya-accent/90 text-white shadow-tabiya-accent/30'
                       }`}
+                      type="button"
+                      aria-label="Contact our support team"
                     >
                       Contact Support
                     </button>
 
                     <button
-                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 ${
+                      className={`font-sans font-medium px-8 py-3 rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-offset-2 ${
                         isDark
-                          ? 'border border-white/30 text-white hover:bg-white/10'
-                          : 'border border-gray-300 text-gray-700 hover:bg-orange-50'
+                          ? 'border border-white/30 text-white hover:bg-white/10 focus:ring-white/20'
+                          : 'border border-gray-300 text-gray-700 hover:bg-orange-50 focus:ring-orange-200'
                       }`}
+                      type="button"
+                      aria-label="Schedule a product demonstration"
                     >
                       Schedule a Demo
                     </button>

@@ -5,6 +5,11 @@ export interface User {
   lastName: string;
   email: string;
   avatar?: string;
+  phone?: string;
+  location?: string;
+  bio?: string;
+  title?: string;
+  company?: string;
 }
 
 export interface Skill {
@@ -43,6 +48,7 @@ export interface Resource {
   difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
   tags: string[];
   createdAt: Date;
+  assignedOccupation?: string;
 }
 
 export interface CommunityPost {

@@ -15,6 +15,7 @@ const features = [
         className="w-10 h-10 text-tabiya-accent"
         fill="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
       </svg>
@@ -31,6 +32,7 @@ const features = [
         className="w-10 h-10 text-tabiya-accent"
         fill="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path d="M9 11H7v4h2v-4zm4-4H11v8h2V7zm4-2H15v10h2V5zm2.5 11.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z" />
       </svg>
@@ -47,6 +49,7 @@ const features = [
         className="w-10 h-10 text-tabiya-accent"
         fill="currentColor"
         viewBox="0 0 24 24"
+        aria-hidden="true"
       >
         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
       </svg>
@@ -71,19 +74,25 @@ export const FeaturesSection = () => {
     <section
       id="features"
       className={`w-full px-4 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-28 ${isDark ? 'bg-tabiya-dark' : 'bg-white'} relative overflow-hidden`}
+      aria-labelledby="features-heading"
     >
       <div className="w-full max-w-7xl mx-auto">
         <ScrollAnimation className="text-center mb-16">
-          <p className="text-tabiya-accent font-sans text-sm font-medium uppercase tracking-wide mb-4">
+          <p
+            className="text-tabiya-accent font-sans text-sm font-medium uppercase tracking-wide mb-4"
+            aria-label="Section category"
+          >
             Explore
           </p>
           <h2
+            id="features-heading"
             className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-3xl sm:text-4xl md:text-5xl font-bold leading-[110%] mb-6 max-w-4xl mx-auto`}
           >
             Unlock Your Career Potential with JobCompass
           </h2>
           <p
             className={`${isDark ? 'text-white/90' : 'text-gray-700'} font-sans text-lg font-medium leading-[140%] max-w-3xl mx-auto`}
+            id="features-description"
           >
             JobCompass empowers you to navigate the complex world of jobs and
             skills. Discover pathways that align with your aspirations and
@@ -99,15 +108,20 @@ export const FeaturesSection = () => {
             <ScrollAnimationItem key={index}>
               <Card
                 className={`${isDark ? 'bg-tabiya-medium/30 border-white/10 hover:border-tabiya-accent/30' : 'bg-white border-gray-200 hover:border-tabiya-accent/50'} rounded-2xl border transition-all duration-300 group backdrop-blur-sm shadow-lg hover:shadow-xl`}
+                role="article"
+                aria-labelledby={`feature-title-${index}`}
+                aria-describedby={`feature-description-${index}`}
               >
                 <CardHeader className="p-8 pb-0">
                   <div
                     className={`w-20 h-20 ${isDark ? 'bg-tabiya-accent/20 group-hover:bg-tabiya-accent/30' : 'bg-tabiya-accent/10 group-hover:bg-tabiya-accent/20'} rounded-2xl flex items-center justify-center mb-8 transition-colors duration-300`}
+                    aria-hidden="true"
                   >
                     {feature.icon}
                   </div>
 
                   <h3
+                    id={`feature-title-${index}`}
                     className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-xl font-bold mb-4`}
                   >
                     {feature.title}
@@ -116,6 +130,7 @@ export const FeaturesSection = () => {
 
                 <CardContent className="p-8 pt-0">
                   <p
+                    id={`feature-description-${index}`}
                     className={`${isDark ? 'text-white/80' : 'text-gray-700'} font-sans text-base leading-[150%] mb-6 font-medium`}
                   >
                     {expandedFeature === index
@@ -127,7 +142,10 @@ export const FeaturesSection = () => {
                     variant="read-more"
                     size="sm"
                     onClick={() => toggleFeature(index)}
-                    className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto`}
+                    className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none`}
+                    aria-expanded={expandedFeature === index}
+                    aria-controls={`feature-description-${index}`}
+                    aria-label={`${expandedFeature === index ? 'Show less' : 'Show more'} information about ${feature.title}`}
                   >
                     {expandedFeature === index ? 'Read Less' : 'Read More'}
                     <svg
@@ -138,6 +156,7 @@ export const FeaturesSection = () => {
                       }`}
                       fill="currentColor"
                       viewBox="0 0 24 24"
+                      aria-hidden="true"
                     >
                       <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
                     </svg>
@@ -149,21 +168,35 @@ export const FeaturesSection = () => {
         </ScrollAnimationContainer>
 
         <ScrollAnimation delay={0.6} className="text-center mt-16">
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          <div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4"
+            role="group"
+            aria-labelledby="features-actions"
+          >
+            <span id="features-actions" className="sr-only">
+              Features section call-to-action buttons
+            </span>
             <Button
               variant="cta-outline"
               size="cta"
-              className="font-sans font-medium transition-all duration-300"
+              className="font-sans font-medium transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
+              aria-describedby="features-description"
             >
               Learn More
             </Button>
             <Button
               variant="cta-primary"
               size="cta"
-              className="font-sans font-semibold transition-all duration-300"
+              className="font-sans font-semibold transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
+              aria-describedby="features-description"
             >
               Sign Up
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
                 <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
               </svg>
             </Button>
