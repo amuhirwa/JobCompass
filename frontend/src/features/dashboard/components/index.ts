@@ -8,5 +8,7 @@ export { AnalyticsSection } from './AnalyticsSection';
 
 // New enhanced components
 export { AnalyticsOverview } from './AnalyticsOverview';
+export { ResourceLearningHub } from './ResourceLearningHub';
+export { ResourceDashboard } from './ResourceDashboard';
 export { SkillsPage } from './SkillsPage';
 export { ProfilePage } from './ProfilePage';

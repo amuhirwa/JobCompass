@@ -1,5 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
+import { Chatbot } from "@/components/custom/Chatbot";
 
 const NotFound = () => {
   const location = useLocation();
@@ -7,19 +8,23 @@ const NotFound = () => {
   useEffect(() => {
     console.error(
       "404 Error: User attempted to access non-existent route:",
-      location.pathname,
+      location.pathname
     );
   }, [location.pathname]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-tabiya-dark px-16">
       <div className="text-center max-w-2xl mx-auto">
-        <h1 className="text-9xl font-bold text-white font-space-mono mb-8">404</h1>
+        <h1 className="text-9xl font-bold text-white font-space-mono mb-8">
+          404
+        </h1>
         <h2 className="text-5xl text-white font-space-mono mb-6 leading-tight">
           Page Not Found
         </h2>
         <p className="text-white font-inter text-lg leading-relaxed mb-8">
-          The page you're looking for doesn't exist. Let us know if you need help finding what you're looking for, and we'll help guide you back to exploring career opportunities with Tabiya.
+          The page you're looking for doesn't exist. Let us know if you need
+          help finding what you're looking for, and we'll help guide you back to
+          exploring career opportunities with Tabiya.
         </p>
         <div className="flex gap-4 justify-center">
           <a
@@ -36,6 +41,16 @@ const NotFound = () => {
           </a>
         </div>
       </div>
+
+      {/* Chatbot for Help and Navigation */}
+      <Chatbot
+        contextType="general"
+        contextData={{
+          name: "Navigation Help",
+          description:
+            "Help with finding the right page and exploring JobCompass features",
+        }}
+      />
     </div>
   );
 };

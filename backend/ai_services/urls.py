@@ -21,4 +21,9 @@ urlpatterns = [
     path('occupations/<str:occupation_id>/generate-all/', 
          views.generate_all_insights, 
          name='generate-all-insights'),
+    
+    # Chatbot endpoint
+    path('chatbot/', 
+         views.chatbot, 
+         name='chatbot'),
 ]

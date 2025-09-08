@@ -346,3 +346,74 @@ class GeminiService:
                 'cost': ''
             }
         ]
+
+    def chat_with_context(self, message: str, context_type: str = "general", context_data: Dict = None) -> str:
+        """Generate chatbot response with JobCompass context"""
+        
+        # Build context prompt based on type
+        context_prompt = self._build_context_prompt(context_type, context_data)
+        
+        system_prompt = f"""
+        You are JobCompass AI, an intelligent career guidance assistant. You help users with:
+        - Skills and competencies information
+        - Occupation and career guidance
+        - Learning paths and resources
+        - Market insights and trends
+        - Career planning and development
+
+        {context_prompt}
+
+        Guidelines:
+        - Be helpful, professional, and encouraging
+        - Provide specific, actionable advice
+        - Use data-driven insights when possible
+        - Keep responses concise but comprehensive
+        - Ask clarifying questions when needed
+        - Always relate answers back to career development
+
+        User question: {message}
+        
+        Provide a helpful response in a conversational tone:
+        """
+
+        try:
+            response = self.model.generate_content(system_prompt)
+            return response.text.strip()
+        except Exception as e:
+            logger.error(f"Error generating chatbot response: {str(e)}")
+            return "I apologize, but I'm having trouble processing your request right now. Please try again or contact support if the issue persists."
+
+    def _build_context_prompt(self, context_type: str, context_data: Dict = None) -> str:
+        """Build context-specific prompt for the chatbot"""
+        
+        if context_type == "skill" and context_data:
+            return f"""
+            Current Context: The user is viewing information about the skill "{context_data.get('name', '')}"
+            Skill Description: {context_data.get('description', '')}
+            Focus your response on this skill and related career opportunities, learning paths, and applications.
+            """
+        
+        elif context_type == "occupation" and context_data:
+            return f"""
+            Current Context: The user is viewing information about the occupation "{context_data.get('name', '')}"
+            Occupation Description: {context_data.get('description', '')}
+            Focus your response on this occupation, required skills, career progression, and market insights.
+            """
+        
+        elif context_type == "resources" and context_data:
+            return f"""
+            Current Context: The user is in the learning resources section
+            Focus your response on learning paths, skill development, and educational resources.
+            """
+        
+        elif context_type == "community" and context_data:
+            return f"""
+            Current Context: The user is in the community section
+            Focus your response on networking, community learning, and collaborative career development.
+            """
+        
+        else:
+            return """
+            Current Context: General JobCompass platform
+            You can help with any career-related questions about skills, occupations, learning paths, or career planning.
+            """

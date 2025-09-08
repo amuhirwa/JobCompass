@@ -74,6 +74,7 @@ export function CareerOpportunitiesSection({
 
       {selectedSkill ? (
         (() => {
+          console.log(relatedOccupations, careerOpportunitiesPage, itemsPerPage);
           const paginatedData = getPaginatedData(
             relatedOccupations,
             careerOpportunitiesPage,
@@ -86,23 +87,23 @@ export function CareerOpportunitiesSection({
                 role="list"
                 aria-label="Career opportunities"
               >
-                {paginatedData.items.map((occupation: any) => {
+                {relatedOccupations.map((occupation: any) => {
                   const matchPercentage = calculateMatchPercentage(occupation);
                   const occupationCardId = `occ-${occupation.id}`;
                   const isExpanded = expandedCards.has(occupationCardId);
                   const description =
-                    occupation.definition || occupation.description || '';
+                    occupation.definition || occupation.occupation_description || '';
                   const displayDescription = description;
 
                   return (
                     <article
-                      key={occupation.id}
+                      key={occupation.occupation_id}
                       className={`p-5 ${isDark ? 'bg-white/5 hover:bg-white/10 focus-within:bg-white/10 border-white/10' : 'bg-gray-50 hover:bg-gray-100 focus-within:bg-gray-100 border-gray-200'} rounded-lg border cursor-pointer transition-all duration-200 group shadow-sm hover:shadow-md`}
                       onClick={(e) => {
                         if (
                           !(e.target as HTMLElement).closest('.read-more-btn')
                         ) {
-                          onOccupationSelect(occupation.id);
+                          onOccupationSelect(occupation.occupation_id);
                         }
                       }}
                       role="listitem"
@@ -113,22 +114,22 @@ export function CareerOpportunitiesSection({
                           if (
                             !(e.target as HTMLElement).closest('.read-more-btn')
                           ) {
-                            onOccupationSelect(occupation.id);
+                            onOccupationSelect(occupation.occupation_id);
                           }
                         }
                       }}
-                      aria-labelledby={`occ-${occupation.id}-title`}
-                      aria-describedby={`occ-${occupation.id}-description`}
+                      aria-labelledby={`occ-${occupation.occupation_id}-title`}
+                      aria-describedby={`occ-${occupation.occupation_id}-description`}
                     >
                       <div className="space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <h4
-                              id={`occ-${occupation.id}-title`}
+                              id={`occ-${occupation.occupation_id}-title`}
                               className="text-tabiya-accent font-semibold text-lg group-hover:text-tabiya-accent/80 transition-colors"
                             >
                               {capitalizeFirstLetter(
-                                occupation.preferred_label
+                                occupation.occupation_name
                               )}
                             </h4>
                           </div>

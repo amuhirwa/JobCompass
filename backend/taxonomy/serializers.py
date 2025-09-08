@@ -71,6 +71,8 @@ class SkillSerializer(serializers.ModelSerializer):
             {
                 'occupation_id': rel.occupation.id,
                 'occupation_name': rel.occupation.preferred_label,
+                'occupation_type': rel.occupation.occupation_type,
+                'occupation_description': rel.occupation.description,
                 'relation_type': rel.relation_type,
                 'signalling_value': rel.signalling_value,
                 'signalling_value_label': rel.signalling_value_label

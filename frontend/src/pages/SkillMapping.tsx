@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useDarkMode } from '@/contexts/DarkModeContext';
-import { SkillLearningModal } from '@/components/custom';
+import { useState } from "react";
+import { useDarkMode } from "@/contexts/DarkModeContext";
+import { SkillLearningModal } from "@/components/custom";
+import { Chatbot } from "@/components/custom/Chatbot";
 import {
   StatsOverview,
   SearchSection,
@@ -10,7 +11,7 @@ import {
   CareerOpportunitiesSection,
   MarketInsightsSection,
   CareerPathsSection,
-} from '@/features/SkillMapping';
+} from "@/features/SkillMapping";
 import {
   useSkills,
   useSkill,
@@ -22,8 +23,12 @@ import {
   useGenerateMarketInsights,
   useCareerPaths,
   useGenerateCareerPaths,
-} from '@/lib/hooks';
-import type { CareerStepSkill } from '@/lib/types';
+} from "@/lib/hooks";
+import type {
+  CareerStepSkill,
+  Occupation,
+  RelatedOccupation,
+} from "@/lib/types";
 
 export default function SkillMapping() {
   const { isDark } = useDarkMode();
@@ -33,9 +38,9 @@ export default function SkillMapping() {
   const [selectedOccupationId, setSelectedOccupationId] = useState<
     string | null
   >(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'skills' | 'occupations'>(
-    'skills'
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"skills" | "occupations">(
+    "skills"
   );
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [relatedSkillsPage, setRelatedSkillsPage] = useState(1);
@@ -57,35 +62,35 @@ export default function SkillMapping() {
     isLoading: searchLoading,
   } = useDebouncedSearch(searchQuery);
   const { data: selectedSkill, isLoading: skillLoading } = useSkill(
-    selectedSkillId || ''
+    selectedSkillId || ""
   );
   const { data: selectedOccupation, isLoading: occupationLoading } =
-    useOccupation(selectedOccupationId || '');
+    useOccupation(selectedOccupationId || "");
   const { data: skillSuggestions, isLoading: suggestionsLoading } =
-    useSkillSuggestions(selectedSkillId || '');
+    useSkillSuggestions(selectedSkillId || "");
   const { data: occupations } = useOccupations();
   const { data: skills } = useSkills();
   const { data: marketInsights, isLoading: marketInsightsLoading } =
-    useMarketInsights(selectedOccupationId || '');
+    useMarketInsights(selectedOccupationId || "");
   const generateMarketInsights = useGenerateMarketInsights();
   const { data: careerPaths, isLoading: careerPathsLoading } = useCareerPaths(
-    selectedOccupationId || ''
+    selectedOccupationId || ""
   );
   const generateCareerPaths = useGenerateCareerPaths();
 
   // Utility functions
   const getAvailableItems = () => {
     if (searchQuery.trim()) {
-      if (activeTab === 'skills') {
+      if (activeTab === "skills") {
         return searchResults?.skills || [];
-      } else if (activeTab === 'occupations') {
+      } else if (activeTab === "occupations") {
         return searchResults?.occupations || [];
       }
       return [];
     } else {
-      if (activeTab === 'skills') {
+      if (activeTab === "skills") {
         return skills?.results || [];
-      } else if (activeTab === 'occupations') {
+      } else if (activeTab === "occupations") {
         return occupations?.results || [];
       }
       return [];
@@ -98,33 +103,28 @@ export default function SkillMapping() {
     return null;
   };
 
-  const relatedOccupations =
-    occupations?.results?.filter((occupation) =>
-      occupation.related_skills?.some(
-        (skill) => skill.skill_id === selectedSkillId
-      )
-    ) || [];
+  const relatedOccupations = selectedSkill?.related_occupations || [];
 
   // Event handlers
   const handleItemSelect = (item: any) => {
-    if (activeTab === 'skills') {
+    if (activeTab === "skills") {
       setSelectedSkillId(item.id);
       setSelectedOccupationId(null);
-    } else if (activeTab === 'occupations') {
+    } else if (activeTab === "occupations") {
       setSelectedOccupationId(item.id);
       setSelectedSkillId(null);
     }
-    setSearchQuery('');
+    setSearchQuery("");
     resetPagination();
   };
 
-  const handleTabChange = (tab: 'skills' | 'occupations') => {
+  const handleTabChange = (tab: "skills" | "occupations") => {
     setActiveTab(tab);
     resetPagination();
   };
 
   const handleOccupationSelect = (occupationId: string) => {
-    setActiveTab('occupations');
+    setActiveTab("occupations");
     setSelectedOccupationId(occupationId);
     setSelectedSkillId(null);
     resetPagination();
@@ -176,7 +176,7 @@ export default function SkillMapping() {
 
   return (
     <main
-      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-full overflow-x-hidden pt-6`}
+      className={`min-h-screen ${isDark ? "bg-tabiya-dark" : "bg-gray-50"} w-full overflow-x-hidden pt-6`}
       role="main"
       aria-labelledby="skill-mapping-title"
     >
@@ -205,12 +205,12 @@ export default function SkillMapping() {
           <div className="space-y-3">
             <h1
               id="skill-mapping-title"
-              className={`${isDark ? 'text-white' : 'text-gray-900'} font-sans text-xl md:text-2xl font-medium`}
+              className={`${isDark ? "text-white" : "text-gray-900"} font-sans text-xl md:text-2xl font-medium`}
             >
               Skill Mapping
             </h1>
             <p
-              className={`${isDark ? 'text-white/70' : 'text-gray-600'} text-sm md:text-base leading-relaxed`}
+              className={`${isDark ? "text-white/70" : "text-gray-600"} text-sm md:text-base leading-relaxed`}
             >
               Explore the interconnected world of skills and careers. Discover
               how skills connect to various occupations, related competencies,
@@ -306,6 +306,18 @@ export default function SkillMapping() {
         isOpen={skillLearningModal.isOpen}
         onClose={handleCloseSkillModal}
         skillInfo={skillLearningModal.skillInfo}
+      />
+
+      {/* Chatbot for Skills and Occupations Help */}
+      <Chatbot
+        contextType="skill"
+        contextData={{
+          name:
+            getSelectedItem()?.preferred_label ||
+            `${activeTab === "skills" ? "Skills" : "Occupations"} Explorer`,
+          description: `Help with exploring ${activeTab === "skills" ? "skills and skill development" : "occupations and career paths"}`,
+          id: selectedSkillId || selectedOccupationId || undefined,
+        }}
       />
     </main>
   );

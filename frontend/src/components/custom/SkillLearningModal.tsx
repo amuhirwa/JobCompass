@@ -16,6 +16,8 @@ import {
   FileText,
   Users,
   Target,
+  Plus,
+  Timer,
 } from "lucide-react";
 import {
   useLearningResources,
@@ -23,6 +25,8 @@ import {
 } from "@/lib/hooks";
 import type { CareerStepSkill } from "@/lib/types";
 import { useDarkMode } from "@/contexts/DarkModeContext";
+import { ResourceLearningHub } from "@/features/dashboard/components/ResourceLearningHub";
+import { useState } from "react";
 
 interface SkillLearningModalProps {
   isOpen: boolean;
@@ -76,6 +80,7 @@ export default function SkillLearningModal({
   skillInfo,
 }: SkillLearningModalProps) {
   const { isDark } = useDarkMode();
+  const [showResourceHub, setShowResourceHub] = useState(false);
 
   const { data: learningResources, isLoading } = useLearningResources(
     skillInfo?.skill.id || ""
@@ -145,19 +150,30 @@ export default function SkillLearningModal({
             >
               Learning Resources
             </h3>
-            {(!learningResources || learningResources.length === 0) && (
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleGenerateResources}
-                disabled={generateResources.isPending}
+                onClick={() => setShowResourceHub(true)}
                 className={`${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
               >
-                {generateResources.isPending
-                  ? "Generating..."
-                  : "Generate Resources"}
+                <Timer className="w-4 h-4 mr-1" />
+                Track Progress
               </Button>
-            )}
+              {(!learningResources || learningResources.length === 0) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGenerateResources}
+                  disabled={generateResources.isPending}
+                  className={`${isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                >
+                  {generateResources.isPending
+                    ? "Generating..."
+                    : "Generate Resources"}
+                </Button>
+              )}
+            </div>
           </div>
 
           {isLoading ? (
@@ -281,6 +297,22 @@ export default function SkillLearningModal({
           )}
         </div>
       </DialogContent>
+
+      {/* Resource Learning Hub Modal */}
+      <ResourceLearningHub
+        isOpen={showResourceHub}
+        onClose={() => setShowResourceHub(false)}
+        skillInfo={
+          skillInfo
+            ? {
+                skill: skillInfo.skill,
+                importance_level: skillInfo.importance_level,
+                proficiency_level: skillInfo.proficiency_level,
+              }
+            : null
+        }
+        goalInfo={null}
+      />
     </Dialog>
   );
 }

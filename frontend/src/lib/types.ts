@@ -41,7 +41,7 @@ export interface Skill extends BaseEntity {
   scope_note: string;
   is_localized: boolean;
   related_skills: RelatedSkill[];
-  related_occupations: RelatedOccupation[];
+  related_occupations: Occupation[];
 }
 
 export interface OccupationGroup extends BaseEntity {
@@ -229,6 +229,80 @@ export interface User {
   last_login?: string;
 }
 
+export interface UserProfile {
+  id: string;
+  user: User;
+  onboarding_completed: boolean;
+  onboarding_step: number;
+  bio?: string;
+  location?: string;
+  phone?: string;
+  linkedin_url?: string;
+  github_url?: string;
+  portfolio_url?: string;
+  current_occupation?: OccupationSummary;
+  target_occupation?: OccupationSummary;
+  experience_level?: 'entry' | 'junior' | 'mid' | 'senior' | 'lead';
+  career_goal?: 'switch_career' | 'advance_current' | 'skill_development' | 'leadership' | 'entrepreneurship' | 'freelance' | 'other';
+  skills: UserSkill[];
+  goals: UserGoal[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserSkill {
+  id: string;
+  skill: SkillSummary;
+  proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  years_of_experience: number;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserGoal {
+  id: string;
+  title: string;
+  description?: string;
+  goal_type: 'skill' | 'certification' | 'career_change' | 'promotion' | 'salary_increase' | 'project' | 'other';
+  target_skill?: SkillSummary;
+  target_occupation?: OccupationSummary;
+  target_date?: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled';
+  progress_percentage: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SkillSummary {
+  id: string;
+  preferred_label: string;
+  skill_type: string;
+}
+
+export interface OccupationSummary {
+  id: string;
+  preferred_label: string;
+  occupation_type: string;
+}
+
+export interface OnboardingStepData {
+  step: number;
+  data: Record<string, any>;
+}
+
+export interface DashboardData {
+  profile: UserProfile;
+  stats: {
+    skills_count: number;
+    goals_count: number;
+    completed_goals: number;
+    in_progress_goals: number;
+  };
+  recent_goals: UserGoal[];
+  primary_skills: UserSkill[];
+}
+
 export interface LoginRequest {
   username: string;
   password: string;
@@ -245,6 +319,7 @@ export interface RegisterRequest {
 export interface AuthResponse {
   message: string;
   user: User;
+  profile?: UserProfile;
   tokens: {
     access: string;
     refresh: string;
@@ -347,4 +422,160 @@ export interface CareerPath {
 export interface GenerateAllInsightsResponse {
   market_insights: MarketInsight;
   career_paths: CareerPath[];
+}
+
+// Community types
+export interface CommunityAuthor {
+  id: string;
+  username: string;
+  first_name?: string;
+  last_name?: string;
+  avatar?: string;
+}
+
+export interface CommunityComment {
+  id: string;
+  author: CommunityAuthor;
+  content: string;
+  parent?: string | null;
+  likes_count: number;
+  created_at: string;
+  updated_at: string;
+  replies?: CommunityComment[];
+}
+
+export interface CommunityPost {
+  id: string;
+  author: CommunityAuthor;
+  title: string;
+  content: string;
+  post_type: 'question' | 'discussion' | 'resource' | 'achievement' | 'tip';
+  tags: string[];
+  likes_count: number;
+  comments_count: number;
+  views_count: number;
+  is_pinned: boolean;
+  created_at: string;
+  updated_at: string;
+  comments?: CommunityComment[];
+  is_liked?: boolean;
+}
+
+export interface CreateCommunityPost {
+  title: string;
+  content: string;
+  post_type: 'question' | 'discussion' | 'resource' | 'achievement' | 'tip';
+  tags: string[];
+}
+
+export interface CreateCommunityComment {
+  content: string;
+  parent?: string | null;
+}
+
+export interface CommunityGroup {
+  id: string;
+  name: string;
+  description: string;
+  creator: CommunityAuthor;
+  is_private: boolean;
+  tags: string[];
+  created_at: string;
+  members_count: number;
+  is_member: boolean;
+}
+
+// Learning Resources Types
+export interface UserLearningResource {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+  resource_type: 'course' | 'video' | 'article' | 'book' | 'podcast' | 'tutorial' | 'documentation' | 'practice' | 'certification';
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  provider: string;
+  duration: string;
+  cost: number;
+  is_free: boolean;
+  rating: number;
+  status: 'planned' | 'in_progress' | 'completed' | 'paused';
+  progress_percentage: number;
+  time_spent_minutes: number;
+  time_spent_hours: number;
+  started_at: string | null;
+  completed_at: string | null;
+  related_skill: string | null;
+  related_skill_name: string | null;
+  related_goal: string | null;
+  related_goal_title: string | null;
+  ai_generated: boolean;
+  is_completed: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateUserLearningResource {
+  title: string;
+  description: string;
+  url: string;
+  resource_type: UserLearningResource['resource_type'];
+  difficulty_level: UserLearningResource['difficulty_level'];
+  provider: string;
+  duration: string;
+  cost: number;
+  is_free: boolean;
+  rating: number;
+  related_skill?: string;
+  related_goal?: string;
+}
+
+export interface UserResourceProgress {
+  id: string;
+  resource: string;
+  resource_title: string;
+  session_date: string;
+  session_duration_minutes: number;
+  progress_before: number;
+  progress_after: number;
+  progress_change: number;
+  notes: string;
+}
+
+export interface ResourceStats {
+  total_resources: number;
+  status_breakdown: {
+    completed: number;
+    in_progress: number;
+    planned: number;
+  };
+  time_stats: {
+    total_hours: number;
+    total_minutes: number;
+    weekly_hours: number;
+    weekly_sessions: number;
+  };
+  progress: {
+    average_completion: number;
+    completion_rate: number;
+  };
+  breakdown: {
+    by_difficulty: Array<{ difficulty_level: string; count: number }>;
+    by_type: Array<{ resource_type: string; count: number }>;
+  };
+}
+
+// Chatbot Types
+export interface ChatbotResponse {
+  message: string;
+  response: string;
+  context_type: string;
+  timestamp: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  message: string;
+  response: string;
+  timestamp: number;
+  isUser: boolean;
 }

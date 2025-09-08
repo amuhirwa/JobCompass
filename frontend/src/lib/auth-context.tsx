@@ -8,8 +8,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
-  register: (userData: RegisterRequest) => Promise<void>;
+  register: (userData: RegisterRequest) => Promise<User>;
   logout: () => void;
+  checkOnboardingStatus: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -68,7 +69,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: RegisterRequest) => {
+  const register = async (userData: RegisterRequest): Promise<User> => {
     try {
       await api.register(userData);
 
@@ -78,8 +79,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Invalidate all queries
       queryClient.invalidateQueries();
+
+      return response.user;
     } catch (error) {
       throw error;
+    }
+  };
+
+  const checkOnboardingStatus = async (): Promise<boolean> => {
+    try {
+      const profile = await api.getUserProfile();
+      return profile?.onboarding_completed || false;
+    } catch (error) {
+      console.error("Error checking onboarding status:", error);
+      return false;
     }
   };
 
@@ -105,6 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     register,
     logout,
+    checkOnboardingStatus,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -386,3 +386,44 @@ def generate_all_insights(request, occupation_id):
             {'detail': 'Error generating insights. Please try again.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def chatbot(request):
+    """Chatbot endpoint for answering career-related questions"""
+    
+    try:
+        message = request.data.get('message', '').strip()
+        context_type = request.data.get('context_type', 'general')
+        context_data = request.data.get('context_data', {})
+        
+        if not message:
+            return Response(
+                {'detail': 'Message is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Initialize Gemini service
+        gemini_service = GeminiService()
+        
+        # Generate response
+        response_text = gemini_service.chat_with_context(
+            message=message,
+            context_type=context_type,
+            context_data=context_data
+        )
+        
+        return Response({
+            'message': message,
+            'response': response_text,
+            'context_type': context_type,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in chatbot endpoint: {str(e)}")
+        return Response(
+            {'detail': 'Error processing your message. Please try again.'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

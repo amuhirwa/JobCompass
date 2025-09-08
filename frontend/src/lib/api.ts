@@ -21,10 +21,25 @@ import type {
   RegisterRequest,
   RefreshTokenResponse,
   User,
+  UserProfile,
+  UserSkill,
+  UserGoal,
+  OnboardingStepData,
+  DashboardData,
   MarketInsight,
   CareerPath,
   LearningResource,
   GenerateAllInsightsResponse,
+  CommunityPost,
+  CreateCommunityPost,
+  CommunityComment,
+  CreateCommunityComment,
+  CommunityGroup,
+  UserLearningResource,
+  CreateUserLearningResource,
+  UserResourceProgress,
+  ResourceStats,
+  ChatbotResponse,
 } from './types';
 
 class JobCompassAPI {
@@ -55,14 +70,27 @@ class JobCompassAPI {
     this.client.interceptors.response.use(
       (response) => response,
       async (error) => {
-        if (error.response?.status === 401 && this.accessToken) {
+        const originalRequest = error.config;
+        
+        // Prevent infinite retry loops
+        if (error.response?.status === 401 && this.accessToken && !originalRequest._retry) {
+          originalRequest._retry = true;
+          
+          // Don't try to refresh if the failing request was already a refresh attempt
+          if (originalRequest.url?.includes('/auth/refresh/')) {
+            this.clearAuth();
+            throw error;
+          }
+          
           // Try to refresh token
           try {
             await this.refreshToken();
+            // Update the authorization header for the retry
+            originalRequest.headers.Authorization = `Bearer ${this.accessToken}`;
             // Retry the original request
-            return this.client.request(error.config);
+            return this.client.request(originalRequest);
           } catch (refreshError) {
-            // Refresh failed, redirect to login
+            // Refresh failed, clear auth
             this.clearAuth();
             throw refreshError;
           }
@@ -207,6 +235,70 @@ class JobCompassAPI {
     return response.data;
   }
 
+  // User Profile API
+  async getUserProfile(): Promise<UserProfile> {
+    const response = await this.client.get<UserProfile>('/auth/profile/details/');
+    return response.data;
+  }
+
+  async updateUserProfile(data: Partial<UserProfile>): Promise<UserProfile> {
+    const response = await this.client.put<UserProfile>('/auth/profile/details/', data);
+    return response.data;
+  }
+
+  async submitOnboardingStep(stepData: OnboardingStepData): Promise<any> {
+    const response = await this.client.post('/auth/profile/onboarding/step/', stepData);
+    return response.data;
+  }
+
+  async completeOnboarding(): Promise<any> {
+    const response = await this.client.post('/auth/profile/onboarding/complete/');
+    return response.data;
+  }
+
+  async getUserSkills(): Promise<UserSkill[]> {
+    const response = await this.client.get<UserSkill[]>('/auth/profile/skills/');
+    return response.data;
+  }
+
+  async addUserSkill(skillData: Partial<UserSkill> & { skill_id: string }): Promise<UserSkill> {
+    const response = await this.client.post<UserSkill>('/auth/profile/skills/', skillData);
+    return response.data;
+  }
+
+  async updateUserSkill(skillId: string, skillData: Partial<UserSkill>): Promise<UserSkill> {
+    const response = await this.client.put<UserSkill>(`/auth/profile/skills/${skillId}/`, skillData);
+    return response.data;
+  }
+
+  async deleteUserSkill(skillId: string): Promise<void> {
+    await this.client.delete(`/auth/profile/skills/${skillId}/`);
+  }
+
+  async getUserGoals(): Promise<UserGoal[]> {
+    const response = await this.client.get<UserGoal[]>('/auth/profile/goals/');
+    return response.data;
+  }
+
+  async addUserGoal(goalData: Partial<UserGoal>): Promise<UserGoal> {
+    const response = await this.client.post<UserGoal>('/auth/profile/goals/', goalData);
+    return response.data;
+  }
+
+  async updateUserGoal(goalId: string, goalData: Partial<UserGoal>): Promise<UserGoal> {
+    const response = await this.client.put<UserGoal>(`/auth/profile/goals/${goalId}/`, goalData);
+    return response.data;
+  }
+
+  async deleteUserGoal(goalId: string): Promise<void> {
+    await this.client.delete(`/auth/profile/goals/${goalId}/`);
+  }
+
+  async getDashboardData(): Promise<DashboardData> {
+    const response = await this.client.get<DashboardData>('/auth/dashboard/');
+    return response.data;
+  }
+
   // AI Services API
   async getMarketInsights(occupationId: string): Promise<MarketInsight> {
     const response = await this.client.get<MarketInsight>(`/ai/occupations/${occupationId}/market-insights/`);
@@ -243,9 +335,153 @@ class JobCompassAPI {
     return response.data;
   }
 
+  // Community API methods
+  async getCommunityPosts(params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    type?: string;
+    tags?: string;
+    sort?: 'recent' | 'popular' | 'trending';
+  }): Promise<PaginatedResponse<CommunityPost>> {
+    const response = await this.client.get<PaginatedResponse<CommunityPost>>('/community/posts/', {
+      params
+    });
+    return response.data;
+  }
+
+  async getCommunityPost(id: string): Promise<CommunityPost> {
+    const response = await this.client.get<CommunityPost>(`/community/posts/${id}/`);
+    return response.data;
+  }
+
+  async createCommunityPost(post: CreateCommunityPost): Promise<CommunityPost> {
+    const response = await this.client.post<CommunityPost>('/community/posts/', post);
+    return response.data;
+  }
+
+  async updateCommunityPost(id: string, post: Partial<CreateCommunityPost>): Promise<CommunityPost> {
+    const response = await this.client.patch<CommunityPost>(`/community/posts/${id}/`, post);
+    return response.data;
+  }
+
+  async deleteCommunityPost(id: string): Promise<void> {
+    await this.client.delete(`/community/posts/${id}/`);
+  }
+
+  async likeCommunityPost(id: string): Promise<{ liked: boolean; likes_count: number }> {
+    const response = await this.client.post<{ liked: boolean; likes_count: number }>(`/community/posts/${id}/like/`);
+    return response.data;
+  }
+
+  async getCommunityComments(postId: string): Promise<CommunityComment[]> {
+    const response = await this.client.get<CommunityComment[]>(`/community/posts/${postId}/comments/`);
+    return response.data;
+  }
+
+  async createCommunityComment(postId: string, comment: CreateCommunityComment): Promise<CommunityComment> {
+    const response = await this.client.post<CommunityComment>(`/community/posts/${postId}/comments/`, comment);
+    return response.data;
+  }
+
+  async likeCommunityComment(id: string): Promise<{ liked: boolean; likes_count: number }> {
+    const response = await this.client.post<{ liked: boolean; likes_count: number }>(`/community/comments/${id}/like/`);
+    return response.data;
+  }
+
+  async getTrendingTopics(): Promise<{ trending_topics: { tag: string; count: number }[] }> {
+    const response = await this.client.get<{ trending_topics: { tag: string; count: number }[] }>('/community/trending/');
+    return response.data;
+  }
+
+  async getCommunityStats(): Promise<{
+    total_posts: number;
+    total_comments: number;
+    total_users: number;
+    recent_posts: number;
+    recent_comments: number;
+  }> {
+    const response = await this.client.get<{
+      total_posts: number;
+      total_comments: number;
+      total_users: number;
+      recent_posts: number;
+      recent_comments: number;
+    }>('/community/stats/');
+    return response.data;
+  }
+
   // Pagination helper
   async getPaginatedData<T>(url: string): Promise<PaginatedResponse<T>> {
     const response = await this.client.get<PaginatedResponse<T>>(url);
+    return response.data;
+  }
+
+  // Learning Resources
+  async getUserResources(params?: {
+    status?: string;
+    skill?: string;
+    goal?: string;
+    search?: string;
+  }): Promise<UserLearningResource[]> {
+    const response = await this.client.get('/accounts/resources/', { params });
+    return response.data;
+  }
+
+  async createUserResource(data: CreateUserLearningResource): Promise<UserLearningResource> {
+    const response = await this.client.post('/accounts/resources/', data);
+    return response.data;
+  }
+
+  async getUserResource(resourceId: string): Promise<UserLearningResource> {
+    const response = await this.client.get(`/accounts/resources/${resourceId}/`);
+    return response.data;
+  }
+
+  async updateUserResource(resourceId: string, data: Partial<UserLearningResource>): Promise<UserLearningResource> {
+    const response = await this.client.patch(`/accounts/resources/${resourceId}/`, data);
+    return response.data;
+  }
+
+  async deleteUserResource(resourceId: string): Promise<void> {
+    await this.client.delete(`/accounts/resources/${resourceId}/`);
+  }
+
+  async updateResourceProgress(
+    resourceId: string, 
+    data: {
+      progress_percentage?: number;
+      status?: string;
+      time_spent_minutes?: number;
+      session_duration_minutes?: number;
+      notes?: string;
+    }
+  ): Promise<UserLearningResource> {
+    const response = await this.client.post(`/accounts/resources/${resourceId}/progress/`, data);
+    return response.data;
+  }
+
+  async getResourceProgress(resourceId: string): Promise<UserResourceProgress[]> {
+    const response = await this.client.get(`/accounts/resources/${resourceId}/sessions/`);
+    return response.data;
+  }
+
+  async getResourceStats(): Promise<ResourceStats> {
+    const response = await this.client.get('/accounts/resources/stats/');
+    return response.data;
+  }
+
+  // Chatbot
+  async sendChatMessage(
+    message: string,
+    contextType: string = 'general',
+    contextData: any = {}
+  ): Promise<ChatbotResponse> {
+    const response = await this.client.post('/ai/chatbot/', {
+      message,
+      context_type: contextType,
+      context_data: contextData,
+    });
     return response.data;
   }
 }

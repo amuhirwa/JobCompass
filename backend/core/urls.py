@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     path('api/taxonomy/', include('taxonomy.urls')),
     path('api/ai/', include('ai_services.urls')),
+    path('api/community/', include('community.urls')),
     
     # JWT token endpoints (alternative to custom auth)
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
