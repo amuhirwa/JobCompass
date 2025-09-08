@@ -47,7 +47,6 @@ const Navigation = () => {
       <div className="w-full flex items-center justify-between">
         {/* Left Side - Logo and Navigation */}
         <div className="flex items-center gap-4 md:gap-8">
-          {/* JobCompass Modern Logo */}
           <Link to="/" className="flex items-center group select-none">
             <div className="flex items-center gap-3">
               <img
@@ -99,12 +98,6 @@ const Navigation = () => {
               }`}
             >
               Key Tools
-            </button>
-            <button
-              onClick={() => {}}
-              className={`${isDark ? 'text-white' : 'text-gray-700'} font-sans text-base font-medium leading-6 hover:text-tabiya-accent transition-colors focus:outline-none focus:text-tabiya-accent`}
-            >
-              Job Insights
             </button>
 
             <div
@@ -353,12 +346,6 @@ const Navigation = () => {
               }`}
             >
               Key Tools
-            </button>
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={`${isDark ? 'text-white hover:bg-tabiya-accent/10 hover:text-tabiya-accent' : 'text-gray-700 hover:bg-gray-100 hover:text-tabiya-accent'} font-sans text-base font-medium py-2 px-2 rounded transition-colors text-left focus:outline-none focus:text-tabiya-accent`}
-            >
-              Job Insights
             </button>
 
             <div className="py-2 px-2">

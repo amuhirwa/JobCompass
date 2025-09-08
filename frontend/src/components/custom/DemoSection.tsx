@@ -16,7 +16,6 @@ export const DemoSection = () => {
           : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
       }`}
     >
-      {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/3 left-1/4 w-72 h-72 rounded-full blur-3xl animate-pulse ${
@@ -188,7 +187,6 @@ export const DemoSection = () => {
                             <path d="M8 5v14l11-7z" />
                           </svg>
 
-                          {/* Pulse rings */}
                           <div
                             className={`absolute inset-0 rounded-full border-2 animate-ping opacity-30 ${
                               isDark
@@ -209,7 +207,6 @@ export const DemoSection = () => {
                       </div>
                     </div>
 
-                    {/* Video thumbnail overlay */}
                     <div
                       className={`absolute inset-0 ${
                         isDark
@@ -219,7 +216,6 @@ export const DemoSection = () => {
                       aria-hidden="true"
                     ></div>
 
-                    {/* Demo preview elements */}
                     <div
                       className="absolute top-4 left-4 right-4"
                       aria-hidden="true"
@@ -239,7 +235,6 @@ export const DemoSection = () => {
                         </span>
                       </div>
 
-                      {/* Mock interface elements */}
                       <div className="space-y-3 opacity-60">
                         <div
                           className={`h-2 rounded-full w-3/4 ${
@@ -306,7 +301,6 @@ export const DemoSection = () => {
                 </CardContent>
               </Card>
 
-              {/* Floating elements */}
               <div
                 className={`absolute -top-4 -right-4 w-16 h-16 rounded-full blur-xl animate-bounce ${
                   isDark ? 'bg-tabiya-accent/20' : 'bg-tabiya-accent/20'

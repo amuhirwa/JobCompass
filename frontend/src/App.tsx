@@ -15,6 +15,7 @@ import OnboardingPage from "./pages/OnboardingPage";
 import AppLayout from "./components/custom/AppLayout";
 import { Dashboard } from "./features/dashboard";
 import LoginPage from "./pages/LoginPage";
+import TaxonomyNavigator from "./pages/TaxanomyNavigator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +53,11 @@ const AppContent = () => {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/new-dashboard" element={<Dashboard />} />
+
+        <Route
+          path="taxonomy-navigator"
+          element={<TaxonomyNavigator></TaxonomyNavigator>}
+        ></Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

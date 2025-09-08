@@ -5,8 +5,6 @@ export { ResourcesHub } from './ResourcesHub';
 export { MapSection } from './MapSection';
 export { CommunityExplore } from './CommunityExplore';
 export { AnalyticsSection } from './AnalyticsSection';
-
-// New enhanced components
 export { AnalyticsOverview } from './AnalyticsOverview';
 export { ResourceLearningHub } from './ResourceLearningHub';
 export { ResourceDashboard } from './ResourceDashboard';
