@@ -12,6 +12,7 @@ import SkillMapping from './pages/SkillMapping';
 import TabiyaDatasetExplorer from './pages/TabiyaDatasetExplorer';
 import { Dashboard } from '@/features/dashboard';
 import AppLayout from './components/custom/AppLayout';
+import TaxonomyNavigator from './pages/TaxanomyNavigator';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,7 +47,11 @@ const AppContent = () => {
         </Route>
         {/* Dashboard routes without AppLayout (no nav/footer) */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/new-dashboard" element={<Dashboard />} />
+
+        <Route
+          path="taxonomy-navigator"
+          element={<TaxonomyNavigator></TaxonomyNavigator>}
+        ></Route>
         <Route path="*" element={<NotFound />} />
       </Routes>
     </div>

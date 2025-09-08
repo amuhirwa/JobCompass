@@ -16,7 +16,6 @@ export const HeroSection = () => {
       aria-labelledby="hero-heading"
       role="banner"
     >
-      {/* Decorative elements with aria-hidden */}
       <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <div
           className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-tabiya-dark via-tabiya-dark/90 to-tabiya-medium/50' : 'bg-gradient-to-br from-blue-50/50 via-white/70 to-indigo-100/50'}`}
