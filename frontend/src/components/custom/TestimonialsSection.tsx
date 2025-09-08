@@ -211,7 +211,6 @@ export const TestimonialsSection = () => {
       }`}
       aria-labelledby="testimonials-heading"
     >
-      {/* Decorative background elements */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 right-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${
@@ -250,7 +249,6 @@ export const TestimonialsSection = () => {
 
         <ScrollAnimation delay={0.2}>
           <div className="flex items-center justify-center gap-8 lg:gap-16">
-            {/* Navigation Controls */}
             <div
               className="flex flex-col items-center gap-8"
               role="group"

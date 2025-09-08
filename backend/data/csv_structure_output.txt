@@ -1,0 +1,235 @@
+
+=== Structure for model_info.csv ===
+
+Columns and Data Types:
+- UUIDHISTORY: string
+- NAME: string
+- LOCALE: string
+- DESCRIPTION: string
+- VERSION: string
+- RELEASED: boolean
+- RELEASENOTES: string
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  UUIDHISTORY: Tabiya (ESCO 1.1.1)
+  NAME: EU-en
+  LOCALE: This model builds on [ESCO v1.1.1](https://esco.ec.europa.eu/en)
+  DESCRIPTION: ...
+  VERSION: v2.0.1-rc.1
+  RELEASED: True
+  RELEASENOTES: ### Version 2.0.1...
+  CREATEDAT: 2025-08-06T11:11:30.527Z
+  UPDATEDAT: 2025-08-06T11:13:27.980Z
+
+
+=== Structure for skill_groups.csv ===
+
+Columns and Data Types:
+- ID: string
+- ORIGINURI: string
+- UUIDHISTORY: string
+- CODE: string
+- SCOPENOTE: string
+- PREFERREDLABEL: string
+- ALTLABELS: string
+- DESCRIPTION: string
+- CREATEDAT: floating
+- UPDATEDAT: floating
+
+Sample Data (up to 3 rows):
+Row 1:
+  ID: 68933870ba407998dac89fcc
+  ORIGINURI: http://data.europa.eu/esco/isced-f/00
+  UUIDHISTORY: ...
+  CODE: generic programmes and qualifications
+  SCOPENOTE: generic programmes and qualifications
+  PREFERREDLABEL: ...
+  ALTLABELS: 2025-08-06T11:11:45.094Z
+  DESCRIPTION: 2025-08-06T11:11:45.094Z
+  CREATEDAT: nan
+  UPDATEDAT: nan
+
+
+=== Structure for occupation_hierarchy.csv ===
+
+Columns and Data Types:
+- PARENTOBJECTTYPE: string
+- PARENTID: string
+- CHILDID: string
+- CHILDOBJECTTYPE: string
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  PARENTOBJECTTYPE: iscogroup
+  PARENTID: 6893386eba407998dac89d44
+  CHILDID: 6893386eba407998dac89d45
+  CHILDOBJECTTYPE: iscogroup
+  CREATEDAT: 2025-08-06T11:12:03.662Z
+  UPDATEDAT: 2025-08-06T11:12:03.662Z
+
+
+=== Structure for occupation_groups.csv ===
+
+Columns and Data Types:
+- ID: string
+- ORIGINURI: string
+- UUIDHISTORY: string
+- CODE: integer
+- GROUPTYPE: string
+- PREFERREDLABEL: string
+- ALTLABELS: string
+- DESCRIPTION: string
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  ID: 6893386eba407998dac89d44
+  ORIGINURI: http://data.europa.eu/esco/isco/C0
+  UUIDHISTORY: ...
+  CODE: 0
+  GROUPTYPE: iscogroup
+  PREFERREDLABEL: Armed forces occupations
+  ALTLABELS: Armed forces occupations
+  DESCRIPTION: ...
+  CREATEDAT: 2025-08-06T11:11:43.518Z
+  UPDATEDAT: 2025-08-06T11:11:43.518Z
+
+
+=== Structure for skills.csv ===
+
+Columns and Data Types:
+- ID: string
+- ORIGINURI: string
+- UUIDHISTORY: string
+- DEFINITION: string
+- SCOPENOTE: string
+- REUSELEVEL: string
+- SKILLTYPE: string
+- PREFERREDLABEL: string
+- ALTLABELS: string
+- DESCRIPTION: string
+- ISLOCALIZED: boolean
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  ID: 68933872ba407998dac8a24d
+  ORIGINURI: http://data.europa.eu/esco/skill/0005c151-5b5a-4a66-8aac-60e734beb1ab
+  UUIDHISTORY: ...
+  DEFINITION: sector-specific
+  SCOPENOTE: skill/competence
+  REUSELEVEL: manage musical staff
+  SKILLTYPE: ...
+  PREFERREDLABEL: Assign and manage staff tasks in areas such as scoring
+  ALTLABELS:  arranging
+  DESCRIPTION:  copying music and vocal coaching.
+  ISLOCALIZED: False
+  CREATEDAT: 2025-08-06T11:11:48.483Z
+  UPDATEDAT: 2025-08-06T11:11:48.483Z
+
+
+=== Structure for occupation_to_skill_relations.csv ===
+
+Columns and Data Types:
+- OCCUPATIONTYPE: string
+- OCCUPATIONID: string
+- RELATIONTYPE: string
+- SKILLID: string
+- SIGNALLINGVALUELABEL: floating
+- SIGNALLINGVALUE: floating
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  OCCUPATIONTYPE: escooccupation
+  OCCUPATIONID: 6893387fba407998dac8dd2b
+  RELATIONTYPE: essential
+  SKILLID: 68933872ba407998dac8a24d
+  SIGNALLINGVALUELABEL: nan
+  SIGNALLINGVALUE: nan
+  CREATEDAT: 2025-08-06T11:12:36.175Z
+  UPDATEDAT: 2025-08-06T11:12:36.175Z
+
+
+=== Structure for skill_hierarchy.csv ===
+
+Columns and Data Types:
+- PARENTOBJECTTYPE: string
+- PARENTID: string
+- CHILDID: string
+- CHILDOBJECTTYPE: string
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  PARENTOBJECTTYPE: skillgroup
+  PARENTID: 68933870ba407998dac8a1e5
+  CHILDID: 68933870ba407998dac89fcc
+  CHILDOBJECTTYPE: skillgroup
+  CREATEDAT: 2025-08-06T11:12:07.313Z
+  UPDATEDAT: 2025-08-06T11:12:07.313Z
+
+
+=== Structure for skill_to_skill_relations.csv ===
+
+Columns and Data Types:
+- REQUIRINGID: string
+- RELATIONTYPE: string
+- REQUIREDID: string
+- CREATEDAT: string
+- UPDATEDAT: string
+
+Sample Data (up to 3 rows):
+Row 1:
+  REQUIRINGID: 6893387bba407998dac8cf04
+  RELATIONTYPE: optional
+  REQUIREDID: 68933872ba407998dac8a254
+  CREATEDAT: 2025-08-06T11:12:21.364Z
+  UPDATEDAT: 2025-08-06T11:12:21.364Z
+
+
+=== Structure for occupations.csv ===
+
+Columns and Data Types:
+- ID: string
+- ORIGINURI: string
+- UUIDHISTORY: string
+- OCCUPATIONGROUPCODE: integer
+- CODE: floating
+- DEFINITION: string
+- SCOPENOTE: string
+- REGULATEDPROFESSIONNOTE: boolean
+- OCCUPATIONTYPE: string
+- ISLOCALIZED: string
+- PREFERREDLABEL: string
+- ALTLABELS: string
+- DESCRIPTION: string
+- CREATEDAT: string
+- UPDATEDAT: floating
+
+Sample Data (up to 3 rows):
+Row 1:
+  ID: 6893387eba407998dac8d898
+  ORIGINURI: http://data.europa.eu/esco/occupation/f2cc5978-e45c-4f28-b859-7f89221b0505
+  UUIDHISTORY: ...
+  OCCUPATIONGROUPCODE: 110
+  CODE: 110.1
+  DEFINITION: ...
+  SCOPENOTE: escooccupation
+  REGULATEDPROFESSIONNOTE: False
+  OCCUPATIONTYPE: air force officer
+  ISLOCALIZED: ...
+  PREFERREDLABEL: Air force officers specialise in flying or ground duties
+  ALTLABELS:  and supervise a team of air force personnel....
+  DESCRIPTION: 2025-08-06T11:12:00.078Z
+  CREATEDAT: 2025-08-06T11:12:00.078Z
+  UPDATEDAT: nan

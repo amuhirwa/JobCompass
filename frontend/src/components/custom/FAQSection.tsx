@@ -91,7 +91,6 @@ export const FAQSection = () => {
           : 'bg-gradient-to-br from-gray-50 via-white to-gray-50'
       }`}
     >
-      {/* Background Elements */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div
           className={`absolute top-1/4 left-1/4 w-96 h-96 rounded-full blur-3xl animate-pulse ${

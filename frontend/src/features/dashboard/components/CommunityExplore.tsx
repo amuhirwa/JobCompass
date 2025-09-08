@@ -75,7 +75,7 @@ export function CommunityExplore({
   const handleCreatePost = () => {
     if (newPost.title.trim() && newPost.content.trim()) {
       onCreatePost({
-        author: { name: 'You' }, // This would come from user context
+        author: { name: 'You' },
         title: newPost.title,
         content: newPost.content,
         tags: newPost.tags,
