@@ -180,7 +180,9 @@ export function Dashboard() {
           userSkillsResponse.results &&
           userSkillsResponse.results.length > 0
         ) {
-          console.log(`Dashboard: Loaded ${userSkillsResponse.results.length} user skills`);
+          console.log(
+            `Dashboard: Loaded ${userSkillsResponse.results.length} user skills`
+          );
           const backendSkillGroups = convertSkillsToGroups(
             userSkillsResponse.results
           );
@@ -194,25 +196,34 @@ export function Dashboard() {
           occupationsResponse.results &&
           occupationsResponse.results.length > 0
         ) {
-          const userSkillNames = userSkillsResponse.results?.map(
-            (us) => us.skill.preferred_label
+          const userSkillIds = userSkillsResponse.results?.map(
+            (us) => us.skill.id
           ) || [];
           
+          console.log(`Dashboard: User has ${userSkillIds.length} skills:`, userSkillIds);
+
           const formattedOccupations = occupationsResponse.results
             .slice(0, 20)
             .map((occ, index) => {
-              // Calculate real match percentage based on user skills
-              const requiredSkills = occ.related_skills
-                ?.filter((skill) => skill.relation_type === "essential")
-                .map((skill) => skill.skill_name) || [];
-              
-              const matchPercentage = calculateSkillMatch(userSkillNames, requiredSkills);
+              // Calculate real match percentage using skill IDs (same logic as Skills page)
+              const relatedSkillIds = occ.related_skills?.map((rs) => rs.skill_id) || [];
+              const matchingSkills = relatedSkillIds.filter((skillId) =>
+                userSkillIds.includes(skillId)
+              );
+              const matchPercentage = relatedSkillIds.length > 0
+                ? Math.round((matchingSkills.length / relatedSkillIds.length) * 100)
+                : 0;
+
+              console.log(`Dashboard: ${occ.preferred_label} - ${matchingSkills.length}/${relatedSkillIds.length} skills matched = ${matchPercentage}%`);
 
               return {
                 id: occ.id,
                 title: occ.preferred_label,
                 matchPercentage,
-                requiredSkills: requiredSkills.slice(0, 4), // Limit to first 4 for display
+                requiredSkills: occ.related_skills
+                  ?.filter((skill) => skill.relation_type === "essential")
+                  .map((skill) => skill.skill_name)
+                  .slice(0, 4) || [], // Limit to first 4 for display
                 salaryRange: {
                   min: 50000 + index * 3000,
                   max: 100000 + index * 5000,
@@ -332,44 +343,6 @@ export function Dashboard() {
     }
   };
 
-  // Calculate skill match percentage for occupations
-  const calculateSkillMatch = (userSkills: string[], requiredSkills: string[]): number => {
-    if (requiredSkills.length === 0) return 0;
-    
-    let matchCount = 0;
-    const userSkillsLower = userSkills.map(skill => skill.toLowerCase());
-    
-    requiredSkills.forEach(required => {
-      const requiredLower = required.toLowerCase();
-      
-      // Check for exact matches or partial matches (skills containing each other)
-      const hasMatch = userSkillsLower.some(userSkill => {
-        // Exact match
-        if (userSkill === requiredLower) return true;
-        
-        // Partial match (either skill contains the other)
-        if (userSkill.includes(requiredLower) || requiredLower.includes(userSkill)) {
-          return true;
-        }
-        
-        // Check for common skill variations
-        const userWords = userSkill.split(/[\s\-_]+/);
-        const requiredWords = requiredLower.split(/[\s\-_]+/);
-        
-        return userWords.some(userWord => 
-          requiredWords.some(reqWord => 
-            userWord.length > 2 && reqWord.length > 2 && 
-            (userWord.includes(reqWord) || reqWord.includes(userWord))
-          )
-        );
-      });
-      
-      if (hasMatch) matchCount++;
-    });
-    
-    return Math.round((matchCount / requiredSkills.length) * 100);
-  };
-
   // Generate analytics data from real backend data
   const getAnalyticsWithBackendData = (): AnalyticsData => {
     const topOccupations = occupations.slice(0, 4).map((occ) => ({
@@ -392,11 +365,11 @@ export function Dashboard() {
     const skillsGrowth = Array.from({ length: 6 }, (_, i) => {
       const date = new Date(currentDate);
       date.setMonth(date.getMonth() - (5 - i));
-      
+
       // Create realistic progression: start with fewer skills, gradually increase
       const progressionRatio = (i + 1) / 6;
       const skillsAtThisPoint = Math.floor(totalSkills * progressionRatio);
-      
+
       return {
         month: date.toLocaleDateString("en", { month: "short" }),
         count: skillsAtThisPoint,

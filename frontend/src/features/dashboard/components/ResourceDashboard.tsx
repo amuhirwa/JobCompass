@@ -34,10 +34,10 @@ export function ResourceDashboard() {
     setLoading(true);
     try {
       const [resourcesData, statsData] = await Promise.all([
-        api.getUserResources({ status: "in_progress" }),
+        api.getUserResources(),
         api.getResourceStats(),
       ]);
-
+      console.log(resourcesData);
       setResources(resourcesData.results);
       setStats(statsData);
     } catch (error) {
