@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import {
   Plus,
@@ -55,11 +56,17 @@ import {
   useGenerateMarketInsights,
   useCareerPaths,
   useGenerateCareerPaths,
+  useCreateUserResource,
 } from "@/lib/hooks";
-import type { LearningResource, SkillSearchResult } from "@/lib/types";
+import type {
+  LearningResource,
+  SkillSearchResult,
+  CreateUserLearningResource,
+} from "@/lib/types";
 
 export function SkillsPage() {
   const { isDark } = useDarkMode();
+  const { toast } = useToast();
 
   // State management
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,6 +100,7 @@ export function SkillsPage() {
 
   const addUserSkill = useAddUserSkill();
   const deleteUserSkill = useDeleteUserSkill();
+  const createUserResource = useCreateUserResource();
   const generateResources = useGenerateLearningResources();
   const generateMarketInsights = useGenerateMarketInsights();
   const generateCareerPaths = useGenerateCareerPaths();
@@ -110,7 +118,7 @@ export function SkillsPage() {
   const getOccupationMatches = () => {
     if (!userSkills || !occupations?.results) return [];
 
-    const userSkillIds = userSkills.results.map((us) => us.skill.id);
+    const userSkillIds = userSkills.map((us) => us.skill.id);
 
     return occupations.results
       .map((occupation) => {
@@ -199,12 +207,56 @@ export function SkillsPage() {
     setSavingResources((prev) => new Set(prev).add(resource.id));
 
     try {
-      // Create a basic user resource save
-      console.log("Saving resource:", resource.title);
-      // TODO: Implement proper API call when the type system matches
-      console.log("Resource saved successfully!");
+      // Map resource type to match CreateUserLearningResource type
+      let mappedResourceType: CreateUserLearningResource["resource_type"];
+      switch (resource.resource_type) {
+        case "bootcamp":
+          mappedResourceType = "course";
+          break;
+        case "workshop":
+          mappedResourceType = "tutorial";
+          break;
+        case "course":
+        case "book":
+        case "tutorial":
+        case "certification":
+        case "documentation":
+        case "practice":
+          mappedResourceType = resource.resource_type;
+          break;
+        default:
+          // Default to tutorial for any unmatched types
+          mappedResourceType = "tutorial";
+      }
+
+      // Map LearningResource to CreateUserLearningResource
+      const createData: CreateUserLearningResource = {
+        title: resource.title,
+        description: resource.description,
+        url: resource.url,
+        resource_type: mappedResourceType,
+        difficulty_level: resource.difficulty_level,
+        provider: resource.provider,
+        duration: resource.duration,
+        cost: parseFloat(resource.cost) || 0,
+        is_free: resource.is_free,
+        rating: resource.rating || 0,
+        related_skill: selectedSkillId || "",
+      };
+
+      await createUserResource.mutateAsync(createData);
+
+      toast({
+        title: "Resource Saved",
+        description: `"${resource.title}" has been added to your learning resources.`,
+      });
     } catch (error) {
       console.error("Failed to save resource:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save resource. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setSavingResources((prev) => {
         const updated = new Set(prev);
@@ -294,7 +346,7 @@ export function SkillsPage() {
             <div
               className={`text-2xl font-bold ${isDark ? "text-tabiya-accent" : "text-primary"}`}
             >
-              {userSkills?.results?.length || 0}
+              {userSkills?.length || 0}
             </div>
             <p
               className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
@@ -416,7 +468,7 @@ export function SkillsPage() {
                   {getAvailableSkills()
                     .slice(0, 10)
                     .map((skill) => {
-                      const alreadyAdded = userSkills?.results?.some(
+                      const alreadyAdded = userSkills?.some(
                         (us) => us.skill.id === skill.id
                       );
                       return (
@@ -508,9 +560,9 @@ export function SkillsPage() {
                 />
               ))}
             </div>
-          ) : userSkills && userSkills.results.length > 0 ? (
+          ) : userSkills && userSkills.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userSkills.results.map((userSkill) => (
+              {userSkills.map((userSkill) => (
                 <div
                   key={userSkill.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors hover:border-tabiya-accent ${
@@ -882,9 +934,11 @@ export function SkillsPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectedOccupation.related_skills.map((relatedSkill) => {
-                      const userHasSkill = userSkills && userSkills?.results?.some(
-                        (us) => us.skill.id === relatedSkill.skill_id
-                      );
+                      const userHasSkill =
+                        userSkills &&
+                        userSkills?.some(
+                          (us) => us.skill.id === relatedSkill.skill_id
+                        );
                       return (
                         <div
                           key={relatedSkill.skill_id}
