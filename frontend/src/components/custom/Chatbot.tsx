@@ -211,15 +211,15 @@ export function Chatbot({
   const getContextColor = () => {
     switch (contextType) {
       case "skill":
-        return "bg-purple-500";
+        return "bg-tabiya-accent";
       case "occupation":
-        return "bg-blue-500";
+        return "bg-tabiya-accent";
       case "resources":
-        return "bg-green-500";
+        return "bg-tabiya-accent";
       case "community":
-        return "bg-orange-500";
+        return "bg-tabiya-accent";
       default:
-        return "bg-gray-500";
+        return "bg-tabiya-accent";
     }
   };
 

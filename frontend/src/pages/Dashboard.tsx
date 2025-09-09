@@ -254,7 +254,7 @@ const sidebarItems = [
 export function Dashboard() {
   const navigate = useNavigate();
   const { isDark, changeMode } = useDarkMode();
-  const { user: authUser, logout } = useAuth();
+  const { user: authUser, logout, checkOnboardingStatus } = useAuth();
   const [activeSection, setActiveSection] = useState("analytics");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [user, setUser] = useState<UserType | null>(null);
@@ -267,6 +267,29 @@ export function Dashboard() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const hasLoadedData = useRef(false);
+
+  // Check onboarding status and redirect if needed
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      if (!authUser) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const hasCompletedOnboarding = await checkOnboardingStatus();
+        if (!hasCompletedOnboarding) {
+          navigate("/onboarding");
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+        // If we can't check onboarding status, allow access but log the error
+      }
+    };
+
+    checkOnboarding();
+  }, [authUser, checkOnboardingStatus, navigate]);
 
   // Load backend data on component mount
   useEffect(() => {

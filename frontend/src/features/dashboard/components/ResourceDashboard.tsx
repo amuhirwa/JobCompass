@@ -38,7 +38,7 @@ export function ResourceDashboard() {
         api.getResourceStats(),
       ]);
 
-      setResources(resourcesData);
+      setResources(resourcesData.results);
       setStats(statsData);
     } catch (error) {
       console.error("Failed to load resource data:", error);
@@ -49,7 +49,7 @@ export function ResourceDashboard() {
 
   const getStreakDays = () => {
     // Simple calculation - in a real app, you'd track daily learning activity
-    return Math.floor(Math.random() * 30) + 1; // Mock data
+    return 0; // Mock data
   };
 
   const getWeeklyGoalProgress = () => {
@@ -195,7 +195,7 @@ export function ResourceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {resources.slice(0, 3).map((resource) => (
+              {resources && resources.slice(0, 3).map((resource) => (
                 <div
                   key={resource.id}
                   className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"

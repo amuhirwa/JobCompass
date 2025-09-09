@@ -23,7 +23,7 @@ class OccupationSummarySerializer(serializers.ModelSerializer):
 
 class UserSkillSerializer(serializers.ModelSerializer):
     skill = SkillSummarySerializer(read_only=True)
-    skill_id = serializers.UUIDField(write_only=True)
+    skill_id = serializers.CharField(max_length=100, write_only=True)
     
     class Meta:
         model = UserSkill
@@ -36,8 +36,8 @@ class UserSkillSerializer(serializers.ModelSerializer):
 class UserGoalSerializer(serializers.ModelSerializer):
     target_skill = SkillSummarySerializer(read_only=True)
     target_occupation = OccupationSummarySerializer(read_only=True)
-    target_skill_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
-    target_occupation_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    target_skill_id = serializers.CharField(max_length=100, write_only=True, required=False, allow_null=True)
+    target_occupation_id = serializers.CharField(max_length=100, write_only=True, required=False, allow_null=True)
     
     class Meta:
         model = UserGoal
@@ -52,8 +52,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     current_occupation = OccupationSummarySerializer(read_only=True)
     target_occupation = OccupationSummarySerializer(read_only=True)
-    current_occupation_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
-    target_occupation_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    current_occupation_id = serializers.CharField(max_length=100, write_only=True, required=False, allow_null=True)
+    target_occupation_id = serializers.CharField(max_length=100, write_only=True, required=False, allow_null=True)
     skills = UserSkillSerializer(many=True, read_only=True)
     goals = UserGoalSerializer(many=True, read_only=True)
     
@@ -79,8 +79,8 @@ class CompleteOnboardingSerializer(serializers.Serializer):
     location = serializers.CharField(required=False, allow_blank=True)
     
     # Career info (step 2)
-    current_occupation_id = serializers.UUIDField(required=False, allow_null=True)
-    target_occupation_id = serializers.UUIDField(required=False, allow_null=True)
+    current_occupation_id = serializers.CharField(max_length=100, required=False, allow_null=True)
+    target_occupation_id = serializers.CharField(max_length=100, required=False, allow_null=True)
     experience_level = serializers.ChoiceField(choices=UserProfile.EXPERIENCE_LEVELS, required=False)
     career_goal = serializers.ChoiceField(choices=UserProfile.CAREER_GOALS, required=False)
     

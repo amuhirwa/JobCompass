@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Chatbot } from "@/components/custom/Chatbot";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const { login, register, isAuthenticated, user } = useAuth();
+  const { login, register, isAuthenticated, checkOnboardingStatus } = useAuth();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [justRegistered, setJustRegistered] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -33,6 +35,13 @@ export default function LoginPage() {
           username: formData.email,
           password: formData.password,
         });
+        // After login, check onboarding status and redirect accordingly
+        const hasCompletedOnboarding = await checkOnboardingStatus();
+        if (hasCompletedOnboarding) {
+          navigate("/dashboard");
+        } else {
+          navigate("/onboarding");
+        }
       } else {
         await register({
           username: formData.username,
@@ -41,6 +50,9 @@ export default function LoginPage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
         });
+        // After registration, always go to onboarding
+        setJustRegistered(true);
+        navigate("/onboarding");
       }
     } catch (err: any) {
       setError(
@@ -58,9 +70,25 @@ export default function LoginPage() {
     }));
   };
 
-  if (isAuthenticated && localStorage.getItem("access_token")) {
-    return <Navigate to="/dashboard" replace />;
-  }
+  // Effect to handle redirects for already authenticated users
+  useEffect(() => {
+    const handleAuthenticatedUser = async () => {
+      if (
+        isAuthenticated &&
+        localStorage.getItem("access_token") &&
+        !justRegistered
+      ) {
+        const hasCompletedOnboarding = await checkOnboardingStatus();
+        if (hasCompletedOnboarding) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/onboarding", { replace: true });
+        }
+      }
+    };
+
+    handleAuthenticatedUser();
+  }, [isAuthenticated, justRegistered, navigate, checkOnboardingStatus]);
 
   return (
     <div className="min-h-screen bg-tabiya-dark flex items-center justify-center p-4">
@@ -128,7 +156,7 @@ export default function LoginPage() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Username</Label>
+              <Label htmlFor="email">{isLogin ? 'Username' : 'Email'}</Label>
               <Input
                 id="email"
                 name="email"

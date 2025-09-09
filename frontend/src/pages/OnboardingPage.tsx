@@ -32,7 +32,7 @@ import {
 
 const OnboardingPage: React.FC = () => {
   const { isDark } = useDarkMode();
-  const { user } = useAuth();
+  const { user, checkOnboardingStatus } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -47,6 +47,28 @@ const OnboardingPage: React.FC = () => {
   ];
 
   const progress = (currentStep / steps.length) * 100;
+
+  // Check if user has already completed onboarding
+  useEffect(() => {
+    const checkExistingOnboarding = async () => {
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const hasCompletedOnboarding = await checkOnboardingStatus();
+        if (hasCompletedOnboarding) {
+          navigate("/dashboard");
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking onboarding status:", error);
+      }
+    };
+
+    checkExistingOnboarding();
+  }, [user, checkOnboardingStatus, navigate]);
 
   const handleStepComplete = async (stepData: Record<string, any>) => {
     if (currentStep === 1) {
