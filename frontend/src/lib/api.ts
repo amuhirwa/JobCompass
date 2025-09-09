@@ -424,27 +424,27 @@ class JobCompassAPI {
     goal?: string;
     search?: string;
   }): Promise<UserLearningResource[]> {
-    const response = await this.client.get('/accounts/resources/', { params });
+    const response = await this.client.get('/auth/resources/', { params });
     return response.data;
   }
 
   async createUserResource(data: CreateUserLearningResource): Promise<UserLearningResource> {
-    const response = await this.client.post('/accounts/resources/', data);
+    const response = await this.client.post('/auth/resources/', data);
     return response.data;
   }
 
   async getUserResource(resourceId: string): Promise<UserLearningResource> {
-    const response = await this.client.get(`/accounts/resources/${resourceId}/`);
+    const response = await this.client.get(`/auth/resources/${resourceId}/`);
     return response.data;
   }
 
   async updateUserResource(resourceId: string, data: Partial<UserLearningResource>): Promise<UserLearningResource> {
-    const response = await this.client.patch(`/accounts/resources/${resourceId}/`, data);
+    const response = await this.client.patch(`/auth/resources/${resourceId}/`, data);
     return response.data;
   }
 
   async deleteUserResource(resourceId: string): Promise<void> {
-    await this.client.delete(`/accounts/resources/${resourceId}/`);
+    await this.client.delete(`/auth/resources/${resourceId}/`);
   }
 
   async updateResourceProgress(
@@ -457,17 +457,17 @@ class JobCompassAPI {
       notes?: string;
     }
   ): Promise<UserLearningResource> {
-    const response = await this.client.post(`/accounts/resources/${resourceId}/progress/`, data);
+    const response = await this.client.post(`/auth/resources/${resourceId}/progress/`, data);
     return response.data;
   }
 
   async getResourceProgress(resourceId: string): Promise<UserResourceProgress[]> {
-    const response = await this.client.get(`/accounts/resources/${resourceId}/sessions/`);
+    const response = await this.client.get(`/auth/resources/${resourceId}/sessions/`);
     return response.data;
   }
 
   async getResourceStats(): Promise<ResourceStats> {
-    const response = await this.client.get('/accounts/resources/stats/');
+    const response = await this.client.get('/auth/resources/stats/');
     return response.data;
   }
 
