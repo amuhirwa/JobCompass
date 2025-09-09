@@ -38,6 +38,7 @@ import {
   X,
   Building,
   DollarSign,
+  MapPin,
   ChevronRight,
 } from "lucide-react";
 import {
@@ -56,7 +57,14 @@ import {
   useCareerPaths,
   useGenerateCareerPaths,
 } from "@/lib/hooks";
-import type { LearningResource, SkillSearchResult } from "@/lib/types";
+import type {
+  Skill as APISkill,
+  Occupation as APIOccupation,
+  LearningResource,
+  CreateUserLearningResource,
+  UserSkill,
+} from "@/lib/types";
+import api from "@/lib/api";
 
 export function SkillsPage() {
   const { isDark } = useDarkMode();
@@ -75,8 +83,11 @@ export function SkillsPage() {
 
   // API hooks
   const { data: userSkills, isLoading: userSkillsLoading } = useUserSkills();
-  const { data: searchResults, isLoading: searchLoading } =
-    useDebouncedSearch(searchQuery);
+  const {
+    debouncedQuery,
+    data: searchResults,
+    isLoading: searchLoading,
+  } = useDebouncedSearch(searchQuery);
   const { data: skills } = useSkills();
   const { data: occupations } = useOccupations();
   const { data: selectedSkill } = useSkill(selectedSkillId || "");
@@ -110,7 +121,7 @@ export function SkillsPage() {
   const getOccupationMatches = () => {
     if (!userSkills || !occupations?.results) return [];
 
-    const userSkillIds = userSkills.results.map((us) => us.skill.id);
+    const userSkillIds = userSkills.map((us) => us.skill.id);
 
     return occupations.results
       .map((occupation) => {
@@ -136,7 +147,7 @@ export function SkillsPage() {
   };
 
   // Handle adding a skill to user profile
-  const handleAddSkill = async (skill: SkillSearchResult) => {
+  const handleAddSkill = async (skill: APISkill) => {
     try {
       await addUserSkill.mutateAsync({
         skill_id: skill.id,
@@ -199,9 +210,21 @@ export function SkillsPage() {
     setSavingResources((prev) => new Set(prev).add(resource.id));
 
     try {
-      // Create a basic user resource save
-      console.log("Saving resource:", resource.title);
-      // TODO: Implement proper API call when the type system matches
+      const createData: CreateUserLearningResource = {
+        title: resource.title,
+        description: resource.description,
+        url: resource.url,
+        type: resource.type,
+        difficulty: resource.difficulty || "Beginner",
+        estimated_duration_hours: resource.estimated_duration_hours || 1,
+        skill_id: selectedSkillId,
+        skill_name: selectedSkill.preferred_label,
+        source: resource.source || "Generated",
+        tags: resource.tags || [],
+        notes: "",
+      };
+
+      await api.createUserResource(createData);
       console.log("Resource saved successfully!");
     } catch (error) {
       console.error("Failed to save resource:", error);
@@ -508,9 +531,9 @@ export function SkillsPage() {
                 />
               ))}
             </div>
-          ) : userSkills && userSkills.results.length > 0 ? (
+          ) : userSkills && userSkills.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userSkills.results.map((userSkill) => (
+              {userSkills.map((userSkill) => (
                 <div
                   key={userSkill.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors hover:border-tabiya-accent ${
@@ -760,7 +783,7 @@ export function SkillsPage() {
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            {getResourceTypeIcon(resource.resource_type)}
+                            {getResourceTypeIcon(resource.type)}
                             <h4
                               className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
                             >
@@ -768,10 +791,10 @@ export function SkillsPage() {
                             </h4>
                             <Badge
                               className={getDifficultyColor(
-                                resource.difficulty_level || "beginner"
+                                resource.difficulty || "Beginner"
                               )}
                             >
-                              {resource.difficulty_level || "beginner"}
+                              {resource.difficulty || "Beginner"}
                             </Badge>
                           </div>
                           <p
@@ -780,20 +803,20 @@ export function SkillsPage() {
                             {resource.description}
                           </p>
                           <div className="flex items-center gap-4 text-xs">
-                            {resource.duration && (
+                            {resource.estimated_duration_hours && (
                               <span
                                 className={`flex items-center gap-1 ${isDark ? "text-white/60" : "text-gray-500"}`}
                               >
                                 <Clock className="h-3 w-3" />
-                                {resource.duration}
+                                {resource.estimated_duration_hours}h
                               </span>
                             )}
-                            {resource.provider && (
+                            {resource.source && (
                               <span
                                 className={`flex items-center gap-1 ${isDark ? "text-white/60" : "text-gray-500"}`}
                               >
                                 <Globe className="h-3 w-3" />
-                                {resource.provider}
+                                {resource.source}
                               </span>
                             )}
                           </div>
@@ -968,44 +991,44 @@ export function SkillsPage() {
                         <h4
                           className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
                         >
-                          Average Salary
+                          Salary Range
                         </h4>
                         <p
                           className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
                         >
-                          $
-                          {marketInsights.average_salary
-                            ? marketInsights.average_salary.toLocaleString()
-                            : "Not available"}
+                          {marketInsights.salary_range || "Not available"}
                         </p>
                       </div>
                       <div>
                         <h4
                           className={`font-medium ${isDark ? "text-white" : "text-gray-900"}`}
                         >
-                          Growth Rate
+                          Job Outlook
                         </h4>
                         <p
                           className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
                         >
-                          {marketInsights.growth_rate
-                            ? `${marketInsights.growth_rate}%`
-                            : "Not available"}
+                          {marketInsights.job_outlook || "Not available"}
                         </p>
                       </div>
                     </div>
-                    {marketInsights.market_trends && (
+                    {marketInsights.key_insights && (
                       <div>
                         <h4
                           className={`font-medium mb-2 ${isDark ? "text-white" : "text-gray-900"}`}
                         >
-                          Market Trends
+                          Key Insights
                         </h4>
-                        <p
-                          className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
+                        <ul
+                          className={`text-sm space-y-1 ${isDark ? "text-white/70" : "text-gray-600"}`}
                         >
-                          {marketInsights.market_trends}
-                        </p>
+                          {marketInsights.key_insights.map((insight, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-tabiya-accent">•</span>
+                              {insight}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     )}
                   </div>
@@ -1070,7 +1093,7 @@ export function SkillsPage() {
                         <h4
                           className={`font-medium mb-2 ${isDark ? "text-white" : "text-gray-900"}`}
                         >
-                          {path.path_name}
+                          {path.title}
                         </h4>
                         <p
                           className={`text-sm mb-3 ${isDark ? "text-white/70" : "text-gray-600"}`}
@@ -1088,7 +1111,7 @@ export function SkillsPage() {
                             className={`flex items-center gap-1 ${isDark ? "text-white/60" : "text-gray-500"}`}
                           >
                             <DollarSign className="h-3 w-3" />
-                            {path.difficulty_level} level
+                            {path.typical_salary_range}
                           </span>
                         </div>
                       </div>

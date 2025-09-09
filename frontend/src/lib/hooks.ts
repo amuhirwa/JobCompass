@@ -9,6 +9,9 @@ import type {
   MarketInsight,
   CareerPath,
   LearningResource,
+  UserLearningResource,
+  CreateUserLearningResource,
+  UserSkill,
   GenerateAllInsightsResponse,
   PaginatedResponse,
 } from './types';
@@ -350,6 +353,102 @@ export const useGenerateAllInsights = () => {
       // Invalidate to trigger refetch and update UI
       queryClient.invalidateQueries({ queryKey: aiQueryKeys.marketInsights(occupationId) });
       queryClient.invalidateQueries({ queryKey: aiQueryKeys.careerPaths(occupationId) });
+    },
+  });
+};
+
+// User Learning Resources Hooks
+export const useUserResources = (params?: {
+  status?: string;
+  skill?: string;
+  goal?: string;
+  search?: string;
+}) => {
+  return useQuery({
+    queryKey: ['userResources', params],
+    queryFn: () => api.getUserResources(params),
+  });
+};
+
+export const useCreateUserResource = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (data: CreateUserLearningResource) => api.createUserResource(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userResources'] });
+    },
+  });
+};
+
+export const useUpdateUserResource = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ resourceId, data }: { resourceId: string; data: Partial<UserLearningResource> }) => 
+      api.updateUserResource(resourceId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userResources'] });
+    },
+  });
+};
+
+export const useDeleteUserResource = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (resourceId: string) => api.deleteUserResource(resourceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userResources'] });
+    },
+  });
+};
+
+export const useResourceStats = () => {
+  return useQuery({
+    queryKey: ['resourceStats'],
+    queryFn: () => api.getResourceStats(),
+  });
+};
+
+// User Skills Hooks
+export const useUserSkills = () => {
+  return useQuery({
+    queryKey: ['userSkills'],
+    queryFn: () => api.getUserSkills(),
+  });
+};
+
+export const useAddUserSkill = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (skillData: Partial<UserSkill> & { skill_id: string }) => api.addUserSkill(skillData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSkills'] });
+    },
+  });
+};
+
+export const useUpdateUserSkill = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: ({ skillId, data }: { skillId: string; data: Partial<UserSkill> }) => 
+      api.updateUserSkill(skillId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSkills'] });
+    },
+  });
+};
+
+export const useDeleteUserSkill = () => {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (skillId: string) => api.deleteUserSkill(skillId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userSkills'] });
     },
   });
 };

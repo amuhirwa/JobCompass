@@ -58,7 +58,7 @@ export default function LoginPage() {
     }));
   };
 
-  if (isAuthenticated) {
+  if (isAuthenticated && localStorage.getItem("access_token")) {
     return <Navigate to="/dashboard" replace />;
   }
 

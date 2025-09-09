@@ -48,6 +48,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           localStorage.removeItem("refresh_token");
         }
       }
+      // else {
+      //   window.location.href = "/login";
+      // }
       setIsLoading(false);
     };
 

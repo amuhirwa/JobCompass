@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-52l@djn2_t0f)!1s_4913(xbqe^bcj@p)(6#y@((&opb)1tg6)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 # AI Services Configuration
 GEMINI_API_KEY = config('GEMINI_API_KEY', default='AIzaSyCjIj4F9sSqMJEAndOIL6l6yTN54xkJ4kU')
@@ -188,6 +188,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5174",
     "http://127.0.0.1:5174",
+    "https://jobcompass.vercel.app"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
