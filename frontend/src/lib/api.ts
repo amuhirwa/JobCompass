@@ -256,8 +256,8 @@ class JobCompassAPI {
     return response.data;
   }
 
-  async getUserSkills(): Promise<UserSkill[]> {
-    const response = await this.client.get<UserSkill[]>('/auth/profile/skills/');
+  async getUserSkills(): Promise<PaginatedResponse<UserSkill>> {
+    const response = await this.client.get<PaginatedResponse<UserSkill>>('/auth/profile/skills/');
     return response.data;
   }
 
