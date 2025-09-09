@@ -34,7 +34,6 @@ import { CommunityExplore } from "../features/dashboard/components/CommunityExpl
 import { SkillsPage } from "../features/dashboard/components/SkillsPage";
 import BackendProfilePage from "@/components/BackendProfilePage";
 import { Chatbot } from "@/components/custom/Chatbot";
-// import { MapSection } from '../features/dashboard/components/MapSection';
 
 import type {
   User as UserType,
@@ -43,174 +42,15 @@ import type {
   Resource,
   AnalyticsData,
 } from "../features/dashboard/types";
-import type { UserProfile, DashboardData, UserSkill } from "@/lib/types";
-
-// Mock data - same as before but organized for the new structure
-const mockSkillGroups: SkillGroup[] = [
-  {
-    id: "1",
-    name: "JavaScript",
-    skills: [
-      { id: "1", name: "React", category: "JavaScript", level: "Advanced" },
-      {
-        id: "2",
-        name: "Node.js",
-        category: "JavaScript",
-        level: "Intermediate",
-      },
-      {
-        id: "3",
-        name: "TypeScript",
-        category: "JavaScript",
-        level: "Intermediate",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Database Design",
-    skills: [
-      {
-        id: "4",
-        name: "PostgreSQL",
-        category: "Database Design",
-        level: "Intermediate",
-      },
-      {
-        id: "5",
-        name: "MongoDB",
-        category: "Database Design",
-        level: "Beginner",
-      },
-    ],
-  },
-];
-
-const mockOccupations: Occupation[] = [
-  {
-    id: "1",
-    title: "Full Stack Developer",
-    matchPercentage: 92,
-    requiredSkills: ["React", "Node.js", "PostgreSQL", "TypeScript"],
-    salaryRange: { min: 75000, max: 120000 },
-    location: "Remote",
-  },
-  {
-    id: "2",
-    title: "Technical Lead",
-    matchPercentage: 87,
-    requiredSkills: [
-      "Team Leadership",
-      "Architecture Design",
-      "React",
-      "Mentoring",
-    ],
-    salaryRange: { min: 90000, max: 150000 },
-    location: "San Francisco, CA",
-  },
-  {
-    id: "3",
-    title: "Product Manager",
-    matchPercentage: 75,
-    requiredSkills: [
-      "Market Research",
-      "Data Analysis",
-      "User Experience",
-      "Agile",
-    ],
-    salaryRange: { min: 85000, max: 140000 },
-    location: "New York, NY",
-  },
-  {
-    id: "4",
-    title: "Senior Developer",
-    matchPercentage: 70,
-    requiredSkills: ["React", "Node.js", "System Design", "Mentoring"],
-    salaryRange: { min: 80000, max: 130000 },
-    location: "Austin, TX",
-  },
-];
-
-const mockResources: Resource[] = [
-  {
-    id: "1",
-    title: "Advanced React Patterns",
-    type: "course",
-    description:
-      "Master advanced React patterns including render props, higher-order components, and hooks.",
-    progress: 65,
-    estimatedTime: "8 hours",
-    difficulty: "Advanced",
-    tags: ["React", "JavaScript", "Frontend"],
-    createdAt: new Date("2024-01-15"),
-    url: "https://example.com/course",
-    assignedOccupation: "Full Stack Developer",
-  },
-  {
-    id: "2",
-    title: "Node.js Performance Optimization",
-    type: "article",
-    description:
-      "Learn techniques to optimize Node.js applications for better performance.",
-    progress: 100,
-    estimatedTime: "2 hours",
-    difficulty: "Intermediate",
-    tags: ["Node.js", "Performance", "Backend"],
-    createdAt: new Date("2024-01-10"),
-    assignedOccupation: "Full Stack Developer",
-  },
-  {
-    id: "3",
-    title: "Database Design Fundamentals",
-    type: "video",
-    description:
-      "Complete guide to designing efficient and scalable database schemas.",
-    progress: 30,
-    estimatedTime: "6 hours",
-    difficulty: "Beginner",
-    tags: ["Database", "SQL", "Design"],
-    createdAt: new Date("2024-01-20"),
-    assignedOccupation: "Technical Lead",
-  },
-  {
-    id: "4",
-    title: "Leadership in Tech",
-    type: "book",
-    description: "Essential leadership skills for technical professionals.",
-    progress: 0,
-    estimatedTime: "12 hours",
-    difficulty: "Intermediate",
-    tags: ["Leadership", "Management", "Career"],
-    createdAt: new Date("2024-01-22"),
-    assignedOccupation: "Technical Lead",
-  },
-];
-
-const mockAnalytics: AnalyticsData = {
-  totalOccupations: 12,
-  totalSkills: 18,
-  resourcesCompleted: 8,
-  topOccupations: [
-    { name: "Full Stack Developer", matchPercentage: 92 },
-    { name: "Technical Lead", matchPercentage: 87 },
-    { name: "Product Manager", matchPercentage: 75 },
-    { name: "Senior Developer", matchPercentage: 70 },
-  ],
-  lastEngagedOccupation: "Full Stack Developer",
-  skillsGrowth: [
-    { month: "Sep", count: 8 },
-    { month: "Oct", count: 12 },
-    { month: "Nov", count: 15 },
-    { month: "Dec", count: 15 },
-    { month: "Jan", count: 18 },
-  ],
-  occupationTrends: [
-    { name: "Full Stack Dev", demand: 95, growth: 15 },
-    { name: "Data Scientist", demand: 88, growth: 22 },
-    { name: "Product Manager", demand: 82, growth: 8 },
-    { name: "DevOps Engineer", demand: 90, growth: 18 },
-  ],
-};
+import type {
+  UserProfile,
+  DashboardData,
+  UserSkill,
+  UserLearningResource,
+  PaginatedResponse,
+  ResourceStats,
+  CommunityPost,
+} from "@/lib/types";
 
 const sidebarItems = [
   {
@@ -237,12 +77,6 @@ const sidebarItems = [
     icon: Users,
     description: "Connect with other professionals",
   },
-  // {
-  //   id: 'map',
-  //   label: 'Career Map',
-  //   icon: MapPin,
-  //   description: 'Explore career opportunities and paths',
-  // },
   {
     id: "profile",
     label: "Profile",
@@ -266,6 +100,7 @@ export function Dashboard() {
   const [occupations, setOccupations] = useState<Occupation[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const hasLoadedData = useRef(false);
 
   // Check onboarding status and redirect if needed
@@ -293,30 +128,41 @@ export function Dashboard() {
 
   // Load backend data on component mount
   useEffect(() => {
-    setIsLoading(true);
-    if (!authUser) return;
     const loadBackendData = async () => {
       if (!authUser) {
         setIsLoading(false);
         return;
       }
 
+      if (hasLoadedData.current) return;
       hasLoadedData.current = true;
 
       try {
-        // Load user profile and dashboard data from backend
+        setIsLoading(true);
+        setError(null);
+
+        // Load all data in parallel
         const [
           profileResponse,
           dashboardResponse,
+          userSkillsResponse,
           occupationsResponse,
-          goalsResponse,
+          userResourcesResponse,
+          resourceStatsResponse,
+          communityPostsResponse,
         ] = await Promise.all([
-          api.getUserProfile(),
-          api.getDashboardData(),
-          api.getOccupations({ page: 1, page_size: 20 }), // Get top 20 occupations
-          api.getUserGoals().catch(() => []), // Goals might not exist yet
+          api.getUserProfile().catch(() => null),
+          api.getDashboardData().catch(() => null),
+          api.getUserSkills().catch(() => ({ results: [] })),
+          api
+            .getOccupations({ page: 1, page_size: 50 })
+            .catch(() => ({ results: [] })),
+          api.getUserResources().catch(() => ({ results: [] })),
+          api.getResourceStats().catch(() => null),
+          api.getCommunityPosts().catch(() => ({ results: [] })),
         ]);
 
+        // Set profile data
         setUserProfile(profileResponse);
         setDashboardData(dashboardResponse);
 
@@ -326,50 +172,94 @@ export function Dashboard() {
           firstName: authUser.first_name || authUser.username || "User",
           lastName: authUser.last_name || "",
           email: authUser.email || "",
-          avatar: "/api/placeholder/150/150",
+          avatar: "/api/placeholder/150/150", // You can add user avatar from profile
         });
 
-        // Convert backend skills to dashboard format
-        if (dashboardResponse.primary_skills) {
+        // Convert backend skills to dashboard skill groups
+        if (
+          userSkillsResponse.results &&
+          userSkillsResponse.results.length > 0
+        ) {
+          console.log(`Dashboard: Loaded ${userSkillsResponse.results.length} user skills`);
           const backendSkillGroups = convertSkillsToGroups(
-            dashboardResponse.primary_skills
+            userSkillsResponse.results
           );
           setSkillGroups(backendSkillGroups);
+        } else {
+          console.log("Dashboard: No user skills found");
         }
 
         // Convert backend occupations to dashboard format
-        if (occupationsResponse.results) {
-          const formattedOccupations = occupationsResponse.results.map(
-            (occ, index) => ({
-              id: occ.id,
-              title: occ.preferred_label,
-              matchPercentage: Math.floor(85 + Math.random() * 15), // Generate realistic match %
-              requiredSkills:
-                occ.related_skills
-                  ?.filter((skill) => skill.relation_type === "essential")
-                  .map((skill) => skill.skill_name)
-                  .slice(0, 4) || [],
-              salaryRange: {
-                min: 60000 + index * 5000,
-                max: 120000 + index * 10000,
-              },
-              location:
-                index % 3 === 0
-                  ? "Remote"
-                  : index % 3 === 1
-                    ? "New York, NY"
-                    : "San Francisco, CA",
+        if (
+          occupationsResponse.results &&
+          occupationsResponse.results.length > 0
+        ) {
+          const userSkillNames = userSkillsResponse.results?.map(
+            (us) => us.skill.preferred_label
+          ) || [];
+          
+          const formattedOccupations = occupationsResponse.results
+            .slice(0, 20)
+            .map((occ, index) => {
+              // Calculate real match percentage based on user skills
+              const requiredSkills = occ.related_skills
+                ?.filter((skill) => skill.relation_type === "essential")
+                .map((skill) => skill.skill_name) || [];
+              
+              const matchPercentage = calculateSkillMatch(userSkillNames, requiredSkills);
+
+              return {
+                id: occ.id,
+                title: occ.preferred_label,
+                matchPercentage,
+                requiredSkills: requiredSkills.slice(0, 4), // Limit to first 4 for display
+                salaryRange: {
+                  min: 50000 + index * 3000,
+                  max: 100000 + index * 5000,
+                },
+                location: [
+                  "Remote",
+                  "New York, NY",
+                  "San Francisco, CA",
+                  "Austin, TX",
+                  "Seattle, WA",
+                ][index % 5],
+              };
             })
-          );
+            .sort((a, b) => b.matchPercentage - a.matchPercentage); // Sort by match percentage
           setOccupations(formattedOccupations);
         }
 
-        // For now, keep mock data for resources
-        // TODO: Implement backend endpoints for these
-        setResources(mockResources);
+        // Convert backend user resources to dashboard format
+        if (
+          userResourcesResponse.results &&
+          userResourcesResponse.results.length > 0
+        ) {
+          const formattedResources = userResourcesResponse.results.map(
+            (resource) => ({
+              id: resource.id,
+              title: resource.title,
+              type: (resource.resource_type || "article") as Resource["type"],
+              description: resource.description || "",
+              url: resource.url,
+              progress: getProgressFromStatus(resource.status),
+              estimatedTime: resource.duration || "Unknown",
+              difficulty: (resource.difficulty_level ||
+                "intermediate") as Resource["difficulty"],
+              tags: [], // No tags field in UserLearningResource
+              createdAt: new Date(resource.created_at),
+              assignedOccupation: resource.related_skill_name || "General",
+            })
+          );
+          setResources(formattedResources);
+        }
       } catch (error) {
-        console.error("Error loading backend data:", error);
-        // Fall back to mock data if backend fails
+        console.error("Error loading dashboard data:", error);
+        setError(
+          "Failed to load dashboard data. Some features may not work properly."
+        );
+
+        // Set minimal fallback data
         setUser({
           id: authUser.id?.toString() || "1",
           firstName: authUser.first_name || authUser.username || "User",
@@ -377,19 +267,17 @@ export function Dashboard() {
           email: authUser.email || "",
           avatar: "/api/placeholder/150/150",
         });
-        // Use fallback mock data
-        setSkillGroups(mockSkillGroups);
-        setOccupations(mockOccupations);
-        setResources(mockResources);
+        setSkillGroups([]);
+        setOccupations([]);
+        setResources([]);
         hasLoadedData.current = false; // Allow retry on error
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Load data when authUser becomes available
     loadBackendData();
-  }, [authUser]); // Only depend on authUser
+  }, [authUser]);
 
   // Convert backend UserSkill[] to SkillGroup[] format
   const convertSkillsToGroups = (backendSkills: UserSkill[]): SkillGroup[] => {
@@ -403,19 +291,19 @@ export function Dashboard() {
       }[]
     >();
 
-    backendSkills.forEach((skill) => {
-      const category = "Technical Skills"; // You might want to add category to backend
+    backendSkills.forEach((userSkill) => {
+      const category = userSkill.skill.skill_type || "Technical Skills";
       const level: "Advanced" | "Beginner" | "Intermediate" | "Expert" =
-        (skill.proficiency_level.charAt(0).toUpperCase() +
-          skill.proficiency_level.slice(1)) as any;
+        (userSkill.proficiency_level.charAt(0).toUpperCase() +
+          userSkill.proficiency_level.slice(1)) as any;
 
       if (!skillMap.has(category)) {
         skillMap.set(category, []);
       }
 
       skillMap.get(category)!.push({
-        id: skill.id,
-        name: skill.skill.preferred_label,
+        id: userSkill.id,
+        name: userSkill.skill.preferred_label,
         category,
         level,
       });
@@ -428,30 +316,115 @@ export function Dashboard() {
     }));
   };
 
-  // Update analytics with backend data
-  const getAnalyticsWithBackendData = (): AnalyticsData => {
-    if (!dashboardData) return mockAnalytics;
+  // Convert resource status to progress percentage
+  const getProgressFromStatus = (status: string): number => {
+    switch (status) {
+      case "completed":
+        return 100;
+      case "in_progress":
+        return Math.floor(Math.random() * 80) + 10; // 10-90%
+      case "paused":
+        return Math.floor(Math.random() * 50) + 10; // 10-60%
+      case "planned":
+        return 0;
+      default:
+        return 0;
+    }
+  };
 
-    // Create analytics from real backend data
-    const realOccupations = occupations.slice(0, 4).map((occ) => ({
+  // Calculate skill match percentage for occupations
+  const calculateSkillMatch = (userSkills: string[], requiredSkills: string[]): number => {
+    if (requiredSkills.length === 0) return 0;
+    
+    let matchCount = 0;
+    const userSkillsLower = userSkills.map(skill => skill.toLowerCase());
+    
+    requiredSkills.forEach(required => {
+      const requiredLower = required.toLowerCase();
+      
+      // Check for exact matches or partial matches (skills containing each other)
+      const hasMatch = userSkillsLower.some(userSkill => {
+        // Exact match
+        if (userSkill === requiredLower) return true;
+        
+        // Partial match (either skill contains the other)
+        if (userSkill.includes(requiredLower) || requiredLower.includes(userSkill)) {
+          return true;
+        }
+        
+        // Check for common skill variations
+        const userWords = userSkill.split(/[\s\-_]+/);
+        const requiredWords = requiredLower.split(/[\s\-_]+/);
+        
+        return userWords.some(userWord => 
+          requiredWords.some(reqWord => 
+            userWord.length > 2 && reqWord.length > 2 && 
+            (userWord.includes(reqWord) || reqWord.includes(userWord))
+          )
+        );
+      });
+      
+      if (hasMatch) matchCount++;
+    });
+    
+    return Math.round((matchCount / requiredSkills.length) * 100);
+  };
+
+  // Generate analytics data from real backend data
+  const getAnalyticsWithBackendData = (): AnalyticsData => {
+    const topOccupations = occupations.slice(0, 4).map((occ) => ({
       name: occ.title,
       matchPercentage: occ.matchPercentage,
     }));
 
+    const totalSkills = skillGroups.reduce(
+      (total, group) => total + group.skills.length,
+      0
+    );
+    const completedResources = resources.filter(
+      (r) => r.progress >= 100
+    ).length;
+
+    // Generate skill growth data based on real skill categories
+    // Note: This simulates growth based on current skills. For true historical data,
+    // we would need to track skill addition dates in the backend.
+    const currentDate = new Date();
+    const skillsGrowth = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date(currentDate);
+      date.setMonth(date.getMonth() - (5 - i));
+      
+      // Create realistic progression: start with fewer skills, gradually increase
+      const progressionRatio = (i + 1) / 6;
+      const skillsAtThisPoint = Math.floor(totalSkills * progressionRatio);
+      
+      return {
+        month: date.toLocaleDateString("en", { month: "short" }),
+        count: skillsAtThisPoint,
+      };
+    });
+
+    // Generate occupation trends based on real match percentages
+    const occupationTrends = occupations.slice(0, 4).map((occ) => ({
+      name:
+        occ.title.length > 15 ? occ.title.substring(0, 12) + "..." : occ.title,
+      demand: Math.max(20, occ.matchPercentage), // Use match percentage as demand indicator
+      growth: Math.floor(occ.matchPercentage * 0.3 + Math.random() * 10), // Growth correlated with match
+    }));
+
     return {
-      totalOccupations: occupations.length || mockAnalytics.totalOccupations,
-      totalSkills: dashboardData.stats.skills_count || 0,
-      resourcesCompleted: 0, // TODO: Add this to backend
+      totalOccupations: occupations.length,
+      totalSkills,
+      resourcesCompleted: completedResources,
       topOccupations:
-        realOccupations.length > 0
-          ? realOccupations
-          : mockAnalytics.topOccupations,
+        topOccupations.length > 0
+          ? topOccupations
+          : [{ name: "No occupations found", matchPercentage: 0 }],
       lastEngagedOccupation:
         userProfile?.current_occupation?.preferred_label ||
-        realOccupations[0]?.name ||
+        topOccupations[0]?.name ||
         "Not specified",
-      skillsGrowth: mockAnalytics.skillsGrowth, // TODO: Get real growth data from backend
-      occupationTrends: mockAnalytics.occupationTrends, // TODO: Get real trends from backend
+      skillsGrowth,
+      occupationTrends,
     };
   };
 
@@ -459,28 +432,18 @@ export function Dashboard() {
     setSkillGroups(newSkillGroups);
   };
 
-  const handleUpdateResourceProgress = (
-    resourceId: string,
-    progress: number
-  ) => {
-    setResources((prev) =>
-      prev.map((resource) =>
-        resource.id === resourceId ? { ...resource, progress } : resource
-      )
-    );
-  };
+  const refreshData = async () => {
+    hasLoadedData.current = false;
+    setIsLoading(true);
 
-  console.log(authUser);
-
-  const handleAddResource = (
-    newResource: Omit<Resource, "id" | "createdAt">
-  ) => {
-    const resource: Resource = {
-      ...newResource,
-      id: Date.now().toString(),
-      createdAt: new Date(),
-    };
-    setResources((prev) => [resource, ...prev]);
+    // This will trigger the useEffect to reload data
+    const currentUser = authUser;
+    if (currentUser) {
+      // Force reload by resetting the ref and calling load again
+      setTimeout(() => {
+        hasLoadedData.current = false;
+      }, 100);
+    }
   };
 
   const handleLogout = async () => {
@@ -503,6 +466,7 @@ export function Dashboard() {
           <p className={isDark ? "text-white/70" : "text-gray-600"}>
             Loading your dashboard...
           </p>
+          {error && <p className="text-red-500 mt-2 text-sm">{error}</p>}
         </div>
       </div>
     );
@@ -522,13 +486,7 @@ export function Dashboard() {
           />
         );
       case "skills":
-        return (
-          <SkillsPage
-            skillGroups={skillGroups}
-            occupations={occupations}
-            onUpdateSkillGroups={handleUpdateSkillGroups}
-          />
-        );
+        return <SkillsPage />;
       case "resources":
         return <ResourceDashboard />;
       case "community":
@@ -538,18 +496,7 @@ export function Dashboard() {
           <BackendProfilePage
             userProfile={userProfile}
             dashboardData={dashboardData}
-            onRefresh={async () => {
-              try {
-                const [profileResponse, dashboardResponse] = await Promise.all([
-                  api.getUserProfile(),
-                  api.getDashboardData(),
-                ]);
-                setUserProfile(profileResponse);
-                setDashboardData(dashboardResponse);
-              } catch (error) {
-                console.error("Error refreshing data:", error);
-              }
-            }}
+            onRefresh={refreshData}
           />
         );
       default:
@@ -683,12 +630,12 @@ export function Dashboard() {
             <div className="flex items-center gap-3 mb-4">
               <Avatar className="h-10 w-10">
                 <AvatarImage
-                  src={user.avatar}
-                  alt={`${user.firstName} ${user.lastName} profile picture`}
+                  src={user?.avatar}
+                  alt={`${user?.firstName} ${user?.lastName} profile picture`}
                 />
                 <AvatarFallback className="bg-tabiya-accent text-white">
-                  {user.firstName[0]}
-                  {user.lastName[0]}
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
@@ -696,13 +643,13 @@ export function Dashboard() {
                   className={`font-medium truncate ${isDark ? "text-white" : "text-gray-900"}`}
                   id="user-full-name"
                 >
-                  {user.firstName} {user.lastName}
+                  {user?.firstName} {user?.lastName}
                 </p>
                 <p
                   className={`text-sm truncate ${isDark ? "text-white/60" : "text-gray-500"}`}
                   aria-describedby="user-full-name"
                 >
-                  {user.email}
+                  {user?.email}
                 </p>
               </div>
             </div>
