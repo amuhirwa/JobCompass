@@ -423,8 +423,8 @@ class JobCompassAPI {
     skill?: string;
     goal?: string;
     search?: string;
-  }): Promise<UserLearningResource[]> {
-    const response = await this.client.get('/auth/resources/', { params });
+  }): Promise<PaginatedResponse<UserLearningResource>> {
+    const response = await this.client.get<PaginatedResponse<UserLearningResource>>('/auth/resources/', { params });
     return response.data;
   }
 

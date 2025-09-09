@@ -43,6 +43,7 @@ import type {
   UserLearningResource,
   CreateUserLearningResource,
   ResourceStats,
+  PaginatedResponse,
 } from "@/lib/types";
 import { useDarkMode } from "@/contexts/DarkModeContext";
 import { useToast } from "@/hooks/use-toast";
@@ -115,7 +116,8 @@ export function ResourceLearningHub({
   const { isDark } = useDarkMode();
   const { toast } = useToast();
 
-  const [resources, setResources] = useState<UserLearningResource[]>([]);
+  const [resourcesData, setResourcesData] =
+    useState<PaginatedResponse<UserLearningResource> | null>(null);
   const [stats, setStats] = useState<ResourceStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("resources");
@@ -123,6 +125,9 @@ export function ResourceLearningHub({
     status: "all",
     search: "",
   });
+
+  // Get resources from paginated data
+  const resources = resourcesData?.results || [];
 
   // Add Resource Form
   const [showAddForm, setShowAddForm] = useState(false);
@@ -171,12 +176,12 @@ export function ResourceLearningHub({
       if (filter.search) params.search = filter.search;
       if (filter.status !== "all") params.status = filter.status;
 
-      const [resourcesData, statsData] = await Promise.all([
+      const [resourcesResponse, statsData] = await Promise.all([
         api.getUserResources(params),
         api.getResourceStats(),
       ]);
 
-      setResources(resourcesData);
+      setResourcesData(resourcesResponse);
       setStats(statsData);
     } catch (error) {
       console.error("Failed to load resources:", error);
@@ -205,7 +210,8 @@ export function ResourceLearningHub({
   const handleAddResource = async () => {
     try {
       const resource = await api.createUserResource(newResource);
-      setResources((prev) => [resource, ...prev]);
+      // Refresh the data to get updated paginated response
+      await loadData();
       setShowAddForm(false);
       setNewResource({
         title: "",
@@ -248,9 +254,16 @@ export function ResourceLearningHub({
         }
       );
 
-      setResources((prev) =>
-        prev.map((r) => (r.id === updatedResource.id ? updatedResource : r))
-      );
+      // Update the resource in our paginated data
+      if (resourcesData) {
+        const updatedResults = resourcesData.results.map((r) =>
+          r.id === updatedResource.id ? updatedResource : r
+        );
+        setResourcesData({
+          ...resourcesData,
+          results: updatedResults,
+        });
+      }
 
       setProgressModal({
         resource: null,
@@ -259,7 +272,14 @@ export function ResourceLearningHub({
         sessionMinutes: 0,
         notes: "",
       });
-      loadData(); // Refresh stats
+
+      // Refresh stats to get updated numbers
+      try {
+        const statsData = await api.getResourceStats();
+        setStats(statsData);
+      } catch (error) {
+        console.error("Failed to refresh stats:", error);
+      }
 
       toast({
         title: "Progress Updated",
@@ -283,6 +303,40 @@ export function ResourceLearningHub({
       sessionMinutes: 0,
       notes: "",
     });
+  };
+
+  const changeResourceStatus = async (
+    resourceId: string,
+    newStatus: string
+  ) => {
+    try {
+      const updatedResource = await api.updateResourceProgress(resourceId, {
+        status: newStatus as any,
+      });
+
+      // Update the resource in our paginated data
+      if (resourcesData) {
+        const updatedResults = resourcesData.results.map((r) =>
+          r.id === updatedResource.id ? updatedResource : r
+        );
+        setResourcesData({
+          ...resourcesData,
+          results: updatedResults,
+        });
+      }
+
+      toast({
+        title: "Status Updated",
+        description: `Resource status changed to ${newStatus.replace("_", " ")}`,
+      });
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update resource status",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -370,6 +424,53 @@ export function ResourceLearningHub({
               </Button>
             </div>
 
+            {/* Quick Filter Buttons */}
+            <div className="flex gap-2 flex-wrap">
+              <span
+                className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"} flex items-center`}
+              >
+                Quick filters:
+              </span>
+              <Button
+                size="sm"
+                variant={
+                  filter.status === "in_progress" ? "default" : "outline"
+                }
+                onClick={() =>
+                  setFilter((prev) => ({ ...prev, status: "in_progress" }))
+                }
+              >
+                Currently Learning
+              </Button>
+              <Button
+                size="sm"
+                variant={filter.status === "planned" ? "default" : "outline"}
+                onClick={() =>
+                  setFilter((prev) => ({ ...prev, status: "planned" }))
+                }
+              >
+                To Start
+              </Button>
+              <Button
+                size="sm"
+                variant={filter.status === "completed" ? "default" : "outline"}
+                onClick={() =>
+                  setFilter((prev) => ({ ...prev, status: "completed" }))
+                }
+              >
+                Completed
+              </Button>
+              <Button
+                size="sm"
+                variant={filter.status === "all" ? "default" : "outline"}
+                onClick={() =>
+                  setFilter((prev) => ({ ...prev, status: "all" }))
+                }
+              >
+                All
+              </Button>
+            </div>
+
             {loading ? (
               <div className="space-y-4">
                 {[...Array(3)].map((_, i) => (
@@ -420,6 +521,26 @@ export function ResourceLearningHub({
                             <Timer className="w-4 h-4 mr-1" />
                             Track Progress
                           </Button>
+                          <Select
+                            value={resource.status}
+                            onValueChange={(status) =>
+                              changeResourceStatus(resource.id, status)
+                            }
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="planned">Planned</SelectItem>
+                              <SelectItem value="in_progress">
+                                In Progress
+                              </SelectItem>
+                              <SelectItem value="completed">
+                                Completed
+                              </SelectItem>
+                              <SelectItem value="paused">Paused</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <Button size="sm" variant="outline" asChild>
                             <a
                               href={resource.url}

@@ -98,7 +98,7 @@ export function SkillsPage() {
     selectedOccupationId || ""
   );
 
-  console.log(userSkills)
+  console.log(userSkills);
 
   const addUserSkill = useAddUserSkill();
   const deleteUserSkill = useDeleteUserSkill();
@@ -562,7 +562,9 @@ export function SkillsPage() {
                 />
               ))}
             </div>
-          ) : userSkills && userSkills.results && userSkills.results.length > 0 ? (
+          ) : userSkills &&
+            userSkills.results &&
+            userSkills.results.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {userSkills.results.map((userSkill) => (
                 <div
