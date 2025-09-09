@@ -196,34 +196,43 @@ export function Dashboard() {
           occupationsResponse.results &&
           occupationsResponse.results.length > 0
         ) {
-          const userSkillIds = userSkillsResponse.results?.map(
-            (us) => us.skill.id
-          ) || [];
-          
-          console.log(`Dashboard: User has ${userSkillIds.length} skills:`, userSkillIds);
+          const userSkillIds =
+            userSkillsResponse.results?.map((us) => us.skill.id) || [];
+
+          console.log(
+            `Dashboard: User has ${userSkillIds.length} skills:`,
+            userSkillIds
+          );
 
           const formattedOccupations = occupationsResponse.results
             .slice(0, 20)
             .map((occ, index) => {
               // Calculate real match percentage using skill IDs (same logic as Skills page)
-              const relatedSkillIds = occ.related_skills?.map((rs) => rs.skill_id) || [];
+              const relatedSkillIds =
+                occ.related_skills?.map((rs) => rs.skill_id) || [];
               const matchingSkills = relatedSkillIds.filter((skillId) =>
                 userSkillIds.includes(skillId)
               );
-              const matchPercentage = relatedSkillIds.length > 0
-                ? Math.round((matchingSkills.length / relatedSkillIds.length) * 100)
-                : 0;
+              const matchPercentage =
+                relatedSkillIds.length > 0
+                  ? Math.round(
+                      (matchingSkills.length / relatedSkillIds.length) * 100
+                    )
+                  : 0;
 
-              console.log(`Dashboard: ${occ.preferred_label} - ${matchingSkills.length}/${relatedSkillIds.length} skills matched = ${matchPercentage}%`);
+              console.log(
+                `Dashboard: ${occ.preferred_label} - ${matchingSkills.length}/${relatedSkillIds.length} skills matched = ${matchPercentage}%`
+              );
 
               return {
                 id: occ.id,
                 title: occ.preferred_label,
                 matchPercentage,
-                requiredSkills: occ.related_skills
-                  ?.filter((skill) => skill.relation_type === "essential")
-                  .map((skill) => skill.skill_name)
-                  .slice(0, 4) || [], // Limit to first 4 for display
+                requiredSkills:
+                  occ.related_skills
+                    ?.filter((skill) => skill.relation_type === "essential")
+                    .map((skill) => skill.skill_name)
+                    .slice(0, 4) || [], // Limit to first 4 for display
                 salaryRange: {
                   min: 50000 + index * 3000,
                   max: 100000 + index * 5000,
