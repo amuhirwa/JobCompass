@@ -25,6 +25,7 @@ import {
   Home,
   Sun,
   Moon,
+  Briefcase,
 } from "lucide-react";
 
 // Import sections
@@ -34,6 +35,7 @@ import { CommunityExplore } from "../features/dashboard/components/CommunityExpl
 import { SkillsPage } from "../features/dashboard/components/SkillsPage";
 import BackendProfilePage from "@/components/BackendProfilePage";
 import { Chatbot } from "@/components/custom/Chatbot";
+import Jobs from "./Jobs";
 
 import type {
   User as UserType,
@@ -64,6 +66,12 @@ const sidebarItems = [
     label: "Skills",
     icon: Target,
     description: "Manage and develop your professional skills",
+  },
+  {
+    id: "jobs",
+    label: "Jobs",
+    icon: Briefcase,
+    description: "Find jobs matching your skills and interests",
   },
   {
     id: "resources",
@@ -469,6 +477,8 @@ export function Dashboard() {
         );
       case "skills":
         return <SkillsPage />;
+      case "jobs":
+        return <Jobs />;
       case "resources":
         return <ResourceDashboard />;
       case "community":
