@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import UserProfile, UserSkill, UserGoal, UserLearningResource, UserResourceProgress
-from taxonomy.models import Skill, Occupation
+from taxonomy.models import Skill, Occupation, OccupationToSkillRelation
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,9 +11,35 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SkillSummarySerializer(serializers.ModelSerializer):
     """Simplified skill serializer for nested use"""
+    related_occupations = serializers.SerializerMethodField()
+    
     class Meta:
         model = Skill
-        fields = ['id', 'preferred_label', 'skill_type']
+        fields = ['id', 'preferred_label', 'skill_type', 'related_occupations']
+
+    def get_related_occupations(self, obj):
+        # Get occupations that use this skill
+        occupation_relations = OccupationToSkillRelation.objects.filter(skill=obj)[:10]
+        
+        related_occupations = []
+        for rel in occupation_relations:
+            # Get total skills required for this occupation
+            total_skills_for_occupation = OccupationToSkillRelation.objects.filter(
+                occupation=rel.occupation
+            ).count()
+            
+            related_occupations.append({
+                'occupation_id': rel.occupation.id,
+                'occupation_name': rel.occupation.preferred_label,
+                'occupation_type': rel.occupation.occupation_type,
+                'occupation_description': rel.occupation.description,
+                'relation_type': rel.relation_type,
+                'signalling_value': rel.signalling_value,
+                'signalling_value_label': rel.signalling_value_label,
+                'total_skills_required': total_skills_for_occupation
+            })
+        
+        return related_occupations
 
 class OccupationSummarySerializer(serializers.ModelSerializer):
     """Simplified occupation serializer for nested use"""

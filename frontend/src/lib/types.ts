@@ -77,9 +77,12 @@ export interface RelatedSkill {
 export interface RelatedOccupation {
   occupation_id: string;
   occupation_name: string;
+  occupation_type?: string;
+  occupation_description?: string;
   relation_type: 'essential' | 'optional' | '';
   signalling_value?: number;
   signalling_value_label: 'low' | 'medium' | 'high' | '';
+  total_skills_required?: number;
 }
 
 export interface RelatedSkillFromOccupation {
@@ -278,6 +281,7 @@ export interface SkillSummary {
   id: string;
   preferred_label: string;
   skill_type: string;
+  related_occupations?: RelatedOccupation[];
 }
 
 export interface OccupationSummary {

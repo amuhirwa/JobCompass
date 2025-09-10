@@ -45,7 +45,6 @@ import {
   useDebouncedSearch,
   useSkills,
   useSkill,
-  useOccupations,
   useOccupation,
   useLearningResources,
   useGenerateLearningResources,
@@ -85,7 +84,6 @@ export function SkillsPage() {
   const { data: searchResults, isLoading: searchLoading } =
     useDebouncedSearch(searchQuery);
   const { data: skills } = useSkills();
-  const { data: occupations } = useOccupations();
   const { data: selectedSkill } = useSkill(selectedSkillId || "");
   const { data: selectedOccupation } = useOccupation(
     selectedOccupationId || ""
@@ -116,33 +114,69 @@ export function SkillsPage() {
     }
   };
 
-  // Calculate occupation matches based on user skills
+  // Get occupation matches from user skills' related occupations
   const getOccupationMatches = () => {
-    if (!userSkills?.results || !occupations?.results) return [];
+    if (!userSkills?.results) return [];
 
-    const userSkillIds = userSkills.results.map((us) => us.skill.id);
+    // Collect all related occupations from user skills
+    const occupationMap = new Map();
 
-    return occupations.results
+    userSkills.results.forEach((userSkill) => {
+      const relatedOccupations = userSkill.skill.related_occupations || [];
+
+      relatedOccupations.forEach((relatedOcc) => {
+        const occupationId = relatedOcc.occupation_id;
+
+        if (occupationMap.has(occupationId)) {
+          // Increment match count for this occupation
+          const existing = occupationMap.get(occupationId);
+          existing.matchingSkillsCount += 1;
+          existing.matchingSkills.push({
+            skill_id: userSkill.skill.id,
+            skill_name: userSkill.skill.preferred_label,
+            relation_type: relatedOcc.relation_type,
+            signalling_value: relatedOcc.signalling_value,
+          });
+        } else {
+          // Add new occupation to map
+          occupationMap.set(occupationId, {
+            id: occupationId,
+            preferred_label: relatedOcc.occupation_name,
+            occupation_type: relatedOcc.occupation_type,
+            description: relatedOcc.occupation_description,
+            matchingSkillsCount: 1,
+            totalSkillsRequired: relatedOcc.total_skills_required || 1, // Fallback to 1 to avoid division by zero
+            matchingSkills: [
+              {
+                skill_id: userSkill.skill.id,
+                skill_name: userSkill.skill.preferred_label,
+                relation_type: relatedOcc.relation_type,
+                signalling_value: relatedOcc.signalling_value,
+              },
+            ],
+          });
+        }
+      });
+    });
+
+    // Convert map to array and calculate match percentages
+    const occupationMatches = Array.from(occupationMap.values())
       .map((occupation) => {
-        const relatedSkillIds =
-          occupation.related_skills?.map((rs) => rs.skill_id) || [];
-        const matchingSkills = relatedSkillIds.filter((skillId) =>
-          userSkillIds.includes(skillId)
+        // Calculate match percentage based on how many of the occupation's required skills the user has
+        const matchPercentage = Math.round(
+          (occupation.matchingSkillsCount / occupation.totalSkillsRequired) *
+            100
         );
-        const matchPercentage =
-          relatedSkillIds.length > 0
-            ? Math.round((matchingSkills.length / relatedSkillIds.length) * 100)
-            : 0;
 
         return {
           ...occupation,
-          matchPercentage,
-          matchingSkillsCount: matchingSkills.length,
-          totalRequiredSkills: relatedSkillIds.length,
+          match_percentage: Math.min(matchPercentage, 100), // Cap at 100%
+          matchPercentage: Math.min(matchPercentage, 100), // Keep both for compatibility
         };
       })
-      .filter((occupation) => occupation.matchPercentage > 0)
-      .sort((a, b) => b.matchPercentage - a.matchPercentage);
+      .sort((a, b) => b.match_percentage - a.match_percentage);
+
+    return occupationMatches;
   };
 
   // Handle adding a skill to user profile
@@ -286,6 +320,7 @@ export function SkillsPage() {
     }
   };
 
+  
   // Get difficulty color
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -309,15 +344,15 @@ export function SkillsPage() {
         return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
       case "advanced":
         return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-      case "expert":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+        case "expert":
+          return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
     }
   };
 
   const occupationMatches = getOccupationMatches();
-
+  
   return (
     <div
       className="space-y-6 w-full"
@@ -404,12 +439,12 @@ export function SkillsPage() {
             <div
               className={`text-2xl font-bold ${isDark ? "text-tabiya-accent" : "text-primary"}`}
             >
-              {occupationMatches[0]?.matchPercentage || 0}%
+              {occupationMatches[0]?.match_percentage || 0}%
             </div>
             <p
               className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
             >
-              Best occupation match
+              {occupationMatches[0]?.preferred_label || "No occupation match"}
             </p>
           </CardContent>
         </Card>
@@ -692,7 +727,7 @@ export function SkillsPage() {
                             className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
                           >
                             {occupation.matchingSkillsCount} of{" "}
-                            {occupation.totalRequiredSkills} required skills
+                            {occupation.totalSkillsRequired} required skills
                             matched
                           </p>
                         </div>
