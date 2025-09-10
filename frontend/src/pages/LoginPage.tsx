@@ -56,7 +56,7 @@ export default function LoginPage() {
       }
     } catch (err: any) {
       setError(
-        err.response?.data?.detail || err.message || "An error occurred"
+        err.response?.data?.error || err.response?.data?.detail || err.message || "An error occurred"
       );
     } finally {
       setIsLoading(false);
