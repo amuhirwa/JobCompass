@@ -385,6 +385,11 @@ class GeminiService:
 
     def _build_context_prompt(self, context_type: str, context_data: Dict = None) -> str:
         """Build context-specific prompt for the chatbot"""
+        if True:
+            return """
+            Current Context: General JobCompass platform
+            You can help with any career-related questions about skills, occupations, learning paths, or career planning.
+            """
         
         if context_type == "skill" and context_data:
             return f"""
