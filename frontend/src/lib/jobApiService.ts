@@ -15,286 +15,39 @@ export interface JobApiResponse {
   hasMore: boolean;
 }
 
-// SerpApi Google Jobs response interface
-interface SerpApiResponse {
-  jobs_results?: any[];
-  pagination?: {
-    current: number;
-    next?: string;
-  };
-  search_metadata?: {
-    total_results?: string;
-  };
-  error?: string;
-}
-
 class JobApiService {
-  private baseUrl = 'https://serpapi.com/search.json';
-  private apiKey = import.meta.env.VITE_SERPAPI_KEY; // Add your SerpApi key to .env
-  private useMockData = !this.apiKey; // Use mock data if no API key provided
+  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   async searchJobs(params: JobSearchParams): Promise<JobApiResponse> {
     try {
-      // Use real SerpApi if API key is available, otherwise use mock data
-      if (this.useMockData) {
-        console.log('Using mock data - add VITE_SERPAPI_KEY to .env for real job data');
-        return this.getMockJobData(params);
+      // Call the backend API endpoint which handles SerpApi integration
+      const searchParams = new URLSearchParams({
+        query: params.query,
+        location: params.location,
+        page: (params.page || 1).toString(),
+        pageSize: (params.pageSize || 10).toString(),
+      });
+
+      const response = await fetch(`${this.baseUrl}/api/jobs/search/?${searchParams}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Backend API request failed: ${response.status} ${response.statusText}`);
       }
 
-      return this.searchWithSerpApi(params);
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error('Error searching jobs:', error);
+      console.error('Error searching jobs via backend:', error);
       // Fallback to mock data on error
       console.log('Falling back to mock data due to API error');
       return this.getMockJobData(params);
     }
-  }
-
-  private async searchWithSerpApi(params: JobSearchParams): Promise<JobApiResponse> {
-    const searchParams = new URLSearchParams({
-      engine: 'google_jobs',
-      q: params.query,
-      location: 'Kigali, Kigali City, Rwanda',
-      api_key: this.apiKey || '',
-    //   start: (((params.page || 1) - 1) * (params.pageSize || 10)).toString(),
-      num: (params.pageSize || 10).toString(),
-      hl: 'en',
-      gl: 'us'
-    });
-
-    const response = await fetch(`${this.baseUrl}?${searchParams}`);
-    
-    if (!response.ok) {
-      throw new Error(`SerpApi request failed: ${response.status} ${response.statusText}`);
-    }
-    
-    const data: SerpApiResponse = await response.json();
-    
-    if (data.error) {
-      throw new Error(`SerpApi error: ${data.error}`);
-    }
-
-    return this.transformSerpApiResponse(data, params);
-  }
-
-  private transformSerpApiResponse(data: SerpApiResponse, params: JobSearchParams): JobApiResponse {
-    const jobs = (data.jobs_results || []).map(job => this.transformSerpApiJob(job));
-    const totalResults = data.search_metadata?.total_results ? 
-      parseInt(data.search_metadata.total_results.replace(/,/g, '')) : jobs.length;
-    
-    return {
-      jobs,
-      total: totalResults,
-      page: params.page || 1,
-      hasMore: data.pagination?.next ? true : false
-    };
-  }
-
-  private transformSerpApiJob(job: any): any {
-    // Transform SerpApi job format to our internal format
-    const salary = this.extractSalary(job.detected_extensions?.salary || job.salary_info);
-    const location = job.location || 'Location not specified';
-    const company = job.company_name || 'Company not specified';
-    
-    return {
-      id: job.job_id || `serpapi-${Date.now()}-${Math.random()}`,
-      title: job.title || 'Job Title Not Specified',
-      company: company,
-      company_logo: job.thumbnail || null,
-      company_industry: this.extractIndustry(job),
-      company_size: null, // Not provided by SerpApi
-      location: location,
-      description: job.description || job.snippet || 'No description available',
-      requirements: this.extractRequirements(job.description || job.snippet || ''),
-      nice_to_have: [],
-      salary_min: salary.min,
-      salary_max: salary.max,
-      salary_currency: salary.currency,
-      employment_type: this.extractEmploymentType(job),
-      experience_level: this.extractExperienceLevel(job.title, job.description),
-      posted_date: this.formatPostedDate(job.detected_extensions?.posted_at || job.posted_at),
-      application_deadline: null, // Not typically provided
-      apply_url: job.apply_link || job.share_link || '#',
-      skills_match_percentage: 0, // Will be calculated later
-      matched_skills: [],
-      source: 'Google Jobs (SerpApi)',
-      remote_allowed: this.isRemoteJob(job.title, job.description, location),
-      benefits: this.extractBenefits(job.description || ''),
-      team_size: null, // Not provided by SerpApi
-      department: this.getDepartment(job.title || '')
-    };
-  }
-
-  private extractSalary(salaryInfo: any): { min?: number; max?: number; currency: string } {
-    if (!salaryInfo) return { currency: 'USD' };
-    
-    if (typeof salaryInfo === 'string') {
-      // Parse salary string like "$80,000 - $120,000" or "$100k"
-      const salaryText = salaryInfo.toLowerCase();
-      const currencyMatch = salaryText.match(/\$|usd|eur|gbp/);
-      const currency = currencyMatch ? (currencyMatch[0] === '$' ? 'USD' : currencyMatch[0].toUpperCase()) : 'USD';
-      
-      // Look for range patterns
-      const rangeMatch = salaryText.match(/(\d+)[,k]*\s*[-–to]\s*(\d+)[,k]*/);
-      if (rangeMatch) {
-        const min = this.parseSalaryNumber(rangeMatch[1]);
-        const max = this.parseSalaryNumber(rangeMatch[2]);
-        return { min, max, currency };
-      }
-      
-      // Look for single number
-      const singleMatch = salaryText.match(/(\d+)[,k]*/);
-      if (singleMatch) {
-        const amount = this.parseSalaryNumber(singleMatch[1]);
-        return { min: amount, currency };
-      }
-    }
-    
-    return { currency: 'USD' };
-  }
-
-  private parseSalaryNumber(str: string): number {
-    const num = parseInt(str.replace(/,/g, ''));
-    // If it's a number like 80 or 120, assume it's in thousands
-    return num < 1000 ? num * 1000 : num;
-  }
-
-  private extractIndustry(job: any): string | undefined {
-    // Try to extract industry from company name or job title
-    const title = (job.title || '').toLowerCase();
-    const company = (job.company_name || '').toLowerCase();
-    
-    if (title.includes('software') || title.includes('developer') || title.includes('engineer') || company.includes('tech')) return 'Technology';
-    if (title.includes('marketing') || title.includes('advertising') || company.includes('marketing')) return 'Marketing';
-    if (title.includes('sales') || title.includes('business development') || company.includes('sales')) return 'Sales';
-    if (title.includes('design') || title.includes('creative') || company.includes('design')) return 'Design';
-    if (title.includes('finance') || title.includes('accounting') || company.includes('bank') || company.includes('financial')) return 'Finance';
-    if (title.includes('healthcare') || title.includes('medical') || company.includes('health') || company.includes('medical')) return 'Healthcare';
-    if (title.includes('education') || title.includes('teacher') || company.includes('school') || company.includes('university')) return 'Education';
-    
-    return undefined;
-  }
-
-  private extractRequirements(description: string): string[] {
-    const requirements: string[] = [];
-    const text = description.toLowerCase();
-    
-    // Common tech skills
-    const techSkills = [
-      'javascript', 'python', 'java', 'react', 'node.js', 'typescript', 'sql', 'aws',
-      'docker', 'kubernetes', 'git', 'html', 'css', 'angular', 'vue.js', 'mongodb',
-      'postgresql', 'redis', 'graphql', 'rest api', 'microservices', 'agile', 'scrum'
-    ];
-    
-    // Common soft skills
-    const softSkills = [
-      'communication', 'teamwork', 'leadership', 'problem solving', 'analytical thinking',
-      'project management', 'time management', 'creativity', 'adaptability'
-    ];
-    
-    // Check for tech skills
-    techSkills.forEach(skill => {
-      if (text.includes(skill.toLowerCase())) {
-        requirements.push(skill);
-      }
-    });
-    
-    // Add some soft skills
-    softSkills.slice(0, 2).forEach(skill => {
-      if (text.includes(skill.toLowerCase()) || requirements.length < 3) {
-        requirements.push(skill);
-      }
-    });
-    
-    return requirements.slice(0, 8); // Limit to 8 requirements
-  }
-
-  private extractEmploymentType(job: any): string {
-    const title = (job.title || '').toLowerCase();
-    const description = (job.description || job.snippet || '').toLowerCase();
-    
-    if (title.includes('part time') || description.includes('part time')) return 'Part-time';
-    if (title.includes('contract') || description.includes('contract') || description.includes('freelance')) return 'Contract';
-    if (title.includes('intern') || description.includes('internship')) return 'Internship';
-    
-    return 'Full-time';
-  }
-
-  private extractExperienceLevel(title: string, description?: string): string {
-    const text = `${title} ${description || ''}`.toLowerCase();
-    
-    if (text.includes('senior') || text.includes('sr.') || text.includes('lead') || text.includes('principal')) return 'Senior Level';
-    if (text.includes('junior') || text.includes('jr.') || text.includes('entry') || text.includes('graduate')) return 'Entry Level';
-    if (text.includes('mid') || text.includes('intermediate')) return 'Mid Level';
-    if (text.includes('director') || text.includes('manager') || text.includes('head of')) return 'Management';
-    
-    return 'Mid Level';
-  }
-
-  private formatPostedDate(postedAt: string | undefined): string {
-    if (!postedAt) return new Date().toISOString();
-    
-    // Handle relative dates like "2 days ago"
-    const now = new Date();
-    if (postedAt.includes('day')) {
-      const days = parseInt(postedAt.match(/(\d+)/)?.[1] || '0');
-      now.setDate(now.getDate() - days);
-      return now.toISOString();
-    }
-    if (postedAt.includes('week')) {
-      const weeks = parseInt(postedAt.match(/(\d+)/)?.[1] || '0');
-      now.setDate(now.getDate() - (weeks * 7));
-      return now.toISOString();
-    }
-    if (postedAt.includes('month')) {
-      const months = parseInt(postedAt.match(/(\d+)/)?.[1] || '0');
-      now.setMonth(now.getMonth() - months);
-      return now.toISOString();
-    }
-    
-    return now.toISOString();
-  }
-
-  private isRemoteJob(title: string, description?: string, location?: string): boolean {
-    const text = `${title} ${description || ''} ${location || ''}`.toLowerCase();
-    return text.includes('remote') || text.includes('work from home') || text.includes('wfh') || 
-           text.includes('anywhere') || location?.toLowerCase().includes('remote') || false;
-  }
-
-  private extractBenefits(description: string): string[] {
-    const benefits: string[] = [];
-    const text = description.toLowerCase();
-    
-    const benefitKeywords = {
-      'health insurance': ['health insurance', 'medical insurance', 'healthcare'],
-      'dental insurance': ['dental insurance', 'dental coverage'],
-      '401k': ['401k', '401(k)', 'retirement plan'],
-      'pto': ['pto', 'paid time off', 'vacation days'],
-      'remote work': ['remote work', 'work from home', 'flexible location'],
-      'stock options': ['stock options', 'equity', 'rsu'],
-      'learning budget': ['learning budget', 'training', 'professional development'],
-      'gym membership': ['gym membership', 'fitness', 'wellness']
-    };
-    
-    Object.entries(benefitKeywords).forEach(([benefit, keywords]) => {
-      if (keywords.some(keyword => text.includes(keyword))) {
-        benefits.push(benefit);
-      }
-    });
-    
-    return benefits;
-  }
-
-  private getDepartment(jobTitle: string): string {
-    const title = jobTitle.toLowerCase();
-    if (title.includes('engineer') || title.includes('developer') || title.includes('software')) return 'Engineering';
-    if (title.includes('design') || title.includes('ux') || title.includes('ui')) return 'Design';
-    if (title.includes('product')) return 'Product';
-    if (title.includes('marketing') || title.includes('growth')) return 'Marketing';
-    if (title.includes('data') || title.includes('analyst')) return 'Data';
-    if (title.includes('sales') || title.includes('business development')) return 'Sales';
-    if (title.includes('manager') || title.includes('director')) return 'Management';
-    return 'General';
   }
 
   private async getMockJobData(params: JobSearchParams): Promise<JobApiResponse> {
@@ -505,6 +258,18 @@ class JobApiService {
 
     const benefitCount = Math.floor(Math.random() * 6) + 4; // 4-10 benefits
     return allBenefits.sort(() => 0.5 - Math.random()).slice(0, benefitCount);
+  }
+
+  private getDepartment(jobTitle: string): string {
+    const title = jobTitle.toLowerCase();
+    if (title.includes('engineer') || title.includes('developer') || title.includes('software')) return 'Engineering';
+    if (title.includes('design') || title.includes('ux') || title.includes('ui')) return 'Design';
+    if (title.includes('product')) return 'Product';
+    if (title.includes('marketing') || title.includes('growth')) return 'Marketing';
+    if (title.includes('data') || title.includes('analyst')) return 'Data';
+    if (title.includes('sales') || title.includes('business development')) return 'Sales';
+    if (title.includes('manager') || title.includes('director')) return 'Management';
+    return 'Technology';
   }
 }
 

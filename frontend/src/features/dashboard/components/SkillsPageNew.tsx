@@ -119,9 +119,9 @@ export function SkillsPage() {
 
   // Calculate occupation matches based on user skills
   const getOccupationMatches = () => {
-    if (!userSkills || !occupations?.results) return [];
+    if (!userSkills?.results || !occupations?.results) return [];
 
-    const userSkillIds = userSkills.map((us) => us.skill.id);
+    const userSkillIds = userSkills.results.map((us) => us.skill.id);
 
     return occupations.results
       .map((occupation) => {
@@ -317,7 +317,7 @@ export function SkillsPage() {
             <div
               className={`text-2xl font-bold ${isDark ? "text-tabiya-accent" : "text-primary"}`}
             >
-              {userSkills?.length || 0}
+              {userSkills?.results?.length || 0}
             </div>
             <p
               className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
@@ -439,7 +439,7 @@ export function SkillsPage() {
                   {getAvailableSkills()
                     .slice(0, 10)
                     .map((skill) => {
-                      const alreadyAdded = userSkills?.some(
+                      const alreadyAdded = userSkills?.results?.some(
                         (us) => us.skill.id === skill.id
                       );
                       return (
@@ -531,9 +531,11 @@ export function SkillsPage() {
                 />
               ))}
             </div>
-          ) : userSkills && userSkills.length > 0 ? (
+          ) : userSkills &&
+            userSkills.results &&
+            userSkills.results.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userSkills.map((userSkill) => (
+              {userSkills.results.map((userSkill) => (
                 <div
                   key={userSkill.id}
                   className={`p-4 border rounded-lg cursor-pointer transition-colors hover:border-tabiya-accent ${
@@ -905,7 +907,7 @@ export function SkillsPage() {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     {selectedOccupation.related_skills.map((relatedSkill) => {
-                      const userHasSkill = userSkills?.some(
+                      const userHasSkill = userSkills?.results?.some(
                         (us) => us.skill.id === relatedSkill.skill_id
                       );
                       return (

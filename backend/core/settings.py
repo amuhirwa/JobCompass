@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'accounts',
     'ai_services',
     'community',
+    'jobs',
 ]
 
 MIDDLEWARE = [

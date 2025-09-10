@@ -185,9 +185,11 @@ export function Jobs() {
         pageSize: 20,
       });
 
-      // Check if we're using real data based on API key presence
-      const hasApiKey = import.meta.env.VITE_SERPAPI_KEY;
-      setIsUsingRealData(!!hasApiKey);
+      // Check if we're using real data based on the job source
+      const hasRealData = response.jobs.some(
+        (job) => job.source === "Google Jobs (SerpApi)"
+      );
+      setIsUsingRealData(hasRealData);
 
       return response.jobs;
     } catch (error) {
@@ -447,18 +449,20 @@ export function Jobs() {
           >
             <CardContent className="p-6 text-center">
               <p className="text-red-600 mb-2">{error}</p>
-              {error.includes("SerpApi") && (
-                <div className="text-sm text-red-500 space-y-2">
-                  <p>This might be due to:</p>
-                  <ul className="text-left max-w-md mx-auto space-y-1">
-                    <li>
-                      • API key not configured (add VITE_SERPAPI_KEY to .env)
-                    </li>
-                    <li>• Monthly API limit reached</li>
-                    <li>• Network connectivity issues</li>
-                  </ul>
-                </div>
-              )}
+              {error.includes("Backend") ||
+                (error.includes("API") && (
+                  <div className="text-sm text-red-500 space-y-2">
+                    <p>This might be due to:</p>
+                    <ul className="text-left max-w-md mx-auto space-y-1">
+                      <li>• Backend API not available</li>
+                      <li>
+                        • SerpApi key not configured in backend environment
+                      </li>
+                      <li>• Monthly API limit reached</li>
+                      <li>• Network connectivity issues</li>
+                    </ul>
+                  </div>
+                ))}
               <div className="flex gap-2 justify-center mt-4">
                 <Button onClick={loadUserSkillsAndJobs}>Try Again</Button>
                 {!isUsingRealData && (
