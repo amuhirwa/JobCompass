@@ -74,7 +74,11 @@ export function CareerOpportunitiesSection({
 
       {selectedSkill ? (
         (() => {
-          console.log(relatedOccupations, careerOpportunitiesPage, itemsPerPage);
+          console.log(
+            relatedOccupations,
+            careerOpportunitiesPage,
+            itemsPerPage
+          );
           const paginatedData = getPaginatedData(
             relatedOccupations,
             careerOpportunitiesPage,
@@ -87,12 +91,14 @@ export function CareerOpportunitiesSection({
                 role="list"
                 aria-label="Career opportunities"
               >
-                {relatedOccupations.map((occupation: any) => {
+                {paginatedData.items.map((occupation: any) => {
                   const matchPercentage = calculateMatchPercentage(occupation);
                   const occupationCardId = `occ-${occupation.id}`;
                   const isExpanded = expandedCards.has(occupationCardId);
                   const description =
-                    occupation.definition || occupation.occupation_description || '';
+                    occupation.definition ||
+                    occupation.occupation_description ||
+                    '';
                   const displayDescription = description;
 
                   return (

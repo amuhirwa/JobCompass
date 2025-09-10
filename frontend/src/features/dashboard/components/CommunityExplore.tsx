@@ -1,25 +1,19 @@
-import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useDarkMode } from "@/contexts/DarkModeContext";
-import { useAuth } from "@/lib/auth-context";
+} from '@/components/ui/select';
+import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useAuth } from '@/lib/auth-context';
 import {
   MessageSquare,
   Heart,
@@ -33,9 +27,9 @@ import {
   Pin,
   Send,
   X,
-} from "lucide-react";
-import api from "@/lib/api";
-import type { CommunityPost, CreateCommunityPost } from "@/lib/types";
+} from 'lucide-react';
+import api from '@/lib/api';
+import type { CommunityPost, CreateCommunityPost } from '@/lib/types';
 
 interface CommunityExploreProps {
   // Remove the old props as we'll fetch data directly from backend
@@ -48,15 +42,15 @@ export function CommunityExplore({}: CommunityExploreProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newPost, setNewPost] = useState<CreateCommunityPost>({
-    title: "",
-    content: "",
-    post_type: "discussion",
+    title: '',
+    content: '',
+    post_type: 'discussion',
     tags: [],
   });
-  const [newTag, setNewTag] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"recent" | "popular" | "trending">(
-    "recent"
+  const [newTag, setNewTag] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'recent' | 'popular' | 'trending'>(
+    'recent'
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -85,7 +79,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
       setPosts(response.results);
       setTotalPages(Math.ceil(response.count / 10));
     } catch (error) {
-      console.error("Error loading posts:", error);
+      console.error('Error loading posts:', error);
     } finally {
       setIsLoading(false);
     }
@@ -96,7 +90,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
       const response = await api.getTrendingTopics();
       setTrendingTopics(response.trending_topics);
     } catch (error) {
-      console.error("Error loading trending topics:", error);
+      console.error('Error loading trending topics:', error);
     }
   };
 
@@ -106,7 +100,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
         ...prev,
         tags: [...prev.tags, newTag.trim()],
       }));
-      setNewTag("");
+      setNewTag('');
     }
   };
 
@@ -126,11 +120,11 @@ export function CommunityExplore({}: CommunityExploreProps) {
         const postWithAuthor: CommunityPost = {
           ...createdPost,
           author: {
-            id: authUser?.id?.toString() || "1",
-            username: authUser?.username || "Unknown",
-            first_name: authUser?.first_name || "",
-            last_name: authUser?.last_name || "",
-            avatar: "/api/placeholder/150/150",
+            id: authUser?.id?.toString() || '1',
+            username: authUser?.username || 'Unknown',
+            first_name: authUser?.first_name || '',
+            last_name: authUser?.last_name || '',
+            avatar: '/api/placeholder/150/150',
           },
           comments: [],
           is_liked: false,
@@ -138,14 +132,14 @@ export function CommunityExplore({}: CommunityExploreProps) {
 
         setPosts((prev) => [postWithAuthor, ...prev]);
         setNewPost({
-          title: "",
-          content: "",
-          post_type: "discussion",
+          title: '',
+          content: '',
+          post_type: 'discussion',
           tags: [],
         });
         setIsCreating(false);
       } catch (error) {
-        console.error("Error creating post:", error);
+        console.error('Error creating post:', error);
       }
     }
   };
@@ -165,7 +159,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
         )
       );
     } catch (error) {
-      console.error("Error liking post:", error);
+      console.error('Error liking post:', error);
     }
   };
 
@@ -180,7 +174,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
     const diffInMs = now.getTime() - date.getTime();
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return "Just now";
+    if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
@@ -189,18 +183,18 @@ export function CommunityExplore({}: CommunityExploreProps) {
 
   const getPostTypeColor = (type: string) => {
     switch (type) {
-      case "question":
-        return "bg-blue-100 text-blue-800";
-      case "discussion":
-        return "bg-green-100 text-green-800";
-      case "resource":
-        return "bg-purple-100 text-purple-800";
-      case "achievement":
-        return "bg-yellow-100 text-yellow-800";
-      case "tip":
-        return "bg-orange-100 text-orange-800";
+      case 'question':
+        return 'bg-blue-100 text-blue-800';
+      case 'discussion':
+        return 'bg-green-100 text-green-800';
+      case 'resource':
+        return 'bg-purple-100 text-purple-800';
+      case 'achievement':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'tip':
+        return 'bg-orange-100 text-orange-800';
       default:
-        return "bg-gray-100 text-gray-800";
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -210,13 +204,10 @@ export function CommunityExplore({}: CommunityExploreProps) {
       <div className="flex-1 space-y-6">
         {/* Header with Search and Controls */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Community</h1>
-            <p className="text-muted-foreground">
-              Connect, share, and learn with fellow professionals
-            </p>
-          </div>
-          <Button onClick={() => setIsCreating(true)} className="gap-2">
+          <Button
+            onClick={() => setIsCreating(true)}
+            className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white border-tabiya-accent"
+          >
             <Plus className="h-4 w-4" />
             New Post
           </Button>
@@ -230,7 +221,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
               placeholder="Search posts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               className="pl-10"
             />
           </div>
@@ -251,10 +242,18 @@ export function CommunityExplore({}: CommunityExploreProps) {
 
         {/* Create Post Form */}
         {isCreating && (
-          <Card>
+          <Card
+            className={
+              isDark
+                ? 'border-tabiya-dark bg-tabiya-medium'
+                : 'border-gray-200 bg-white'
+            }
+          >
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Create New Post</CardTitle>
+                <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+                  Create New Post
+                </CardTitle>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -306,7 +305,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
                     placeholder="Add tag..."
                     value={newTag}
                     onChange={(e) => setNewTag(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && addTag()}
+                    onKeyPress={(e) => e.key === 'Enter' && addTag()}
                     className="flex-1"
                   />
                   <Button onClick={addTag} variant="outline" size="sm">
@@ -333,7 +332,10 @@ export function CommunityExplore({}: CommunityExploreProps) {
                 <Button variant="outline" onClick={() => setIsCreating(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleCreatePost} className="gap-2">
+                <Button
+                  onClick={handleCreatePost}
+                  className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white border-tabiya-accent"
+                >
                   <Send className="h-4 w-4" />
                   Post
                 </Button>
@@ -346,14 +348,32 @@ export function CommunityExplore({}: CommunityExploreProps) {
         {isLoading ? (
           <div className="text-center py-8">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            <p className="mt-2 text-muted-foreground">Loading posts...</p>
+            <p
+              className={`mt-2 ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+            >
+              Loading posts...
+            </p>
           </div>
         ) : posts.length === 0 ? (
-          <Card>
+          <Card
+            className={
+              isDark
+                ? 'border-tabiya-dark bg-tabiya-medium'
+                : 'border-gray-200 bg-white'
+            }
+          >
             <CardContent className="text-center py-8">
-              <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No posts found</h3>
-              <p className="text-muted-foreground mb-4">
+              <Users
+                className={`h-12 w-12 mx-auto mb-4 ${isDark ? 'text-white/50' : 'text-muted-foreground'}`}
+              />
+              <h3
+                className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}
+              >
+                No posts found
+              </h3>
+              <p
+                className={`mb-4 ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+              >
                 Be the first to start a conversation!
               </p>
               <Button onClick={() => setIsCreating(true)}>Create Post</Button>
@@ -362,7 +382,14 @@ export function CommunityExplore({}: CommunityExploreProps) {
         ) : (
           <div className="space-y-4">
             {posts.map((post) => (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={post.id}
+                className={`hover:shadow-md transition-shadow ${
+                  isDark
+                    ? 'border-tabiya-dark bg-tabiya-medium'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
@@ -418,10 +445,10 @@ export function CommunityExplore({}: CommunityExploreProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleLikePost(post.id)}
-                        className={`gap-2 ${post.is_liked ? "text-red-500" : ""}`}
+                        className={`gap-2 ${post.is_liked ? 'text-red-500' : ''}`}
                       >
                         <Heart
-                          className={`h-4 w-4 ${post.is_liked ? "fill-current" : ""}`}
+                          className={`h-4 w-4 ${post.is_liked ? 'fill-current' : ''}`}
                         />
                         {post.likes_count}
                       </Button>
@@ -474,16 +501,26 @@ export function CommunityExplore({}: CommunityExploreProps) {
       {/* Sidebar */}
       <div className="lg:w-80 space-y-6">
         {/* Trending Topics */}
-        <Card>
+        <Card
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
+        >
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle
+              className={`flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}
+            >
               <TrendingUp className="h-5 w-5" />
               Trending Topics
             </CardTitle>
           </CardHeader>
           <CardContent>
             {trendingTopics.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p
+                className={`text-sm ${isDark ? 'text-white/70' : 'text-muted-foreground'}`}
+              >
                 No trending topics yet
               </p>
             ) : (
@@ -509,16 +546,24 @@ export function CommunityExplore({}: CommunityExploreProps) {
         </Card>
 
         {/* Quick Actions */}
-        <Card>
+        <Card
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
+        >
           <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
+            <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+              Quick Actions
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             <Button
               variant="outline"
               className="w-full justify-start"
               onClick={() => {
-                setNewPost({ ...newPost, post_type: "question" });
+                setNewPost({ ...newPost, post_type: 'question' });
                 setIsCreating(true);
               }}
             >
@@ -528,7 +573,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
               variant="outline"
               className="w-full justify-start"
               onClick={() => {
-                setNewPost({ ...newPost, post_type: "resource" });
+                setNewPost({ ...newPost, post_type: 'resource' });
                 setIsCreating(true);
               }}
             >
@@ -538,7 +583,7 @@ export function CommunityExplore({}: CommunityExploreProps) {
               variant="outline"
               className="w-full justify-start"
               onClick={() => {
-                setNewPost({ ...newPost, post_type: "achievement" });
+                setNewPost({ ...newPost, post_type: 'achievement' });
                 setIsCreating(true);
               }}
             >

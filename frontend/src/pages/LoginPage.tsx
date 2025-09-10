@@ -1,33 +1,33 @@
-import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { Chatbot } from "@/components/custom/Chatbot";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
+import { Chatbot } from '@/components/custom/Chatbot';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoginPage() {
   const { login, register, isAuthenticated, checkOnboardingStatus } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [justRegistered, setJustRegistered] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    username: "",
-    first_name: "",
-    last_name: "",
+    email: '',
+    password: '',
+    username: '',
+    first_name: '',
+    last_name: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError("");
+    setError('');
 
     try {
       if (isLogin) {
@@ -35,12 +35,12 @@ export default function LoginPage() {
           username: formData.email,
           password: formData.password,
         });
-        // After login, check onboarding status and redirect accordingly
+
         const hasCompletedOnboarding = await checkOnboardingStatus();
         if (hasCompletedOnboarding) {
-          navigate("/dashboard");
+          navigate('/dashboard');
         } else {
-          navigate("/onboarding");
+          navigate('/onboarding');
         }
       } else {
         await register({
@@ -50,13 +50,16 @@ export default function LoginPage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
         });
-        // After registration, always go to onboarding
+
         setJustRegistered(true);
-        navigate("/onboarding");
+        navigate('/onboarding');
       }
     } catch (err: any) {
       setError(
-        err.response?.data?.error || err.response?.data?.detail || err.message || "An error occurred"
+        err.response?.data?.error ||
+          err.response?.data?.detail ||
+          err.message ||
+          'An error occurred'
       );
     } finally {
       setIsLoading(false);
@@ -75,14 +78,14 @@ export default function LoginPage() {
     const handleAuthenticatedUser = async () => {
       if (
         isAuthenticated &&
-        localStorage.getItem("access_token") &&
+        localStorage.getItem('access_token') &&
         !justRegistered
       ) {
         const hasCompletedOnboarding = await checkOnboardingStatus();
         if (hasCompletedOnboarding) {
-          navigate("/dashboard", { replace: true });
+          navigate('/dashboard', { replace: true });
         } else {
-          navigate("/onboarding", { replace: true });
+          navigate('/onboarding', { replace: true });
         }
       }
     };
@@ -95,10 +98,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md bg-white/5 border-white/10 text-white">
         <CardHeader>
           <CardTitle className="text-center text-2xl">
-            {isLogin ? "Login" : "Register"}
+            {isLogin ? 'Login' : 'Register'}
           </CardTitle>
           <p className="text-center text-white/60">
-            {isLogin ? "Sign in to your account" : "Create a new account"}
+            {isLogin ? 'Sign in to your account' : 'Create a new account'}
           </p>
         </CardHeader>
         <CardContent>
@@ -187,7 +190,7 @@ export default function LoginPage() {
               disabled={isLoading}
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLogin ? "Login" : "Register"}
+              {isLogin ? 'Login' : 'Register'}
             </Button>
 
             <div className="text-center">
@@ -198,7 +201,7 @@ export default function LoginPage() {
               >
                 {isLogin
                   ? "Don't have an account? Register"
-                  : "Already have an account? Login"}
+                  : 'Already have an account? Login'}
               </button>
             </div>
           </form>
@@ -218,9 +221,9 @@ export default function LoginPage() {
       <Chatbot
         contextType="general"
         contextData={{
-          name: "Login Support",
+          name: 'Login Support',
           description:
-            "Help with account access, registration, and platform features",
+            'Help with account access, registration, and platform features',
         }}
       />
     </div>

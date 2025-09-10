@@ -1,5 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useNavigate } from 'react-router-dom';
+import { useAnchorNavigation } from '@/hooks/useAnchorNavigation';
 import {
   ScrollAnimation,
   ScrollAnimationContainer,
@@ -8,6 +10,8 @@ import {
 
 export const HeroSection = () => {
   const { isDark } = useDarkMode();
+  const navigate = useNavigate();
+  const { navigateToSection } = useAnchorNavigation();
 
   return (
     <section
@@ -88,6 +92,7 @@ export const HeroSection = () => {
                     size="hero"
                     className="font-sans font-semibold leading-6 transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
                     aria-describedby="hero-description"
+                    onClick={() => navigate('/taxonomy-navigator')}
                   >
                     Explore Now
                   </Button>
@@ -96,6 +101,7 @@ export const HeroSection = () => {
                     size="hero"
                     className="font-sans font-medium leading-6 transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
                     aria-describedby="hero-description"
+                    onClick={() => navigateToSection('demo')}
                   >
                     Learn More
                   </Button>

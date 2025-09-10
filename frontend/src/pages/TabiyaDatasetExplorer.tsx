@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { useDarkMode } from "@/contexts/DarkModeContext";
-import { Chatbot } from "@/components/custom/Chatbot";
+import { useState } from 'react';
+import { useDarkMode } from '@/contexts/DarkModeContext';
+import { Chatbot } from '@/components/custom/Chatbot';
 import {
   Sidebar,
   StatsOverview,
   NavigationTabs,
   DetailView,
   ItemsList,
-} from "@/features/TabiyaDatasetExplorer";
+} from '@/features/TabiyaDatasetExplorer';
 import {
   useSkills,
   useSkill,
@@ -18,7 +18,7 @@ import {
   useDebouncedSearch,
   useTaxonomyStats,
   useSkillSuggestions,
-} from "@/lib/hooks";
+} from '@/lib/hooks';
 
 export default function TabiyaDatasetExplorer() {
   const { isDark } = useDarkMode();
@@ -31,10 +31,10 @@ export default function TabiyaDatasetExplorer() {
   const [selectedSkillGroupId, setSelectedSkillGroupId] = useState<
     string | null
   >(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<
-    "skills" | "skill-groups" | "occupations"
-  >("skills");
+    'skills' | 'skill-groups' | 'occupations'
+  >('skills');
   const [filters, setFilters] = useState({
     crossSectorOnly: false,
     localOccupationsOnly: false,
@@ -45,14 +45,14 @@ export default function TabiyaDatasetExplorer() {
 
   // API calls
   const { data: skills, isLoading: skillsLoading } = useSkills({
-    reuse_level: filters.crossSectorOnly ? "cross-sector" : undefined,
+    reuse_level: filters.crossSectorOnly ? 'cross-sector' : undefined,
     page: currentPage,
     page_size: itemsPerPage,
   });
   const { data: skillGroups, isLoading: skillGroupsLoading } = useSkillGroups();
   const { data: occupations, isLoading: occupationsLoading } = useOccupations({
     occupation_type: filters.localOccupationsOnly
-      ? "localoccupation"
+      ? 'localoccupation'
       : undefined,
     page: currentPage,
     page_size: itemsPerPage,
@@ -67,11 +67,11 @@ export default function TabiyaDatasetExplorer() {
   } = useDebouncedSearch(searchQuery);
 
   // Get selected item details
-  const { data: selectedSkill } = useSkill(selectedSkillId || "");
+  const { data: selectedSkill } = useSkill(selectedSkillId || '');
   const { data: selectedOccupation } = useOccupation(
-    selectedOccupationId || ""
+    selectedOccupationId || ''
   );
-  const { data: skillSuggestions } = useSkillSuggestions(selectedSkillId || "");
+  const { data: skillSuggestions } = useSkillSuggestions(selectedSkillId || '');
 
   // Utility functions
   const getSelectedItem = () => {
@@ -84,15 +84,15 @@ export default function TabiyaDatasetExplorer() {
   };
 
   const getDisplayedItems = () => {
-    if (activeTab === "skills") {
+    if (activeTab === 'skills') {
       return searchQuery.trim()
         ? searchResults?.skills || []
         : skills?.results || [];
-    } else if (activeTab === "occupations") {
+    } else if (activeTab === 'occupations') {
       return searchQuery.trim()
         ? searchResults?.occupations || []
         : occupations?.results || [];
-    } else if (activeTab === "skill-groups") {
+    } else if (activeTab === 'skill-groups') {
       if (searchQuery.trim()) {
         return (
           skillGroups?.results?.filter(
@@ -112,11 +112,11 @@ export default function TabiyaDatasetExplorer() {
   };
 
   const getTotalPages = () => {
-    if (activeTab === "skills") {
+    if (activeTab === 'skills') {
       return Math.ceil((skills?.count || 0) / itemsPerPage);
-    } else if (activeTab === "occupations") {
+    } else if (activeTab === 'occupations') {
       return Math.ceil((occupations?.count || 0) / itemsPerPage);
-    } else if (activeTab === "skill-groups") {
+    } else if (activeTab === 'skill-groups') {
       return Math.ceil((skillGroups?.count || 0) / itemsPerPage);
     }
     return 1;
@@ -141,25 +141,25 @@ export default function TabiyaDatasetExplorer() {
     setCurrentPage(1);
   };
 
-  const handleTabChange = (tab: "skills" | "skill-groups" | "occupations") => {
+  const handleTabChange = (tab: 'skills' | 'skill-groups' | 'occupations') => {
     setActiveTab(tab);
     setSelectedSkillId(null);
     setSelectedOccupationId(null);
     setSelectedSkillGroupId(null);
     setCurrentPage(1);
-    setSearchQuery("");
+    setSearchQuery('');
   };
 
   const handleItemSelect = (item: any) => {
-    if (activeTab === "skills") {
+    if (activeTab === 'skills') {
       setSelectedSkillId(item.id);
       setSelectedOccupationId(null);
       setSelectedSkillGroupId(null);
-    } else if (activeTab === "occupations") {
+    } else if (activeTab === 'occupations') {
       setSelectedOccupationId(item.id);
       setSelectedSkillId(null);
       setSelectedSkillGroupId(null);
-    } else if (activeTab === "skill-groups") {
+    } else if (activeTab === 'skill-groups') {
       setSelectedSkillGroupId(item.id);
       setSelectedSkillId(null);
       setSelectedOccupationId(null);
@@ -179,7 +179,7 @@ export default function TabiyaDatasetExplorer() {
 
   return (
     <div
-      className={`min-h-screen ${isDark ? "bg-tabiya-dark" : "bg-gray-50"} w-screen overflow-x-hidden`}
+      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} w-screen overflow-x-hidden pt-20`}
     >
       <div className="flex w-screen min-w-0">
         {/* Left Sidebar */}
@@ -206,7 +206,7 @@ export default function TabiyaDatasetExplorer() {
 
         {/* Main Content Area */}
         <main
-          className={`flex-1 min-w-0 p-8 ${isDark ? "bg-tabiya-dark" : "bg-gray-50"}`}
+          className={`flex-1 min-w-0 p-8 ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'}`}
           role="main"
           aria-labelledby="dataset-explorer-heading"
         >
@@ -237,8 +237,8 @@ export default function TabiyaDatasetExplorer() {
           <section className="w-full" aria-labelledby="content-section-heading">
             <h2 id="content-section-heading" className="sr-only">
               {selectedItem
-                ? "Item Details"
-                : `${activeTab.replace("-", " ")} List`}
+                ? 'Item Details'
+                : `${activeTab.replace('-', ' ')} List`}
             </h2>
             {selectedItem ? (
               /* Detail View */

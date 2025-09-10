@@ -1,34 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/lib/auth-context";
-import { useDarkMode } from "@/contexts/DarkModeContext";
-import { Chatbot } from "@/components/custom/Chatbot";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/lib/auth-context';
+import { useDarkMode } from '@/contexts/DarkModeContext';
+import { Chatbot } from '@/components/custom/Chatbot';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle } from "lucide-react";
-import api from "@/lib/api";
-import type { OnboardingStepData } from "@/lib/types";
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { CheckCircle } from 'lucide-react';
+import api from '@/lib/api';
+import type { OnboardingStepData } from '@/lib/types';
 import {
   BasicInfoStep,
   CareerInfoStep,
   GoalsStep,
   SkillsStep,
   WelcomeStep,
-} from "@/components/onboarding";
-
-// Import step components
-// import BasicInfoStep from "@/components/onboarding/BasicInfoStep";
-// import CareerInfoStep from "@/components/onboarding/CareerInfoStep";
-// import SkillsStep from "@/components/onboarding/SkillsStep";
-// import GoalsStep from "@/components/onboarding/GoalsStep";
-// import WelcomeStep from "@/components/onboarding/WelcomeStep";
+} from '@/components/onboarding';
 
 const OnboardingPage: React.FC = () => {
   const { isDark } = useDarkMode();
@@ -39,11 +31,11 @@ const OnboardingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const steps = [
-    { id: 1, title: "Welcome", description: "Welcome to JobCompass" },
-    { id: 2, title: "Basic Info", description: "Tell us about yourself" },
-    { id: 3, title: "Career Info", description: "Your career journey" },
-    { id: 4, title: "Skills", description: "What are your skills?" },
-    { id: 5, title: "Goals", description: "Set your learning goals" },
+    { id: 1, title: 'Welcome', description: 'Welcome to JobCompass' },
+    { id: 2, title: 'Basic Info', description: 'Tell us about yourself' },
+    { id: 3, title: 'Career Info', description: 'Your career journey' },
+    { id: 4, title: 'Skills', description: 'What are your skills?' },
+    { id: 5, title: 'Goals', description: 'Set your learning goals' },
   ];
 
   const progress = (currentStep / steps.length) * 100;
@@ -52,18 +44,18 @@ const OnboardingPage: React.FC = () => {
   useEffect(() => {
     const checkExistingOnboarding = async () => {
       if (!user) {
-        navigate("/login");
+        navigate('/login');
         return;
       }
 
       try {
         const hasCompletedOnboarding = await checkOnboardingStatus();
         if (hasCompletedOnboarding) {
-          navigate("/dashboard");
+          navigate('/dashboard');
           return;
         }
       } catch (error) {
-        console.error("Error checking onboarding status:", error);
+        console.error('Error checking onboarding status:', error);
       }
     };
 
@@ -95,7 +87,7 @@ const OnboardingPage: React.FC = () => {
         await handleCompleteOnboarding();
       }
     } catch (error) {
-      console.error("Error submitting onboarding step:", error);
+      console.error('Error submitting onboarding step:', error);
       // Handle error (show toast, etc.)
     } finally {
       setIsSubmitting(false);
@@ -105,9 +97,9 @@ const OnboardingPage: React.FC = () => {
   const handleCompleteOnboarding = async () => {
     try {
       await api.completeOnboarding();
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (error) {
-      console.error("Error completing onboarding:", error);
+      console.error('Error completing onboarding:', error);
     }
   };
 
@@ -152,19 +144,19 @@ const OnboardingPage: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen ${isDark ? "bg-tabiya-dark" : "bg-gray-50"} flex items-center justify-center p-6`}
+      className={`min-h-screen ${isDark ? 'bg-tabiya-dark' : 'bg-gray-50'} flex items-center justify-center p-6`}
     >
       <div className="w-full max-w-4xl">
         {/* Progress Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h1
-              className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}
+              className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}
             >
               Welcome to JobCompass
             </h1>
             <span
-              className={`text-sm ${isDark ? "text-white/70" : "text-gray-600"}`}
+              className={`text-sm ${isDark ? 'text-white/70' : 'text-gray-600'}`}
             >
               Step {currentStep} of {steps.length}
             </span>
@@ -179,12 +171,12 @@ const OnboardingPage: React.FC = () => {
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${
                     completedSteps.includes(step.id)
-                      ? "bg-green-500 text-white"
+                      ? 'bg-green-500 text-white'
                       : step.id === currentStep
-                        ? "bg-tabiya-accent text-white"
+                        ? 'bg-tabiya-accent text-white'
                         : isDark
-                          ? "bg-white/20 text-white/60"
-                          : "bg-gray-200 text-gray-500"
+                          ? 'bg-white/20 text-white/60'
+                          : 'bg-gray-200 text-gray-500'
                   }`}
                 >
                   {completedSteps.includes(step.id) ? (
@@ -195,7 +187,7 @@ const OnboardingPage: React.FC = () => {
                 </div>
                 <span
                   className={`text-xs text-center ${
-                    isDark ? "text-white/70" : "text-gray-600"
+                    isDark ? 'text-white/70' : 'text-gray-600'
                   }`}
                 >
                   {step.title}
@@ -207,7 +199,7 @@ const OnboardingPage: React.FC = () => {
 
         {/* Current Step Content */}
         <Card
-          className={`${isDark ? "bg-white/5 border-white/10" : "bg-white border-gray-200"}`}
+          className={`${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200'}`}
         >
           <CardContent className="p-8">{renderCurrentStep()}</CardContent>
         </Card>
@@ -216,7 +208,7 @@ const OnboardingPage: React.FC = () => {
         {currentStep > 1 && (
           <div className="mt-6 text-center">
             <p
-              className={`text-sm ${isDark ? "text-white/60" : "text-gray-600"}`}
+              className={`text-sm ${isDark ? 'text-white/60' : 'text-gray-600'}`}
             >
               You can always update this information later in your profile
               settings.
@@ -229,9 +221,9 @@ const OnboardingPage: React.FC = () => {
       <Chatbot
         contextType="general"
         contextData={{
-          name: "Onboarding Assistant",
+          name: 'Onboarding Assistant',
           description:
-            "Help with completing your profile setup and understanding JobCompass features",
+            'Help with completing your profile setup and understanding JobCompass features',
         }}
       />
     </div>

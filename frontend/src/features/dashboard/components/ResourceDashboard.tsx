@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import {
   BookOpen,
   Clock,
@@ -13,11 +13,11 @@ import {
   BarChart3,
   Trophy,
   Flame,
-} from "lucide-react";
-import api from "@/lib/api";
-import type { UserLearningResource, ResourceStats } from "@/lib/types";
-import { ResourceLearningHub } from "./ResourceLearningHub";
-import { useDarkMode } from "@/contexts/DarkModeContext";
+} from 'lucide-react';
+import api from '@/lib/api';
+import type { UserLearningResource, ResourceStats } from '@/lib/types';
+import { ResourceLearningHub } from './ResourceLearningHub';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 
 export function ResourceDashboard() {
   const { isDark } = useDarkMode();
@@ -41,7 +41,7 @@ export function ResourceDashboard() {
       setResources(resourcesData.results);
       setStats(statsData);
     } catch (error) {
-      console.error("Failed to load resource data:", error);
+      console.error('Failed to load resource data:', error);
     } finally {
       setLoading(false);
     }
@@ -65,7 +65,11 @@ export function ResourceDashboard() {
           {[...Array(4)].map((_, i) => (
             <Card
               key={i}
-              className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"} animate-pulse`}
+              className={`${
+                isDark
+                  ? 'border-tabiya-dark bg-tabiya-medium'
+                  : 'border-gray-200 bg-white'
+              } animate-pulse`}
             >
               <CardHeader className="pb-2">
                 <div className="h-4 bg-gray-300 rounded w-3/4"></div>
@@ -85,7 +89,11 @@ export function ResourceDashboard() {
       {/* Quick Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -104,7 +112,11 @@ export function ResourceDashboard() {
         </Card>
 
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Learning Time</CardTitle>
@@ -121,7 +133,11 @@ export function ResourceDashboard() {
         </Card>
 
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -140,7 +156,11 @@ export function ResourceDashboard() {
         </Card>
 
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -157,7 +177,11 @@ export function ResourceDashboard() {
 
       {/* Weekly Progress */}
       <Card
-        className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+        className={
+          isDark
+            ? 'border-tabiya-dark bg-tabiya-medium'
+            : 'border-gray-200 bg-white'
+        }
       >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -185,7 +209,11 @@ export function ResourceDashboard() {
       {/* Current Learning Resources */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -195,38 +223,39 @@ export function ResourceDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {resources && resources.slice(0, 3).map((resource) => (
-                <div
-                  key={resource.id}
-                  className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-                >
-                  <div className="flex-1">
-                    <h4
-                      className={`${isDark ? "text-white" : "text-gray-900"} font-medium`}
-                    >
-                      {resource.title}
-                    </h4>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Badge variant="secondary" className="text-xs">
-                        {resource.resource_type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {resource.time_spent_hours}h spent
-                      </span>
-                    </div>
-                    <div className="mt-2">
-                      <div className="flex justify-between text-xs mb-1">
-                        <span>Progress</span>
-                        <span>{resource.progress_percentage}%</span>
+              {resources &&
+                resources.slice(0, 3).map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex-1">
+                      <h4
+                        className={`${isDark ? 'text-white' : 'text-gray-900'} font-medium`}
+                      >
+                        {resource.title}
+                      </h4>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs">
+                          {resource.resource_type}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {resource.time_spent_hours}h spent
+                        </span>
                       </div>
-                      <Progress
-                        value={resource.progress_percentage}
-                        className="h-1"
-                      />
+                      <div className="mt-2">
+                        <div className="flex justify-between text-xs mb-1">
+                          <span>Progress</span>
+                          <span>{resource.progress_percentage}%</span>
+                        </div>
+                        <Progress
+                          value={resource.progress_percentage}
+                          className="h-1"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
 
               {resources.length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
@@ -241,7 +270,7 @@ export function ResourceDashboard() {
               <Button
                 variant="outline"
                 onClick={() => setShowHub(true)}
-                className="w-full"
+                className="w-full bg-tabiya-accent hover:bg-tabiya-accent/90 text-white border-tabiya-accent"
               >
                 <Plus className="h-4 w-4 mr-2" />
                 View All Resources
@@ -251,7 +280,11 @@ export function ResourceDashboard() {
         </Card>
 
         <Card
-          className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+          className={
+            isDark
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white'
+          }
         >
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -323,7 +356,9 @@ export function ResourceDashboard() {
 
       {/* Recent Achievements */}
       <Card
-        className={`${isDark ? "bg-gray-800 border-gray-700" : "bg-white"}`}
+        className={`${isDark}
+              ? 'border-tabiya-dark bg-tabiya-medium'
+              : 'border-gray-200 bg-white' : "bg-white"}`}
       >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -334,7 +369,7 @@ export function ResourceDashboard() {
         <CardContent>
           <div className="space-y-3">
             {resources
-              .filter((r) => r.status === "completed")
+              .filter((r) => r.status === 'completed')
               .slice(0, 3)
               .map((resource) => (
                 <div
@@ -347,7 +382,7 @@ export function ResourceDashboard() {
                       Completed: {resource.title}
                     </h4>
                     <p className="text-sm text-green-700 dark:text-green-300">
-                      {resource.time_spent_hours}h total •{" "}
+                      {resource.time_spent_hours}h total •{' '}
                       {resource.resource_type}
                     </p>
                   </div>
@@ -359,7 +394,7 @@ export function ResourceDashboard() {
                 </div>
               ))}
 
-            {resources.filter((r) => r.status === "completed").length === 0 && (
+            {resources.filter((r) => r.status === 'completed').length === 0 && (
               <div className="text-center py-6 text-muted-foreground">
                 <Trophy className="h-12 w-12 mx-auto mb-3 opacity-50" />
                 <p>No completed resources yet</p>

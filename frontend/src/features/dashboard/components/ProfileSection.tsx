@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Camera, Edit2, Save, X } from 'lucide-react';
+import { useDarkMode } from '@/contexts/DarkModeContext';
 import type { User } from '@/features/dashboard/types';
 
 interface ProfileSectionProps {
@@ -19,6 +20,7 @@ interface ProfileSectionProps {
 }
 
 export function ProfileSection({ user, onUpdateUser }: ProfileSectionProps) {
+  const { isDark } = useDarkMode();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     firstName: user.firstName,
@@ -41,11 +43,21 @@ export function ProfileSection({ user, onUpdateUser }: ProfileSectionProps) {
   };
 
   return (
-    <Card className="w-full">
+    <Card
+      className={`w-full ${
+        isDark
+          ? 'border-tabiya-dark bg-tabiya-medium'
+          : 'border-gray-200 bg-white'
+      }`}
+    >
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>Manage your personal information</CardDescription>
+          <CardTitle className={isDark ? 'text-white' : 'text-gray-900'}>
+            Profile
+          </CardTitle>
+          <CardDescription className={isDark ? 'text-white/70' : ''}>
+            Manage your personal information
+          </CardDescription>
         </div>
         {!isEditing && (
           <Button
@@ -84,10 +96,16 @@ export function ProfileSection({ user, onUpdateUser }: ProfileSectionProps) {
             )}
           </div>
           <div>
-            <h3 className="text-lg font-semibold">
+            <h3
+              className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
+            >
               {user.firstName} {user.lastName}
             </h3>
-            <p className="text-sm text-muted-foreground">{user.email}</p>
+            <p
+              className={`text-sm ${isDark ? 'text-white/60' : 'text-muted-foreground'}`}
+            >
+              {user.email}
+            </p>
           </div>
         </div>
 

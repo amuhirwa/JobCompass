@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useAnchorNavigation } from '@/hooks/useAnchorNavigation';
+import { useNavigate } from 'react-router-dom';
 import {
   ScrollAnimation,
   ScrollAnimationContainer,
@@ -65,6 +67,8 @@ const features = [
 export const FeaturesSection = () => {
   const [expandedFeature, setExpandedFeature] = useState<number | null>(null);
   const { isDark } = useDarkMode();
+  const { navigateToSection } = useAnchorNavigation();
+  const navigate = useNavigate();
 
   const toggleFeature = (featureIndex: number) => {
     setExpandedFeature(expandedFeature === featureIndex ? null : featureIndex);
@@ -181,6 +185,7 @@ export const FeaturesSection = () => {
               size="cta"
               className="font-sans font-medium transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
               aria-describedby="features-description"
+              onClick={() => navigateToSection('demo')}
             >
               Learn More
             </Button>
@@ -189,6 +194,7 @@ export const FeaturesSection = () => {
               size="cta"
               className="font-sans font-semibold transition-all duration-300 focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
               aria-describedby="features-description"
+              onClick={() => navigate('/login')}
             >
               Sign Up
               <svg

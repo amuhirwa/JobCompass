@@ -2,10 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useDarkMode } from '@/contexts/DarkModeContext';
+import { useNavigate } from 'react-router-dom';
 import { ScrollAnimation } from '@/components/ui/scroll-animation';
 
 export const ToolsSection = () => {
   const { isDark } = useDarkMode();
+  const navigate = useNavigate();
 
   return (
     <section
@@ -83,21 +85,6 @@ export const ToolsSection = () => {
                 career path, the assistant provides tailored suggestions to
                 guide your learning journey.
               </p>
-              <Button
-                variant="read-more"
-                className="text-tabiya-accent hover:text-white font-sans text-sm font-semibold p-0 h-auto group focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
-                aria-describedby="ai-assistant-desc"
-              >
-                Try Assistant
-                <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
-                </svg>
-              </Button>
             </CardContent>
           </Card>
 
@@ -147,21 +134,6 @@ export const ToolsSection = () => {
                 role or skills, and even discover new opportunities you may not
                 have considered.
               </p>
-              <Button
-                variant="read-more"
-                className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none`}
-                aria-describedby="jobs-map-desc"
-              >
-                Explore Map
-                <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
-                </svg>
-              </Button>
             </CardContent>
           </Card>
 
@@ -210,21 +182,6 @@ export const ToolsSection = () => {
                 current skills, you can explore related skills, see which jobs
                 they unlock, and plan a clear pathway to career growth.
               </p>
-              <Button
-                variant="read-more"
-                className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none`}
-                aria-describedby="skill-graph-desc"
-              >
-                View Graph
-                <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
-                </svg>
-              </Button>
             </CardContent>
           </Card>
 
@@ -274,21 +231,6 @@ export const ToolsSection = () => {
                 industries, and career strategies. This tool turns learning into
                 a collaborative experience.
               </p>
-              <Button
-                variant="read-more"
-                className={`text-tabiya-accent font-sans text-sm font-semibold ${isDark ? 'hover:text-white' : 'hover:text-tabiya-accent/80'} transition-colors group p-0 h-auto focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none`}
-                aria-describedby="community-desc"
-              >
-                Join Community
-                <svg
-                  className="w-4 h-4 group-hover:translate-x-1 transition-transform"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z" />
-                </svg>
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -340,6 +282,7 @@ export const ToolsSection = () => {
                   size="cta"
                   className="font-sans font-semibold focus:ring-2 focus:ring-tabiya-accent focus:ring-offset-2 focus:outline-none"
                   aria-describedby="tabiya-explorer-desc"
+                  onClick={() => navigate('/dataset-explorer')}
                 >
                   Explore Dataset
                   <svg

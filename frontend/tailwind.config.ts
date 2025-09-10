@@ -23,8 +23,8 @@ export default {
       lg: '1024px',
       xl: '1280px',
       '2xl': '1400px',
-      // Custom breakpoint for navigation
-      nav: '1400px',
+      // Custom breakpoint for navigation - show hamburger menu only on tablets and below
+      nav: '900px',
     },
     extend: {
       fontFamily: {

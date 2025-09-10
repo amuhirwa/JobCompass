@@ -201,7 +201,7 @@ export function ResourcesHub({
         <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
           <DialogTrigger asChild>
             <Button
-              className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white"
+              className="gap-2 bg-tabiya-accent hover:bg-tabiya-accent/90 text-white border-tabiya-accent"
               aria-label="Add a new learning resource"
             >
               <Plus className="h-4 w-4" aria-hidden="true" />
