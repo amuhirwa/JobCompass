@@ -4,7 +4,7 @@ import React, {
   useState,
   useCallback,
   useMemo,
-} from 'react';
+} from "react";
 import {
   Search,
   ZoomIn,
@@ -14,20 +14,28 @@ import {
   Users,
   Briefcase,
   Target,
-} from 'lucide-react';
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  Settings,
+  BarChart3,
+  Eye,
+} from "lucide-react";
+import { useDarkMode } from "@/contexts/DarkModeContext";
 
 // Local imports instead of CDN
-import Graph from 'graphology';
-import Sigma from 'sigma';
+import Graph from "graphology";
+import Sigma from "sigma";
 // Import layout algorithms with fallback
-import forceAtlas2 from 'graphology-layout-forceatlas2';
+import forceAtlas2 from "graphology-layout-forceatlas2";
 
 // Types for our graph data
 interface GraphNode {
   id: string;
   label: string;
   description: string;
-  type: 'occupation' | 'skill' | 'group';
+  type: "occupation" | "skill" | "group";
   size: number;
   x?: number;
   y?: number;
@@ -40,7 +48,7 @@ interface GraphEdge {
   id: string;
   source: string;
   target: string;
-  relationType: 'essential' | 'optional' | 'hierarchy';
+  relationType: "essential" | "optional" | "hierarchy";
   weight?: number;
 }
 
@@ -75,7 +83,7 @@ interface TooltipData {
  * - WebWorker-based CSV parsing to avoid UI blocking
  * - Responsive design with Tailwind CSS
  */
-const TaxonomyNavigator: React.FC = () => {
+const TabiyaDatasetExplorer: React.FC = () => {
   // State management
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -86,7 +94,7 @@ const TaxonomyNavigator: React.FC = () => {
   const [processedData, setProcessedData] = useState<ProcessedData | null>(
     null
   );
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
   const [selectedNode, setSelectedNode] = useState<GraphNode | null>(null);
   const [highlightedNodes, setHighlightedNodes] = useState<Set<string>>(
@@ -98,8 +106,8 @@ const TaxonomyNavigator: React.FC = () => {
 
   // Virtual Graph and LOD state
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [renderQuality, setRenderQuality] = useState<'low' | 'medium' | 'high'>(
-    'medium'
+  const [renderQuality, setRenderQuality] = useState<"low" | "medium" | "high">(
+    "medium"
   );
   const [visibleNodeCount, setVisibleNodeCount] = useState(5000);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -109,13 +117,38 @@ const TaxonomyNavigator: React.FC = () => {
 
   // Performance optimization state
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingStage, setLoadingStage] = useState('');
+  const [loadingStage, setLoadingStage] = useState("");
   const [performanceMetrics, setPerformanceMetrics] = useState({
     fps: 0,
     renderTime: 0,
     nodeCount: 0,
   });
   const [isInteracting, setIsInteracting] = useState(false);
+
+  // Sidebar and UI state
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(
+    new Set(["performance", "legend"]) // Start with performance and legend collapsed for better initial UX
+  );
+
+  // Theme integration
+  const { isDark } = useDarkMode();
+
+  // Sidebar helper functions
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  const toggleSection = (sectionId: string) => {
+    const newCollapsedSections = new Set(collapsedSections);
+    if (newCollapsedSections.has(sectionId)) {
+      newCollapsedSections.delete(sectionId);
+    } else {
+      newCollapsedSections.add(sectionId);
+    }
+    setCollapsedSections(newCollapsedSections);
+  };
+
+  const isSectionCollapsed = (sectionId: string) =>
+    collapsedSections.has(sectionId);
 
   // Refs for Sigma.js integration
   const containerRef = useRef<HTMLDivElement>(null);
@@ -127,8 +160,8 @@ const TaxonomyNavigator: React.FC = () => {
   useEffect(() => {
     // Use external worker file with papaparse
     workerRef.current = new Worker(
-      new URL('../workers/graphParser.worker.ts', import.meta.url),
-      { type: 'module' }
+      new URL("../workers/graphParser.worker.ts", import.meta.url),
+      { type: "module" }
     );
 
     // Load and process CSV data
@@ -148,19 +181,19 @@ const TaxonomyNavigator: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setLoadingProgress(0);
-    setLoadingStage('Initializing...');
+    setLoadingStage("Initializing...");
 
     try {
       // Stage 1: Load CSV files in parallel
-      setLoadingStage('Loading CSV files...');
+      setLoadingStage("Loading CSV files...");
       const filePromises = [
-        'occupations.csv',
-        'skills.csv',
-        'occupation_groups.csv',
-        'skill_groups.csv',
-        'occupation_to_skill_relations.csv',
-        'occupation_hierarchy.csv',
-        'skill_hierarchy.csv',
+        "occupations.csv",
+        "skills.csv",
+        "occupation_groups.csv",
+        "skill_groups.csv",
+        "occupation_to_skill_relations.csv",
+        "occupation_hierarchy.csv",
+        "skill_hierarchy.csv",
       ].map(async (filename) => {
         const response = await fetch(`/data/${filename}`);
         if (!response.ok) throw new Error(`Failed to load ${filename}`);
@@ -171,7 +204,7 @@ const TaxonomyNavigator: React.FC = () => {
       setLoadingProgress(20);
 
       // Stage 2: Process files sequentially with delays to prevent blocking
-      setLoadingStage('Processing core data...');
+      setLoadingStage("Processing core data...");
       const processed: any = {};
 
       for (let i = 0; i < files.length; i++) {
@@ -189,19 +222,19 @@ const TaxonomyNavigator: React.FC = () => {
                 console.error(`Failed to process ${filename}:`, e.data.error);
                 processed[filename] = [];
               }
-              workerRef.current?.removeEventListener('message', handleMessage);
+              workerRef.current?.removeEventListener("message", handleMessage);
               resolve(e.data);
             }
           };
 
           const handleError = (error: any) => {
             console.error(`Worker error processing ${filename}:`, error);
-            workerRef.current?.removeEventListener('error', handleError);
+            workerRef.current?.removeEventListener("error", handleError);
             reject(error);
           };
 
-          workerRef.current?.addEventListener('message', handleMessage);
-          workerRef.current?.addEventListener('error', handleError);
+          workerRef.current?.addEventListener("message", handleMessage);
+          workerRef.current?.addEventListener("error", handleError);
           workerRef.current?.postMessage({ csvData: data, type: filename });
         });
 
@@ -211,37 +244,37 @@ const TaxonomyNavigator: React.FC = () => {
       }
 
       // Stage 3: Create data structures
-      setLoadingStage('Building data structures...');
+      setLoadingStage("Building data structures...");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const processedData: ProcessedData = {
         occupations: new Map(
-          processed['occupations.csv']?.map((item: any) => [item.ID, item]) ||
+          processed["occupations.csv"]?.map((item: any) => [item.ID, item]) ||
             []
         ),
         skills: new Map(
-          processed['skills.csv']?.map((item: any) => [item.ID, item]) || []
+          processed["skills.csv"]?.map((item: any) => [item.ID, item]) || []
         ),
         groups: new Map([
-          ...(processed['occupation_groups.csv']?.map((item: any) => [
+          ...(processed["occupation_groups.csv"]?.map((item: any) => [
             item.ID,
-            { ...item, type: 'occupation_group' },
+            { ...item, type: "occupation_group" },
           ]) || []),
-          ...(processed['skill_groups.csv']?.map((item: any) => [
+          ...(processed["skill_groups.csv"]?.map((item: any) => [
             item.ID,
-            { ...item, type: 'skill_group' },
+            { ...item, type: "skill_group" },
           ]) || []),
         ]),
-        relations: processed['occupation_to_skill_relations.csv'] || [],
+        relations: processed["occupation_to_skill_relations.csv"] || [],
         hierarchies: [
-          ...(processed['occupation_hierarchy.csv'] || []),
-          ...(processed['skill_hierarchy.csv'] || []),
+          ...(processed["occupation_hierarchy.csv"] || []),
+          ...(processed["skill_hierarchy.csv"] || []),
         ],
       };
 
       setLoadingProgress(85);
 
-      console.log('Processed data summary:', {
+      console.log("Processed data summary:", {
         occupations: processedData.occupations.size,
         skills: processedData.skills.size,
         groups: processedData.groups.size,
@@ -252,21 +285,21 @@ const TaxonomyNavigator: React.FC = () => {
       setProcessedData(processedData);
 
       // Stage 4: Generate initial graph with 1000+ nodes
-      setLoadingStage('Creating visualization with 1000+ nodes...');
+      setLoadingStage("Creating visualization with 1000+ nodes...");
       await new Promise((resolve) => setTimeout(resolve, 10));
 
       const initialGraph = generateMinimalGraph(processedData);
       setGraphData(initialGraph);
 
       setLoadingProgress(100);
-      setLoadingStage('Complete!');
+      setLoadingStage("Complete!");
 
       // Brief delay to show completion
       await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (err) {
-      console.error('Error loading dataset:', err);
+      console.error("Error loading dataset:", err);
       setError(
-        `Failed to load dataset files: ${err instanceof Error ? err.message : 'Unknown error'}`
+        `Failed to load dataset files: ${err instanceof Error ? err.message : "Unknown error"}`
       );
       setHasInitialSkillsLoaded(false); // Ensure button is available for manual loading
     } finally {
@@ -281,7 +314,7 @@ const TaxonomyNavigator: React.FC = () => {
 
     // Load top occupation groups (30 groups)
     const topOccupationGroups = Array.from(data.groups.values())
-      .filter((group: any) => group.type === 'occupation_group')
+      .filter((group: any) => group.type === "occupation_group")
       .slice(0, 30);
 
     // Calculate connection frequencies for prioritization
@@ -311,8 +344,8 @@ const TaxonomyNavigator: React.FC = () => {
       nodes.push({
         id: group.ID,
         label: group.PREFERREDLABEL || `Group ${group.CODE}`,
-        description: group.DESCRIPTION || 'Occupation group',
-        type: 'group',
+        description: group.DESCRIPTION || "Occupation group",
+        type: "group",
         size: Math.max(8, Math.min(20, totalSkills / 15)),
         skillCount: totalSkills,
       });
@@ -331,9 +364,9 @@ const TaxonomyNavigator: React.FC = () => {
       if (!nodes.find((n) => n.id === occ.ID)) {
         nodes.push({
           id: occ.ID,
-          label: occ.PREFERREDLABEL || 'Unknown Occupation',
-          description: occ.DESCRIPTION || '',
-          type: 'occupation',
+          label: occ.PREFERREDLABEL || "Unknown Occupation",
+          description: occ.DESCRIPTION || "",
+          type: "occupation",
           size: Math.max(8, Math.min(25, occ.skillCount / 2)),
           skillCount: occ.skillCount,
         });
@@ -356,9 +389,9 @@ const TaxonomyNavigator: React.FC = () => {
     topSkills.forEach((skill: any) => {
       nodes.push({
         id: skill.ID,
-        label: skill.PREFERREDLABEL || 'Unknown Skill',
-        description: skill.DESCRIPTION || '',
-        type: 'skill',
+        label: skill.PREFERREDLABEL || "Unknown Skill",
+        description: skill.DESCRIPTION || "",
+        type: "skill",
         size: Math.max(3, Math.min(8, skill.connectionCount / 5)),
       });
     });
@@ -382,7 +415,7 @@ const TaxonomyNavigator: React.FC = () => {
             id: edgeId,
             source: rel.OCCUPATIONID,
             target: rel.SKILLID,
-            relationType: rel.RELATIONTYPE as 'essential' | 'optional',
+            relationType: rel.RELATIONTYPE as "essential" | "optional",
           });
           addedEdges.add(edgeId);
         }
@@ -401,7 +434,7 @@ const TaxonomyNavigator: React.FC = () => {
             id: edgeId,
             source: group.ID,
             target: occ.ID,
-            relationType: 'hierarchy',
+            relationType: "hierarchy",
           });
           addedEdges.add(edgeId);
         }
@@ -409,7 +442,7 @@ const TaxonomyNavigator: React.FC = () => {
     });
 
     // Set counters - count actual loaded skills
-    const loadedSkillCount = nodes.filter((n) => n.type === 'skill').length;
+    const loadedSkillCount = nodes.filter((n) => n.type === "skill").length;
     setLoadedSkillsCount(loadedSkillCount);
     setMaxSkillsCount(data.skills.size);
 
@@ -440,11 +473,11 @@ const TaxonomyNavigator: React.FC = () => {
       for (let i = startIndex; i < endIndex; i++) {
         const node = nodes[i];
         const color =
-          node.type === 'occupation'
-            ? '#3b82f6'
-            : node.type === 'skill'
-              ? '#10b981'
-              : '#f59e0b';
+          node.type === "occupation"
+            ? "#3b82f6"
+            : node.type === "skill"
+              ? "#10b981"
+              : "#f59e0b";
 
         graph.addNode(node.id, {
           label: node.label,
@@ -506,9 +539,9 @@ const TaxonomyNavigator: React.FC = () => {
             if (!newNodes.find((n) => n.id === skill.ID)) {
               newNodes.push({
                 id: skill.ID,
-                label: skill.PREFERREDLABEL || 'Unknown Skill',
-                description: skill.DESCRIPTION || '',
-                type: 'skill',
+                label: skill.PREFERREDLABEL || "Unknown Skill",
+                description: skill.DESCRIPTION || "",
+                type: "skill",
                 size: Math.max(2, Math.min(6, skill.connectionCount / 5)),
               });
             }
@@ -532,7 +565,7 @@ const TaxonomyNavigator: React.FC = () => {
                     id: edgeId,
                     source: rel.OCCUPATIONID,
                     target: rel.SKILLID,
-                    relationType: rel.RELATIONTYPE as 'essential' | 'optional',
+                    relationType: rel.RELATIONTYPE as "essential" | "optional",
                   });
                   edgeCount.set(rel.SKILLID, skillEdgeCount + 1);
                 }
@@ -551,7 +584,7 @@ const TaxonomyNavigator: React.FC = () => {
           `Loaded ${topSkills.length} initial skills. Total: ${loadedSkillsCount + topSkills.length}/${maxSkillsCount}`
         );
       } catch (error) {
-        console.error('Error loading initial skills:', error);
+        console.error("Error loading initial skills:", error);
       } finally {
         setIsLoadingMore(false);
       }
@@ -590,7 +623,7 @@ const TaxonomyNavigator: React.FC = () => {
         // Get currently loaded skill IDs
         const currentSkillIds = new Set(
           graphData.nodes
-            .filter((node) => node.type === 'skill')
+            .filter((node) => node.type === "skill")
             .map((node) => node.id)
         );
 
@@ -617,9 +650,9 @@ const TaxonomyNavigator: React.FC = () => {
           microBatch.forEach((skill: any) => {
             newNodes.push({
               id: skill.ID,
-              label: skill.PREFERREDLABEL || 'Unknown Skill',
-              description: skill.DESCRIPTION || '',
-              type: 'skill',
+              label: skill.PREFERREDLABEL || "Unknown Skill",
+              description: skill.DESCRIPTION || "",
+              type: "skill",
               size: Math.max(2, Math.min(6, skill.connectionCount / 5)),
             });
           });
@@ -642,7 +675,7 @@ const TaxonomyNavigator: React.FC = () => {
                     id: edgeId,
                     source: rel.OCCUPATIONID,
                     target: rel.SKILLID,
-                    relationType: rel.RELATIONTYPE as 'essential' | 'optional',
+                    relationType: rel.RELATIONTYPE as "essential" | "optional",
                   });
                   edgeCount.set(rel.SKILLID, skillEdgeCount + 1);
                 }
@@ -660,7 +693,7 @@ const TaxonomyNavigator: React.FC = () => {
           `Loaded ${nextSkills.length} more skills. Total: ${loadedSkillsCount + nextSkills.length}/${maxSkillsCount}`
         );
       } catch (error) {
-        console.error('Error loading more skills:', error);
+        console.error("Error loading more skills:", error);
       } finally {
         setIsLoadingMore(false);
       }
@@ -692,7 +725,7 @@ const TaxonomyNavigator: React.FC = () => {
       // Track existing node IDs to avoid duplicates
       const existingNodeIds = new Set(newNodes.map((node) => node.id));
 
-      if (group.type === 'occupation_group') {
+      if (group.type === "occupation_group") {
         // Add occupations in this group
         const relatedOccupations = Array.from(
           processedData.occupations.values()
@@ -708,9 +741,9 @@ const TaxonomyNavigator: React.FC = () => {
 
             newNodes.push({
               id: occ.ID,
-              label: occ.PREFERREDLABEL || 'Unknown Occupation',
-              description: occ.DESCRIPTION || '',
-              type: 'occupation',
+              label: occ.PREFERREDLABEL || "Unknown Occupation",
+              description: occ.DESCRIPTION || "",
+              type: "occupation",
               size: Math.max(8, Math.min(25, skillCount * 2)),
               skillCount,
             });
@@ -728,7 +761,7 @@ const TaxonomyNavigator: React.FC = () => {
               id: edgeId,
               source: clusterId,
               target: occ.ID,
-              relationType: 'hierarchy',
+              relationType: "hierarchy",
             });
           }
         });
@@ -747,9 +780,9 @@ const TaxonomyNavigator: React.FC = () => {
           if (skill && !existingNodeIds.has(skill.ID)) {
             newNodes.push({
               id: skill.ID,
-              label: skill.PREFERREDLABEL || 'Unknown Skill',
-              description: skill.DESCRIPTION || '',
-              type: 'skill',
+              label: skill.PREFERREDLABEL || "Unknown Skill",
+              description: skill.DESCRIPTION || "",
+              type: "skill",
               size: 6,
             });
 
@@ -773,7 +806,7 @@ const TaxonomyNavigator: React.FC = () => {
                   id: edgeId,
                   source: rel.OCCUPATIONID,
                   target: rel.SKILLID,
-                  relationType: rel.RELATIONTYPE as 'essential' | 'optional',
+                  relationType: rel.RELATIONTYPE as "essential" | "optional",
                 });
               }
             });
@@ -795,7 +828,7 @@ const TaxonomyNavigator: React.FC = () => {
       let zoomTimeout: NodeJS.Timeout;
       let interactionTimeout: NodeJS.Timeout;
 
-      sigma.getCamera().on('updated', ({ ratio }: { ratio: number }) => {
+      sigma.getCamera().on("updated", ({ ratio }: { ratio: number }) => {
         setIsInteracting(true);
 
         // Throttle zoom updates for performance (increased to 150ms)
@@ -814,9 +847,9 @@ const TaxonomyNavigator: React.FC = () => {
       // Optimized hover with delay
       let hoverTimeout: NodeJS.Timeout;
 
-      sigma.on('enterNode', (event: any) => {
+      sigma.on("enterNode", (event: any) => {
         // Skip tooltip during interactions or in low quality mode
-        if (isInteracting || renderQuality === 'low') return;
+        if (isInteracting || renderQuality === "low") return;
 
         clearTimeout(hoverTimeout);
         hoverTimeout = setTimeout(() => {
@@ -841,18 +874,18 @@ const TaxonomyNavigator: React.FC = () => {
         }, 100); // 100ms delay for hover
       });
 
-      sigma.on('leaveNode', () => {
+      sigma.on("leaveNode", () => {
         clearTimeout(hoverTimeout);
         setTooltip(null);
       });
 
       // Enhanced click handler with comprehensive node highlighting
-      sigma.on('clickNode', (event: any) => {
+      sigma.on("clickNode", (event: any) => {
         const nodeId = event.node;
         const nodeData = graph.getNodeAttributes(nodeId);
 
         // Handle cluster expansion (legacy support)
-        if (nodeData.nodeType === 'group' && !expandedClusters.has(nodeId)) {
+        if (nodeData.nodeType === "group" && !expandedClusters.has(nodeId)) {
           expandCluster(nodeId);
           return;
         }
@@ -886,33 +919,33 @@ const TaxonomyNavigator: React.FC = () => {
           // Reset all nodes with background styling and hidden labels
           graph.forEachNode((node: string, attributes: any) => {
             const originalColor =
-              attributes.nodeType === 'occupation'
-                ? '#3b82f6'
-                : attributes.nodeType === 'skill'
-                  ? '#10b981'
-                  : '#f59e0b';
+              attributes.nodeType === "occupation"
+                ? "#3b82f6"
+                : attributes.nodeType === "skill"
+                  ? "#10b981"
+                  : "#f59e0b";
 
             const isHighlighted = neighbors.has(node);
             const isSelected = node === nodeId;
 
             if (isSelected) {
               // Selected node - bright orange, largest size, highest z-index
-              graph.setNodeAttribute(node, 'color', '#ff6b35');
-              graph.setNodeAttribute(node, 'size', attributes.size * 1.5);
-              graph.setNodeAttribute(node, 'zIndex', 100); // Bring to front
-              graph.setNodeAttribute(node, 'label', attributes.originalLabel); // Show label
+              graph.setNodeAttribute(node, "color", "#ff6b35");
+              graph.setNodeAttribute(node, "size", attributes.size * 1.5);
+              graph.setNodeAttribute(node, "zIndex", 100); // Bring to front
+              graph.setNodeAttribute(node, "label", attributes.originalLabel); // Show label
             } else if (isHighlighted) {
               // Connected nodes - original color, medium size, high z-index
-              graph.setNodeAttribute(node, 'color', originalColor);
-              graph.setNodeAttribute(node, 'size', attributes.size * 1.2);
-              graph.setNodeAttribute(node, 'zIndex', 50); // Bring to front
-              graph.setNodeAttribute(node, 'label', attributes.originalLabel); // Show label
+              graph.setNodeAttribute(node, "color", originalColor);
+              graph.setNodeAttribute(node, "size", attributes.size * 1.2);
+              graph.setNodeAttribute(node, "zIndex", 50); // Bring to front
+              graph.setNodeAttribute(node, "label", attributes.originalLabel); // Show label
             } else {
               // Background nodes - dimmed, smaller, low z-index, hidden labels
-              graph.setNodeAttribute(node, 'color', '#e5e7eb');
-              graph.setNodeAttribute(node, 'size', attributes.size * 0.6);
-              graph.setNodeAttribute(node, 'zIndex', 1); // Keep in background
-              graph.setNodeAttribute(node, 'label', ''); // Hide label
+              graph.setNodeAttribute(node, "color", "#e5e7eb");
+              graph.setNodeAttribute(node, "size", attributes.size * 0.6);
+              graph.setNodeAttribute(node, "zIndex", 1); // Keep in background
+              graph.setNodeAttribute(node, "label", ""); // Hide label
             }
           });
 
@@ -921,35 +954,35 @@ const TaxonomyNavigator: React.FC = () => {
             const isConnected = connectedEdges.has(edgeKey);
             if (isConnected) {
               // Connected edges - bright, thick, high z-index
-              graph.setEdgeAttribute(edgeKey, 'color', '#ff6b35');
+              graph.setEdgeAttribute(edgeKey, "color", "#ff6b35");
               graph.setEdgeAttribute(
                 edgeKey,
-                'size',
+                "size",
                 Math.max(2, attributes.size * 2)
               );
-              graph.setEdgeAttribute(edgeKey, 'zIndex', 75); // Bring to front
+              graph.setEdgeAttribute(edgeKey, "zIndex", 75); // Bring to front
             } else {
               // Background edges - dimmed, thin, low z-index
-              graph.setEdgeAttribute(edgeKey, 'color', '#e5e7eb');
+              graph.setEdgeAttribute(edgeKey, "color", "#e5e7eb");
               graph.setEdgeAttribute(
                 edgeKey,
-                'size',
+                "size",
                 Math.max(0.5, attributes.size * 0.3)
               );
-              graph.setEdgeAttribute(edgeKey, 'zIndex', 1); // Keep in background
+              graph.setEdgeAttribute(edgeKey, "zIndex", 1); // Keep in background
             }
           });
 
           try {
             sigma.refresh();
           } catch (refreshError) {
-            console.warn('Failed to refresh after highlighting:', refreshError);
+            console.warn("Failed to refresh after highlighting:", refreshError);
           }
         }
       });
 
       // Enhanced click on empty space to reset with proper restoration
-      sigma.on('clickStage', () => {
+      sigma.on("clickStage", () => {
         setHighlightedNodes(new Set());
         setSelectedNode(null);
 
@@ -958,32 +991,32 @@ const TaxonomyNavigator: React.FC = () => {
           try {
             graph.forEachNode((node: string, attributes: any) => {
               const originalColor =
-                attributes.nodeType === 'occupation'
-                  ? '#3b82f6'
-                  : attributes.nodeType === 'skill'
-                    ? '#10b981'
-                    : '#f59e0b';
+                attributes.nodeType === "occupation"
+                  ? "#3b82f6"
+                  : attributes.nodeType === "skill"
+                    ? "#10b981"
+                    : "#f59e0b";
 
               // Restore original color, size, z-index, and labels
-              graph.setNodeAttribute(node, 'color', originalColor);
+              graph.setNodeAttribute(node, "color", originalColor);
               // Reset to base size (assuming original size is stored or calculate from node type)
               const baseSize =
-                attributes.nodeType === 'group'
+                attributes.nodeType === "group"
                   ? Math.max(
                       8,
                       Math.min(20, (attributes.skillCount || 10) / 15)
                     )
-                  : attributes.nodeType === 'occupation'
+                  : attributes.nodeType === "occupation"
                     ? Math.max(
                         8,
                         Math.min(25, (attributes.skillCount || 5) / 2)
                       )
                     : Math.max(3, Math.min(8, 5)); // default skill size
-              graph.setNodeAttribute(node, 'size', baseSize);
-              graph.setNodeAttribute(node, 'zIndex', 1); // Reset z-index
+              graph.setNodeAttribute(node, "size", baseSize);
+              graph.setNodeAttribute(node, "zIndex", 1); // Reset z-index
               graph.setNodeAttribute(
                 node,
-                'label',
+                "label",
                 attributes.originalLabel || attributes.label
               ); // Restore label
             });
@@ -991,23 +1024,23 @@ const TaxonomyNavigator: React.FC = () => {
             // Reset all edges to original state with z-index
             graph.forEachEdge((edgeKey: string, attributes: any) => {
               const originalColor =
-                attributes.relationType === 'hierarchy'
-                  ? '#94a3b8'
-                  : attributes.relationType === 'essential'
-                    ? '#ef4444'
-                    : '#64748b';
+                attributes.relationType === "hierarchy"
+                  ? "#94a3b8"
+                  : attributes.relationType === "essential"
+                    ? "#ef4444"
+                    : "#64748b";
 
               const originalSize =
-                attributes.relationType === 'hierarchy' ? 2 : 1;
+                attributes.relationType === "hierarchy" ? 2 : 1;
 
-              graph.setEdgeAttribute(edgeKey, 'color', originalColor);
-              graph.setEdgeAttribute(edgeKey, 'size', originalSize);
-              graph.setEdgeAttribute(edgeKey, 'zIndex', 1); // Reset z-index
+              graph.setEdgeAttribute(edgeKey, "color", originalColor);
+              graph.setEdgeAttribute(edgeKey, "size", originalSize);
+              graph.setEdgeAttribute(edgeKey, "zIndex", 1); // Reset z-index
             });
 
             sigma.refresh();
           } catch (resetError) {
-            console.warn('Failed to reset node and edge colors:', resetError);
+            console.warn("Failed to reset node and edge colors:", resetError);
           }
         }
       });
@@ -1022,7 +1055,7 @@ const TaxonomyNavigator: React.FC = () => {
 
       // Adjusted quality thresholds for infinite zoom
       const newQuality =
-        zoomRatio > 5 ? 'low' : zoomRatio > 0.1 ? 'medium' : 'high';
+        zoomRatio > 5 ? "low" : zoomRatio > 0.1 ? "medium" : "high";
 
       if (newQuality !== renderQuality) {
         setRenderQuality(newQuality);
@@ -1031,24 +1064,24 @@ const TaxonomyNavigator: React.FC = () => {
         if (sigmaRef.current) {
           try {
             // Enable labels at all zoom levels for better user experience
-            sigmaRef.current.setSetting('renderLabels', true);
+            sigmaRef.current.setSetting("renderLabels", true);
             sigmaRef.current.setSetting(
-              'hideLabelsOnMove',
-              newQuality === 'low'
+              "hideLabelsOnMove",
+              newQuality === "low"
             );
 
             // Adjust label size based on zoom for readability
             const labelSize =
-              newQuality === 'high' ? 12 : newQuality === 'medium' ? 10 : 8;
-            sigmaRef.current.setSetting('labelSize', labelSize);
+              newQuality === "high" ? 12 : newQuality === "medium" ? 10 : 8;
+            sigmaRef.current.setSetting("labelSize", labelSize);
 
             // Adjust edge visibility based on zoom
             sigmaRef.current.setSetting(
-              'hideEdgesOnMove',
-              newQuality === 'low'
+              "hideEdgesOnMove",
+              newQuality === "low"
             );
           } catch (settingError) {
-            console.warn('Failed to update Sigma settings:', settingError);
+            console.warn("Failed to update Sigma settings:", settingError);
           }
         }
       }
@@ -1070,7 +1103,7 @@ const TaxonomyNavigator: React.FC = () => {
           // Ensure container has proper dimensions before initializing
           const container = containerRef.current!;
           if (container.clientWidth === 0 || container.clientHeight === 0) {
-            console.warn('Container has no dimensions, waiting...');
+            console.warn("Container has no dimensions, waiting...");
             setTimeout(() => initializeSigma(), 100);
             return;
           }
@@ -1088,11 +1121,11 @@ const TaxonomyNavigator: React.FC = () => {
           const sigmaSettings = {
             renderLabels: true, // Enable labels for better initial experience
             renderEdgeLabels: false,
-            defaultNodeColor: '#666',
-            defaultEdgeColor: '#ccc',
-            labelFont: 'Arial',
+            defaultNodeColor: "#666",
+            defaultEdgeColor: "#ccc",
+            labelFont: "Arial",
             labelSize: 10,
-            labelColor: { color: '#000' },
+            labelColor: { color: "#000" },
             enableEdgeEvents: false, // Disable for performance
             // Infinite zoom settings
             minCameraRatio: 0.001, // Allow extreme zoom in
@@ -1150,19 +1183,19 @@ const TaxonomyNavigator: React.FC = () => {
             }
 
             // Add edges after all nodes are added
-            console.log('Adding edges...');
+            console.log("Adding edges...");
             let edgeCount = 0;
             for (const edge of graphData.edges) {
               if (graph.hasNode(edge.source) && graph.hasNode(edge.target)) {
                 graph.addEdge(edge.source, edge.target, {
-                  type: 'line',
+                  type: "line",
                   color:
-                    edge.relationType === 'hierarchy'
-                      ? '#94a3b8'
-                      : edge.relationType === 'essential'
-                        ? '#ef4444'
-                        : '#64748b',
-                  size: edge.relationType === 'hierarchy' ? 2 : 1,
+                    edge.relationType === "hierarchy"
+                      ? "#94a3b8"
+                      : edge.relationType === "essential"
+                        ? "#ef4444"
+                        : "#64748b",
+                  size: edge.relationType === "hierarchy" ? 2 : 1,
                   relationType: edge.relationType,
                   zIndex: 1, // Default z-index for layering
                 });
@@ -1178,7 +1211,7 @@ const TaxonomyNavigator: React.FC = () => {
             }
 
             // Apply optimized layout with reduced iterations
-            console.log('Applying layout...');
+            console.log("Applying layout...");
             const settings = forceAtlas2.inferSettings(graph);
             forceAtlas2.assign(graph, { ...settings, iterations: 30 }); // Reduced from 100
 
@@ -1186,20 +1219,20 @@ const TaxonomyNavigator: React.FC = () => {
             setupSigmaEvents(sigma, graph);
 
             // Enable labels after initial setup (without refresh to prevent errors)
-            sigma.setSetting('renderLabels', renderQuality !== 'low');
+            sigma.setSetting("renderLabels", renderQuality !== "low");
 
             // Only refresh if we have nodes and the container is properly sized
             if (graph.order > 0 && container.clientWidth > 0) {
               try {
                 sigma.refresh();
               } catch (refreshError) {
-                console.warn('Refresh failed, will retry:', refreshError);
+                console.warn("Refresh failed, will retry:", refreshError);
                 // Retry refresh after a short delay
                 setTimeout(() => {
                   try {
                     sigma.refresh();
                   } catch (retryError) {
-                    console.error('Refresh retry failed:', retryError);
+                    console.error("Refresh retry failed:", retryError);
                   }
                 }, 100);
               }
@@ -1212,9 +1245,9 @@ const TaxonomyNavigator: React.FC = () => {
 
           await addNodesChunked();
         } catch (err) {
-          console.error('Error initializing Sigma.js:', err);
+          console.error("Error initializing Sigma.js:", err);
           setError(
-            `Failed to initialize graph visualization: ${err instanceof Error ? err.message : 'Unknown error'}`
+            `Failed to initialize graph visualization: ${err instanceof Error ? err.message : "Unknown error"}`
           );
         }
       };
@@ -1237,17 +1270,17 @@ const TaxonomyNavigator: React.FC = () => {
       // Optimized search with aggressive early termination
       const matches: { node: string; score: number }[] = [];
       const maxMatches =
-        isInteracting || renderQuality === 'low'
+        isInteracting || renderQuality === "low"
           ? 5
-          : renderQuality === 'medium'
+          : renderQuality === "medium"
             ? 15
             : 30;
 
       let searchCount = 0;
       const maxSearchNodes =
-        renderQuality === 'low'
+        renderQuality === "low"
           ? 500
-          : renderQuality === 'medium'
+          : renderQuality === "medium"
             ? 2000
             : 5000;
 
@@ -1270,42 +1303,138 @@ const TaxonomyNavigator: React.FC = () => {
         matches.sort((a, b) => b.score - a.score);
         const bestMatch = matches[0].node;
 
-        // Center the camera on the found node
+        // Get all connected nodes to the search result
+        const connectedNodes = new Set([bestMatch]);
+        const connectedEdges = new Set<string>();
+
+        // Get all directly connected neighbors
+        graph.forEachNeighbor(bestMatch, (neighbor: string) => {
+          connectedNodes.add(neighbor);
+        });
+
+        // Get all edges connected to the selected node
+        graph.forEachEdge(bestMatch, (edgeKey: string) => {
+          connectedEdges.add(edgeKey);
+        });
+
+        // Set highlighted nodes and selected node for UI state
+        setHighlightedNodes(connectedNodes);
+        const nodeData = graph.getNodeAttributes(bestMatch);
+        setSelectedNode({
+          id: bestMatch,
+          label: nodeData.label,
+          description: nodeData.description,
+          type: nodeData.nodeType,
+          size: nodeData.size,
+          skillCount: nodeData.skillCount,
+        });
+
+        // Apply visual highlighting with gray-out effect for unconnected nodes
+        if (graph.order > 0) {
+          // Reset all nodes with enhanced styling
+          graph.forEachNode((node: string, attributes: any) => {
+            const originalColor =
+              attributes.nodeType === "occupation"
+                ? "#3b82f6"
+                : attributes.nodeType === "skill"
+                  ? "#10b981"
+                  : "#f59e0b";
+
+            const isConnected = connectedNodes.has(node);
+            const isSelected = node === bestMatch;
+
+            if (isSelected) {
+              // Selected node - bright highlight color, larger size, highest z-index
+              graph.setNodeAttribute(node, "color", "#EB5D42");
+              graph.setNodeAttribute(node, "size", attributes.size * 2);
+              graph.setNodeAttribute(node, "zIndex", 100);
+              graph.setNodeAttribute(
+                node,
+                "label",
+                attributes.originalLabel || attributes.label
+              );
+            } else if (isConnected) {
+              // Connected nodes - original color, slightly larger, high z-index
+              graph.setNodeAttribute(node, "color", originalColor);
+              graph.setNodeAttribute(node, "size", attributes.size * 1.3);
+              graph.setNodeAttribute(node, "zIndex", 50);
+              graph.setNodeAttribute(
+                node,
+                "label",
+                attributes.originalLabel || attributes.label
+              );
+            } else {
+              // Unconnected nodes - grayed out, smaller, low z-index, hidden labels
+              graph.setNodeAttribute(node, "color", "#d1d5db");
+              graph.setNodeAttribute(node, "size", attributes.size * 0.5);
+              graph.setNodeAttribute(node, "zIndex", 1);
+              graph.setNodeAttribute(node, "label", "");
+            }
+          });
+
+          // Highlight connected edges and gray out unconnected ones
+          graph.forEachEdge((edgeKey: string, attributes: any) => {
+            const isConnected = connectedEdges.has(edgeKey);
+            if (isConnected) {
+              // Connected edges - bright highlight, thick, high z-index
+              graph.setEdgeAttribute(edgeKey, "color", "#EB5D42");
+              graph.setEdgeAttribute(
+                edgeKey,
+                "size",
+                Math.max(3, attributes.size * 2.5)
+              );
+              graph.setEdgeAttribute(edgeKey, "zIndex", 75);
+            } else {
+              // Unconnected edges - grayed out, thin, low z-index
+              graph.setEdgeAttribute(edgeKey, "color", "#e5e7eb");
+              graph.setEdgeAttribute(
+                edgeKey,
+                "size",
+                Math.max(0.3, attributes.size * 0.2)
+              );
+              graph.setEdgeAttribute(edgeKey, "zIndex", 1);
+            }
+          });
+
+          try {
+            sigma.refresh();
+          } catch (refreshError) {
+            console.warn(
+              "Failed to refresh after search highlighting:",
+              refreshError
+            );
+          }
+        }
+
+        // Center the camera on the found node with zoom to 0.01 ratio
         try {
           const nodePosition = sigma.getNodeDisplayData(bestMatch);
-          const targetRatio =
-            renderQuality === 'low'
-              ? 0.8
-              : renderQuality === 'medium'
-                ? 0.5
-                : 0.2;
 
-          sigma
-            .getCamera()
-            .animate(
-              { x: nodePosition.x, y: nodePosition.y, ratio: targetRatio },
-              { duration: renderQuality === 'low' ? 500 : 1000 }
-            );
+          sigma.getCamera().animate(
+            {
+              x: nodePosition.x,
+              y: nodePosition.y,
+              ratio: 0.01, // Very close zoom as requested
+            },
+            { duration: 1200 } // Slightly longer animation for smooth zoom
+          );
         } catch (cameraError) {
           console.warn(
-            'Failed to center camera on search result:',
+            "Failed to center camera on search result:",
             cameraError
           );
         }
 
-        // Highlight the found node
-        try {
-          graph.setNodeAttribute(bestMatch, 'color', '#ff6b35');
-          sigma.refresh();
-        } catch (highlightError) {
-          console.warn('Failed to highlight search result:', highlightError);
+        // If it's a group node that hasn't been expanded, expand it
+        if (nodeData.nodeType === "group" && !expandedClusters.has(bestMatch)) {
+          setTimeout(() => expandCluster(bestMatch), 500);
         }
 
-        // If it's a group node that hasn't been expanded, expand it
-        const nodeData = graph.getNodeAttributes(bestMatch);
-        if (nodeData.nodeType === 'group' && !expandedClusters.has(bestMatch)) {
-          setTimeout(() => expandCluster(bestMatch), 300);
-        }
+        console.log(
+          `Search found: ${nodeData.label} (${nodeData.nodeType}) with ${connectedNodes.size - 1} connected nodes`
+        );
+      } else {
+        console.log(`No results found for: ${searchTerm}`);
       }
     },
     [expandedClusters, expandCluster, renderQuality, isInteracting]
@@ -1318,7 +1447,7 @@ const TaxonomyNavigator: React.FC = () => {
         const camera = sigmaRef.current.getCamera();
         camera.animate({ ratio: camera.ratio * 0.7 }, { duration: 300 });
       } catch (zoomError) {
-        console.warn('Failed to zoom in:', zoomError);
+        console.warn("Failed to zoom in:", zoomError);
       }
     }
   };
@@ -1329,7 +1458,7 @@ const TaxonomyNavigator: React.FC = () => {
         const camera = sigmaRef.current.getCamera();
         camera.animate({ ratio: camera.ratio * 1.3 }, { duration: 300 });
       } catch (zoomError) {
-        console.warn('Failed to zoom out:', zoomError);
+        console.warn("Failed to zoom out:", zoomError);
       }
     }
   };
@@ -1343,7 +1472,7 @@ const TaxonomyNavigator: React.FC = () => {
         setHighlightedNodes(new Set());
         setSelectedNode(null);
       } catch (resetError) {
-        console.warn('Failed to reset view:', resetError);
+        console.warn("Failed to reset view:", resetError);
       }
     }
 
@@ -1352,25 +1481,25 @@ const TaxonomyNavigator: React.FC = () => {
       try {
         graphRef.current.forEachNode((node: string, attributes: any) => {
           const originalColor =
-            attributes.nodeType === 'occupation'
-              ? '#3b82f6'
-              : attributes.nodeType === 'skill'
-                ? '#10b981'
-                : '#f59e0b';
+            attributes.nodeType === "occupation"
+              ? "#3b82f6"
+              : attributes.nodeType === "skill"
+                ? "#10b981"
+                : "#f59e0b";
 
           // Restore original color, size, z-index, and labels
-          graphRef.current.setNodeAttribute(node, 'color', originalColor);
+          graphRef.current.setNodeAttribute(node, "color", originalColor);
           const baseSize =
-            attributes.nodeType === 'group'
+            attributes.nodeType === "group"
               ? Math.max(8, Math.min(20, (attributes.skillCount || 10) / 15))
-              : attributes.nodeType === 'occupation'
+              : attributes.nodeType === "occupation"
                 ? Math.max(8, Math.min(25, (attributes.skillCount || 5) / 2))
                 : Math.max(3, Math.min(8, 5)); // default skill size
-          graphRef.current.setNodeAttribute(node, 'size', baseSize);
-          graphRef.current.setNodeAttribute(node, 'zIndex', 1); // Reset z-index
+          graphRef.current.setNodeAttribute(node, "size", baseSize);
+          graphRef.current.setNodeAttribute(node, "zIndex", 1); // Reset z-index
           graphRef.current.setNodeAttribute(
             node,
-            'label',
+            "label",
             attributes.originalLabel || attributes.label
           ); // Restore label
         });
@@ -1378,22 +1507,22 @@ const TaxonomyNavigator: React.FC = () => {
         // Reset all edges to original state with z-index
         graphRef.current.forEachEdge((edgeKey: string, attributes: any) => {
           const originalColor =
-            attributes.relationType === 'hierarchy'
-              ? '#94a3b8'
-              : attributes.relationType === 'essential'
-                ? '#ef4444'
-                : '#64748b';
+            attributes.relationType === "hierarchy"
+              ? "#94a3b8"
+              : attributes.relationType === "essential"
+                ? "#ef4444"
+                : "#64748b";
 
-          const originalSize = attributes.relationType === 'hierarchy' ? 2 : 1;
+          const originalSize = attributes.relationType === "hierarchy" ? 2 : 1;
 
-          graphRef.current.setEdgeAttribute(edgeKey, 'color', originalColor);
-          graphRef.current.setEdgeAttribute(edgeKey, 'size', originalSize);
-          graphRef.current.setEdgeAttribute(edgeKey, 'zIndex', 1); // Reset z-index
+          graphRef.current.setEdgeAttribute(edgeKey, "color", originalColor);
+          graphRef.current.setEdgeAttribute(edgeKey, "size", originalSize);
+          graphRef.current.setEdgeAttribute(edgeKey, "zIndex", 1); // Reset z-index
         });
 
         sigmaRef.current.refresh();
       } catch (resetError) {
-        console.warn('Failed to reset view colors and sizes:', resetError);
+        console.warn("Failed to reset view colors and sizes:", resetError);
       }
     }
   };
@@ -1405,7 +1534,7 @@ const TaxonomyNavigator: React.FC = () => {
     const visibleNodes = graphData.nodes.length;
     const visibleEdges = graphData.edges.length;
     const skillsLoaded = graphData.nodes.filter(
-      (n) => n.type === 'skill'
+      (n) => n.type === "skill"
     ).length;
 
     return {
@@ -1427,28 +1556,52 @@ const TaxonomyNavigator: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div
+        className={`flex items-center justify-center h-screen ${
+          isDark
+            ? "bg-gradient-to-br from-tabiya-dark to-tabiya-medium"
+            : "bg-gradient-to-br from-blue-50 to-indigo-100"
+        }`}
+      >
         <div className="text-center max-w-md w-full px-6">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg font-medium text-gray-700 mb-2">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#EB5D42] mx-auto mb-4"></div>
+          <p
+            className={`text-lg font-medium mb-2 ${
+              isDark ? "text-tabiya-text" : "text-gray-700"
+            }`}
+          >
             Loading Tabiya Dataset...
           </p>
-          <p className="text-sm text-gray-500 mb-4">
-            {loadingStage || 'Initializing...'}
+          <p
+            className={`text-sm mb-4 ${
+              isDark ? "text-gray-300" : "text-gray-500"
+            }`}
+          >
+            {loadingStage || "Initializing..."}
           </p>
 
           {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+          <div
+            className={`w-full rounded-full h-2 mb-2 ${
+              isDark ? "bg-tabiya-medium" : "bg-gray-200"
+            }`}
+          >
             <div
-              className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+              className="h-2 rounded-full transition-all duration-300 bg-[#EB5D42]"
               style={{ width: `${loadingProgress}%` }}
             ></div>
           </div>
-          <p className="text-xs text-gray-400">
+          <p
+            className={`text-xs ${isDark ? "text-gray-400" : "text-gray-400"}`}
+          >
             {loadingProgress.toFixed(0)}% complete
           </p>
 
-          <div className="mt-4 text-xs text-gray-500 space-y-1">
+          <div
+            className={`mt-4 text-xs space-y-1 ${
+              isDark ? "text-gray-400" : "text-gray-500"
+            }`}
+          >
             <div>Optimized for 18,000+ nodes</div>
             <div>Progressive loading • Performance-first rendering</div>
           </div>
@@ -1459,355 +1612,777 @@ const TaxonomyNavigator: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-red-50">
-        <div className="text-center text-red-600">
-          <p className="text-xl font-semibold mb-2">Error</p>
-          <p>{error}</p>
+      <div
+        className={`flex items-center justify-center h-screen ${
+          isDark ? "bg-tabiya-dark" : "bg-red-50"
+        }`}
+      >
+        <div className="text-center">
+          <p
+            className={`text-xl font-semibold mb-2 ${
+              isDark ? "text-red-400" : "text-red-600"
+            }`}
+          >
+            Error
+          </p>
+          <p className={isDark ? "text-gray-300" : "text-red-600"}>{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Tabiya Dataset Explorer
-            </h1>
-            <p className="text-sm text-gray-600 mt-1">
-              Interactive visualization of occupations, skills, and their
-              relationships
-            </p>
+    <div
+      className={`h-screen flex ${isDark ? "bg-tabiya-dark" : "bg-gray-50"}`}
+    >
+      {/* Collapsible Sidebar */}
+      <div
+        className={`${sidebarOpen ? "w-80" : "w-12"} transition-all duration-300 ${
+          isDark
+            ? "bg-tabiya-medium border-tabiya-dark"
+            : "bg-white border-gray-200"
+        } border-r flex flex-col`}
+      >
+        {/* Sidebar Header */}
+        <div
+          className={`p-4 border-b ${isDark ? "border-tabiya-dark" : "border-gray-200"}`}
+        >
+          <div className="flex items-center justify-between">
+            {sidebarOpen && (
+              <h2
+                className={`text-lg font-semibold ${isDark ? "text-tabiya-text" : "text-gray-900"}`}
+              >
+                Controls
+              </h2>
+            )}
+            <button
+              onClick={toggleSidebar}
+              className={`p-2 rounded-lg transition-colors ${
+                isDark
+                  ? "text-gray-300 hover:bg-tabiya-dark hover:text-tabiya-text"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+              title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+            >
+              {sidebarOpen ? (
+                <ChevronLeft className="h-5 w-5" />
+              ) : (
+                <ChevronRight className="h-5 w-5" />
+              )}
+            </button>
           </div>
+        </div>
 
-          {stats && (
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <Briefcase className="h-4 w-4 text-blue-600" />
-                <span className="font-medium">{stats.occupations}</span>
-                <span className="text-gray-500">occupations</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Target className="h-4 w-4 text-green-600" />
-                <span className="font-medium">{stats.skillsLoaded}</span>
-                <span className="text-gray-500">/ {stats.skills} skills</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-yellow-600" />
-                <span className="font-medium">{stats.groups}</span>
-                <span className="text-gray-500">groups</span>
-              </div>
-              <div className="text-xs text-gray-400">
+        {/* Sidebar Content */}
+        {sidebarOpen && (
+          <div className="flex-1 overflow-y-auto">
+            {/* Search Widget */}
+            <div
+              className={`border-b ${isDark ? "border-tabiya-dark" : "border-gray-200"}`}
+            >
+              <button
+                onClick={() => toggleSection("search")}
+                className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                  isDark
+                    ? "text-tabiya-text hover:bg-tabiya-dark"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Search className="h-4 w-4" />
+                  <span className="font-medium">Search</span>
+                </div>
+                {isSectionCollapsed("search") ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              {!isSectionCollapsed("search") && (
+                <div className="px-4 pb-4">
+                  <div className="relative mb-3">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search occupations and skills..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" && handleSearch(searchTerm)
+                      }
+                      className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent ${
+                        isDark
+                          ? "bg-tabiya-dark border-gray-600 text-tabiya-text focus:ring-tabiya-accent placeholder-gray-400"
+                          : "bg-white border-gray-300 text-gray-900 focus:ring-blue-500 placeholder-gray-500"
+                      }`}
+                    />
+                  </div>
+                  <button
+                    onClick={() => handleSearch(searchTerm)}
+                    className="w-full px-4 py-2 bg-[#EB5D42] text-white rounded-lg font-medium transition-colors hover:bg-[#d54d37]"
+                  >
+                    Search
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Graph Controls Widget */}
+            <div
+              className={`border-b ${isDark ? "border-tabiya-dark" : "border-gray-200"}`}
+            >
+              <button
+                onClick={() => toggleSection("controls")}
+                className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                  isDark
+                    ? "text-tabiya-text hover:bg-tabiya-dark"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="font-medium">Graph Controls</span>
+                </div>
+                {isSectionCollapsed("controls") ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              {!isSectionCollapsed("controls") && (
+                <div className="px-4 pb-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={zoomIn}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark
+                          ? "text-gray-300 hover:bg-tabiya-dark hover:text-tabiya-text"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                      title="Zoom In"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={zoomOut}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark
+                          ? "text-gray-300 hover:bg-tabiya-dark hover:text-tabiya-text"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                      title="Zoom Out"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={resetView}
+                      className={`p-2 rounded-lg transition-colors ${
+                        isDark
+                          ? "text-gray-300 hover:bg-tabiya-dark hover:text-tabiya-text"
+                          : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                      title="Reset View"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {/* Progressive Loading Controls - Only show Load More after initial skills are loaded */}
+                  {hasInitialSkillsLoaded &&
+                    loadedSkillsCount < maxSkillsCount && (
+                      <button
+                        onClick={() => loadMoreSkills(2000)}
+                        disabled={isLoadingMore}
+                        className="w-full px-4 py-2 bg-[#EB5D42] text-white rounded-lg font-medium transition-colors hover:bg-[#d54d37] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoadingMore ? "Loading..." : "Load More Skills"}
+                      </button>
+                    )}
+
+                  {/* Node Count Control */}
+                  <div className="space-y-2">
+                    <label
+                      className={`text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      Max Skills:
+                    </label>
+                    <select
+                      value={visibleNodeCount}
+                      onChange={(e) =>
+                        setVisibleNodeCount(Number(e.target.value))
+                      }
+                      className={`w-full text-sm border rounded px-3 py-2 ${
+                        isDark
+                          ? "bg-tabiya-dark border-gray-600 text-tabiya-text"
+                          : "bg-white border-gray-300 text-gray-900"
+                      }`}
+                    >
+                      <option value={2000}>2K</option>
+                      <option value={5000}>5K</option>
+                      <option value={10000}>10K</option>
+                      <option value={15000}>15K</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Performance Widget */}
+            <div
+              className={`border-b ${isDark ? "border-tabiya-dark" : "border-gray-200"}`}
+            >
+              <button
+                onClick={() => toggleSection("performance")}
+                className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                  isDark
+                    ? "text-tabiya-text hover:bg-tabiya-dark"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="font-medium">Performance</span>
+                </div>
+                {isSectionCollapsed("performance") ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              {!isSectionCollapsed("performance") && (
+                <div className="px-4 pb-4 space-y-3">
+                  {/* Quality Indicator */}
+                  <div
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                      isDark ? "bg-tabiya-dark" : "bg-gray-100"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        renderQuality === "high"
+                          ? "bg-green-500"
+                          : renderQuality === "medium"
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      }`}
+                    ></div>
+                    <span
+                      className={`text-sm capitalize ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {renderQuality} Quality
+                    </span>
+                    <span
+                      className={`text-xs ml-2 ${
+                        isDark ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Zoom: {zoomLevel.toFixed(2)}
+                    </span>
+                    {isInteracting && (
+                      <span className="text-xs text-orange-500 ml-1">
+                        Moving
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Performance Indicator */}
+                  <div
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-lg ${
+                      isDark ? "bg-tabiya-dark" : "bg-gray-50"
+                    }`}
+                  >
+                    <div
+                      className={`w-2 h-2 rounded-full ${
+                        performanceMetrics.fps >= 30
+                          ? "bg-green-500"
+                          : performanceMetrics.fps >= 15
+                            ? "bg-yellow-500"
+                            : "bg-red-500"
+                      }`}
+                    ></div>
+                    <span
+                      className={`text-xs ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {performanceMetrics.fps} FPS
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Statistics Widget */}
+            <div
+              className={`border-b ${isDark ? "border-tabiya-dark" : "border-gray-200"}`}
+            >
+              <button
+                onClick={() => toggleSection("stats")}
+                className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                  isDark
+                    ? "text-tabiya-text hover:bg-tabiya-dark"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Eye className="h-4 w-4" />
+                  <span className="font-medium">Statistics</span>
+                </div>
+                {isSectionCollapsed("stats") ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              {!isSectionCollapsed("stats") && stats && (
+                <div className="px-4 pb-4 space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Briefcase className="h-4 w-4 text-blue-600" />
+                        <span
+                          className={isDark ? "text-gray-300" : "text-gray-600"}
+                        >
+                          Occupations
+                        </span>
+                      </div>
+                      <span
+                        className={`font-medium ${isDark ? "text-tabiya-text" : "text-gray-900"}`}
+                      >
+                        {stats.occupations}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Target className="h-4 w-4 text-green-600" />
+                        <span
+                          className={isDark ? "text-gray-300" : "text-gray-600"}
+                        >
+                          Skills
+                        </span>
+                      </div>
+                      <span
+                        className={`font-medium ${isDark ? "text-tabiya-text" : "text-gray-900"}`}
+                      >
+                        {stats.skillsLoaded} / {stats.skills}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Users className="h-4 w-4 text-yellow-600" />
+                        <span
+                          className={isDark ? "text-gray-300" : "text-gray-600"}
+                        >
+                          Groups
+                        </span>
+                      </div>
+                      <span
+                        className={`font-medium ${isDark ? "text-tabiya-text" : "text-gray-900"}`}
+                      >
+                        {stats.groups}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`pt-3 border-t space-y-1 text-xs ${
+                      isDark
+                        ? "border-tabiya-dark text-gray-400"
+                        : "border-gray-200 text-gray-500"
+                    }`}
+                  >
+                    <div>
+                      Visible: {stats.visibleNodes} nodes, {stats.visibleEdges}{" "}
+                      edges
+                    </div>
+                    <div>Progress: {stats.loadProgress}%</div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Legend Widget */}
+            <div>
+              <button
+                onClick={() => toggleSection("legend")}
+                className={`w-full px-4 py-3 flex items-center justify-between text-left transition-colors ${
+                  isDark
+                    ? "text-tabiya-text hover:bg-tabiya-dark"
+                    : "text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <Info className="h-4 w-4" />
+                  <span className="font-medium">Legend</span>
+                </div>
+                {isSectionCollapsed("legend") ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronUp className="h-4 w-4" />
+                )}
+              </button>
+
+              {!isSectionCollapsed("legend") && (
+                <div className="px-4 pb-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+                      <span
+                        className={isDark ? "text-gray-300" : "text-gray-700"}
+                      >
+                        Occupations
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-green-600"></div>
+                      <span
+                        className={isDark ? "text-gray-300" : "text-gray-700"}
+                      >
+                        Skills
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-3 h-3 rounded-full bg-yellow-600"></div>
+                      <span
+                        className={isDark ? "text-gray-300" : "text-gray-700"}
+                      >
+                        Groups
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-0.5 bg-red-500"></div>
+                      <span
+                        className={isDark ? "text-gray-300" : "text-gray-700"}
+                      >
+                        Essential
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-0.5 bg-gray-500 border-dashed border-t-2 border-gray-500"></div>
+                      <span
+                        className={isDark ? "text-gray-300" : "text-gray-700"}
+                      >
+                        Optional
+                      </span>
+                    </div>
+                  </div>
+
+                  <p
+                    className={`text-xs mt-3 ${
+                      isDark ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    Click nodes to explore connections
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div
+          className={`shadow-sm border-b p-4 ${
+            isDark
+              ? "bg-tabiya-medium border-tabiya-dark"
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h1
+                className={`text-2xl font-bold ${
+                  isDark ? "text-tabiya-text" : "text-gray-900"
+                }`}
+              >
+                Tabiya Dataset Explorer
+              </h1>
+              <p
+                className={`text-sm mt-1 ${
+                  isDark ? "text-gray-300" : "text-gray-600"
+                }`}
+              >
+                Interactive visualization of occupations, skills, and their
+                relationships
+              </p>
+            </div>
+
+            {/* Condensed Stats in Header */}
+            {stats && (
+              <div
+                className={`text-xs space-y-1 text-right ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 <div>
-                  Visible: {stats.visibleNodes} nodes, {stats.visibleEdges}{' '}
-                  edges
+                  Quality: {stats.renderQuality} | FPS: {performanceMetrics.fps}
                 </div>
                 <div>
-                  Quality: {stats.renderQuality} | Progress:{' '}
-                  {stats.loadProgress}% | FPS: {performanceMetrics.fps}
+                  Nodes: {stats.visibleNodes} | Edges: {stats.visibleEdges}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Graph Container */}
+        <div className="flex-1 relative">
+          <div ref={containerRef} className="w-full h-full" />
+
+          {/* Instructional Text - Show when dataset is loaded but skills haven't been loaded yet */}
+          {!isLoading && !hasInitialSkillsLoaded && !isLoadingMore && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className={`text-center px-8 py-6 rounded-lg border-2 border-dashed max-w-md ${
+                  isDark
+                    ? "bg-tabiya-medium/80 border-gray-600 text-tabiya-text"
+                    : "bg-white/80 border-gray-300 text-gray-700"
+                }`}
+              >
+                <div className="flex items-center justify-center mb-3">
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      isDark ? "bg-tabiya-dark" : "bg-gray-100"
+                    }`}
+                  >
+                    <Target className="h-6 w-6 text-[#EB5D42]" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  Ready to Explore!
+                </h3>
+                <p className="text-sm mb-6">
+                  Dataset loaded successfully. Click the button below to begin
+                  visualizing the skill network and explore connections between
+                  occupations and skills.
+                </p>
+
+                {/* Start Exploring Skills Button */}
+                <button
+                  onClick={() => loadInitialSkills(2000)}
+                  disabled={isLoadingMore}
+                  className="w-full px-6 py-3 bg-[#EB5D42] text-white rounded-lg font-medium transition-colors hover:bg-[#d54d37] disabled:opacity-50 disabled:cursor-not-allowed mb-4 pointer-events-auto"
+                >
+                  {isLoadingMore ? "Loading..." : "Start Exploring Skills"}
+                </button>
+
+                <div className="flex items-center justify-center text-xs text-gray-500">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-2 h-2 bg-[#EB5D42] rounded-full animate-pulse"></div>
+                    <span>Click to visualize skill network</span>
+                  </div>
                 </div>
               </div>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Controls */}
-      <div className="bg-white border-b border-gray-200 p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search occupations and skills..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) =>
-                  e.key === 'Enter' && handleSearch(searchTerm)
-                }
-                className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            <button
-              onClick={() => handleSearch(searchTerm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          {/* Loading Progress Indicator */}
+          {isLoadingMore && (
+            <div
+              className={`absolute top-4 left-1/2 transform -translate-x-1/2 border rounded-lg shadow-lg px-4 py-2 ${
+                isDark
+                  ? "bg-tabiya-medium border-tabiya-dark"
+                  : "bg-white border-gray-200"
+              }`}
             >
-              Search
-            </button>
-
-            {/* Progressive Loading Controls */}
-            {(loadedSkillsCount < maxSkillsCount ||
-              !hasInitialSkillsLoaded) && (
-              <button
-                onClick={() =>
-                  hasInitialSkillsLoaded
-                    ? loadMoreSkills(2000)
-                    : loadInitialSkills(2000)
-                }
-                disabled={isLoadingMore}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoadingMore
-                  ? 'Loading...'
-                  : hasInitialSkillsLoaded
-                    ? 'Load More Skills'
-                    : 'Start Exploring Skills'}
-              </button>
-            )}
-
-            {/* Quality Indicator */}
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-100 rounded-lg">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  renderQuality === 'high'
-                    ? 'bg-green-500'
-                    : renderQuality === 'medium'
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }`}
-              ></div>
-              <span className="text-sm text-gray-600 capitalize">
-                {renderQuality} Quality
-              </span>
-              <span className="text-xs text-gray-500 ml-2">
-                Zoom: {zoomLevel.toFixed(2)}
-              </span>
-              {isInteracting && (
-                <span className="text-xs text-orange-500 ml-1">Moving</span>
-              )}
-            </div>
-
-            {/* Performance Indicator */}
-            <div className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  performanceMetrics.fps >= 30
-                    ? 'bg-green-500'
-                    : performanceMetrics.fps >= 15
-                      ? 'bg-yellow-500'
-                      : 'bg-red-500'
-                }`}
-              ></div>
-              <span className="text-xs text-gray-600">
-                {performanceMetrics.fps} FPS
-              </span>
-            </div>
-
-            {/* Node Count Control */}
-            <div className="flex items-center space-x-2">
-              <label className="text-sm text-gray-600">Max Skills:</label>
-              <select
-                value={visibleNodeCount}
-                onChange={(e) => setVisibleNodeCount(Number(e.target.value))}
-                className="text-sm border border-gray-300 rounded px-2 py-1"
-              >
-                <option value={2000}>2K</option>
-                <option value={5000}>5K</option>
-                <option value={10000}>10K</option>
-                <option value={15000}>15K</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={zoomIn}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Zoom In"
-            >
-              <ZoomIn className="h-4 w-4" />
-            </button>
-            <button
-              onClick={zoomOut}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Zoom Out"
-            >
-              <ZoomOut className="h-4 w-4" />
-            </button>
-            <button
-              onClick={resetView}
-              className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              title="Reset View"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 relative">
-        {/* Graph Container */}
-        <div ref={containerRef} className="w-full h-full" />
-
-        {/* Loading Progress Indicator */}
-        {isLoadingMore && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-lg shadow-lg px-4 py-2">
-            <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-sm text-gray-600">
-                Loading more skills...
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Tooltip */}
-        {tooltip && (
-          <div
-            className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg p-3 max-w-xs pointer-events-none"
-            style={{
-              left: tooltip.x + 10,
-              top: tooltip.y - 10,
-              transform: 'translate(0, -100%)',
-            }}
-          >
-            <div className="flex items-center space-x-2 mb-2">
-              {tooltip.node.type === 'occupation' && (
-                <Briefcase className="h-4 w-4 text-blue-600" />
-              )}
-              {tooltip.node.type === 'skill' && (
-                <Target className="h-4 w-4 text-green-600" />
-              )}
-              {tooltip.node.type === 'group' && (
-                <Users className="h-4 w-4 text-yellow-600" />
-              )}
-              <span className="font-medium text-gray-900">
-                {tooltip.node.label}
-              </span>
-            </div>
-
-            {tooltip.node.description && (
-              <p className="text-sm text-gray-600 mb-2 line-clamp-3">
-                {tooltip.node.description}
-              </p>
-            )}
-
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="capitalize">{tooltip.node.type}</span>
-              {tooltip.node.skillCount && (
-                <span>{tooltip.node.skillCount} skills</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Side Panel */}
-        {selectedNode && (
-          <div className="absolute top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center space-x-2">
-                <Info className="h-5 w-5 text-blue-600" />
-                <h3 className="font-semibold text-gray-900">Node Details</h3>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[#EB5D42]"></div>
+                <span
+                  className={`text-sm ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Loading more skills...
+                </span>
               </div>
-              <button
-                onClick={() => setSelectedNode(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                ×
-              </button>
             </div>
+          )}
 
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Label
-                </label>
-                <p className="text-gray-900">{selectedNode.label}</p>
+          {/* Tooltip */}
+          {tooltip && (
+            <div
+              className={`absolute z-10 border rounded-lg shadow-lg p-3 max-w-xs pointer-events-none ${
+                isDark
+                  ? "bg-tabiya-medium border-tabiya-dark"
+                  : "bg-white border-gray-200"
+              }`}
+              style={{
+                left: tooltip.x + 10,
+                top: tooltip.y - 10,
+                transform: "translate(0, -100%)",
+              }}
+            >
+              <div className="flex items-center space-x-2 mb-2">
+                {tooltip.node.type === "occupation" && (
+                  <Briefcase className="h-4 w-4 text-blue-600" />
+                )}
+                {tooltip.node.type === "skill" && (
+                  <Target className="h-4 w-4 text-green-600" />
+                )}
+                {tooltip.node.type === "group" && (
+                  <Users className="h-4 w-4 text-yellow-600" />
+                )}
+                <span
+                  className={`font-medium ${
+                    isDark ? "text-tabiya-text" : "text-gray-900"
+                  }`}
+                >
+                  {tooltip.node.label}
+                </span>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Type
-                </label>
-                <p className="text-gray-600 capitalize">{selectedNode.type}</p>
+              {tooltip.node.description && (
+                <p
+                  className={`text-sm mb-2 line-clamp-3 ${
+                    isDark ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  {tooltip.node.description}
+                </p>
+              )}
+
+              <div
+                className={`flex items-center justify-between text-xs ${
+                  isDark ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                <span className="capitalize">{tooltip.node.type}</span>
+                {tooltip.node.skillCount && (
+                  <span>{tooltip.node.skillCount} skills</span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Node Details Panel */}
+          {selectedNode && (
+            <div
+              className={`absolute top-4 right-4 w-80 border rounded-lg shadow-lg p-4 ${
+                isDark
+                  ? "bg-tabiya-medium border-tabiya-dark"
+                  : "bg-white border-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Info className="h-5 w-5 text-blue-600" />
+                  <h3
+                    className={`font-semibold ${
+                      isDark ? "text-tabiya-text" : "text-gray-900"
+                    }`}
+                  >
+                    Node Details
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedNode(null)}
+                  className={`transition-colors ${
+                    isDark
+                      ? "text-gray-400 hover:text-tabiya-text"
+                      : "text-gray-400 hover:text-gray-600"
+                  }`}
+                >
+                  ×
+                </button>
               </div>
 
-              {selectedNode.description && (
+              <div className="space-y-3">
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Description
+                  <label
+                    className={`text-sm font-medium ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Label
                   </label>
-                  <p className="text-gray-600 text-sm">
-                    {selectedNode.description}
+                  <p className={isDark ? "text-tabiya-text" : "text-gray-900"}>
+                    {selectedNode.label}
                   </p>
                 </div>
-              )}
 
-              {selectedNode.skillCount && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Related Skills
+                  <label
+                    className={`text-sm font-medium ${
+                      isDark ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Type
                   </label>
-                  <p className="text-gray-600">{selectedNode.skillCount}</p>
+                  <p
+                    className={`capitalize ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    {selectedNode.type}
+                  </p>
                 </div>
-              )}
 
-              {highlightedNodes.size > 1 && (
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Connected Nodes
-                  </label>
-                  <p className="text-gray-600">{highlightedNodes.size - 1}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                {selectedNode.description && (
+                  <div>
+                    <label
+                      className={`text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Description
+                    </label>
+                    <p
+                      className={`text-sm ${
+                        isDark ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {selectedNode.description}
+                    </p>
+                  </div>
+                )}
 
-        {/* Legend */}
-        <div className="absolute bottom-4 left-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4">
-          <h4 className="font-semibold text-gray-900 mb-3">Legend</h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-              <span>Occupations</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-green-600"></div>
-              <span>Skills (Progressive)</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 rounded-full bg-yellow-600"></div>
-              <span>Groups</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-0.5 bg-red-500"></div>
-              <span>Essential</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-0.5 bg-gray-500 border-dashed border-t-2 border-gray-500"></div>
-              <span>Optional</span>
-            </div>
-          </div>
+                {selectedNode.skillCount && (
+                  <div>
+                    <label
+                      className={`text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Related Skills
+                    </label>
+                    <p className={isDark ? "text-gray-300" : "text-gray-600"}>
+                      {selectedNode.skillCount}
+                    </p>
+                  </div>
+                )}
 
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="text-xs text-gray-500 space-y-1">
-              <div>
-                Skills: {stats?.skillsLoaded || 0} / {stats?.skills || 0} loaded
-              </div>
-              <div>
-                Click "Load More Skills" button to add more •{' '}
-                {stats?.renderQuality || 'medium'} quality mode
-              </div>
-              <div>
-                Nodes: {stats?.visibleNodes || 0} • Edges:{' '}
-                {stats?.visibleEdges || 0}
+                {highlightedNodes.size > 1 && (
+                  <div>
+                    <label
+                      className={`text-sm font-medium ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      Connected Nodes
+                    </label>
+                    <p className={isDark ? "text-gray-300" : "text-gray-600"}>
+                      {highlightedNodes.size - 1}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-2">
-            Manual skill loading • Zoom-based quality • Click nodes to explore
-          </p>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default TaxonomyNavigator;
+export default TabiyaDatasetExplorer;
