@@ -28,7 +28,7 @@ class JobApiService {
         pageSize: (params.pageSize || 10).toString(),
       });
 
-      const response = await fetch(`${this.baseUrl}/api/jobs/search/?${searchParams}`, {
+      const response = await fetch(`${this.baseUrl}/jobs/search/?${searchParams}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
