@@ -16,7 +16,7 @@ export interface JobApiResponse {
 }
 
 class JobApiService {
-  private baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  private baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
   async searchJobs(params: JobSearchParams): Promise<JobApiResponse> {
     try {
