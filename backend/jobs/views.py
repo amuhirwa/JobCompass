@@ -40,7 +40,7 @@ def search_jobs(request):
         params = {
             'engine': 'google_jobs',
             'q': query,
-            'location': 'Kigali, Rwanda',
+            'location': location if location else 'Kigali, Rwanda',
             'api_key': serpapi_key,
             'hl': 'en',
             'gl': 'us'
